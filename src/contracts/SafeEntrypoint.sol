@@ -31,10 +31,10 @@ contract SafeEntrypoint is SafeManageable, ISafeEntrypoint {
   /// @inheritdoc ISafeEntrypoint
   uint256 public transactionNonce;
 
-  /// @notice Maps an actions builder to its approval expiry time
+  /// @inheritdoc ISafeEntrypoint
   mapping(address _actionsBuilder => uint256 _approvalExpiryTime) public approvalExpiries;
 
-  /// @notice Maps a transaction ID to its information
+  /// @inheritdoc ISafeEntrypoint
   mapping(uint256 _txId => TransactionInfo _txInfo) public transactions;
 
   /// @inheritdoc ISafeEntrypoint
