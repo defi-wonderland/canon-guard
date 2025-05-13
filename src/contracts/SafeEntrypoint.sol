@@ -106,16 +106,19 @@ contract SafeEntrypoint is SafeManageable, ISafeEntrypoint {
     IActionsBuilder.Action calldata _action,
     uint256 _expiryDelay
   ) external isSafeOwner returns (uint256 _txId) {
-    // Generate a simple transaction ID
-    _txId = ++transactionNonce;
+    IActionsBuilder.Action[] memory _actions = new IActionsBuilder.Action[](1);
+    _actions[0] = _action;
 
     // Use default expiry delay if duration is 0
     _expiryDelay = _expiryDelay == 0 ? DEFAULT_TX_EXPIRY_DELAY : _expiryDelay;
 
+    // Generate a simple transaction ID
+    _txId = ++transactionNonce;
+
     // Store the transaction information
     transactions[_txId] = TransactionInfo({
       actionsBuilder: address(0),
-      actionsData: abi.encode(_action),
+      actionsData: abi.encode(_actions),
       executableAt: block.timestamp + LONG_TX_EXECUTION_DELAY,
       expiresAt: block.timestamp + LONG_TX_EXECUTION_DELAY + _expiryDelay,
       isExecuted: false
