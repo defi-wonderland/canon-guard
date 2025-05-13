@@ -31,6 +31,4 @@ interface ICappedTokenTransfers is ISafeManageable, IActionsBuilder {
   // ~~~ STATE MANAGEMENT ~~~
 
   function updateState(bytes memory _data) external;
-
-  function getActions() external view returns (Action[] memory);
 }
