@@ -37,19 +37,19 @@ interface ISafeEntrypoint is ISafeManageable {
 
   /**
    * @notice Gets the short execution delay applied to pre-approved transactions
-   * @return _shortExecutionDelay The short execution delay (in seconds)
+   * @return _shortTxExecutionDelay The short transaction execution delay (in seconds)
    */
-  function SHORT_EXECUTION_DELAY() external view returns (uint256 _shortExecutionDelay);
+  function SHORT_TX_EXECUTION_DELAY() external view returns (uint256 _shortTxExecutionDelay);
 
   /**
    * @notice Gets the long execution delay applied to arbitrary transactions
-   * @return _longExecutionDelay The long execution delay (in seconds)
+   * @return _longTxExecutionDelay The long transaction execution delay (in seconds)
    */
-  function LONG_EXECUTION_DELAY() external view returns (uint256 _longExecutionDelay);
+  function LONG_TX_EXECUTION_DELAY() external view returns (uint256 _longTxExecutionDelay);
 
   /**
-   * @notice Gets the default expiration time for transactions
-   * @return _defaultTxExpiryDelay The default expiry delay (in seconds)
+   * @notice Gets the default expiry delay for transactions
+   * @return _defaultTxExpiryDelay The default transaction expiry delay (in seconds)
    */
   function DEFAULT_TX_EXPIRY_DELAY() external view returns (uint256 _defaultTxExpiryDelay);
 
@@ -62,9 +62,9 @@ interface ISafeEntrypoint is ISafeManageable {
   /**
    * @notice Gets the approval expiry time for an actions builder
    * @param _actionsBuilder The address of the actions builder contract
-   * @return _expiryTime The timestamp from which the actions builder contract is no longer approved to be queued
+   * @return _approvalExpiresAt The timestamp from which the actions builder contract is no longer approved to be queued
    */
-  function approvalExpiries(address _actionsBuilder) external view returns (uint256 _expiryTime);
+  function approvalExpiries(address _actionsBuilder) external view returns (uint256 _approvalExpiresAt);
 
   /**
    * @notice Gets the transaction info for a transaction ID
@@ -100,10 +100,10 @@ interface ISafeEntrypoint is ISafeManageable {
    * @notice Emitted when an actions builder is approved
    * @param _actionsBuilder The address of the actions builder contract
    * @param _approvalDuration The duration (in seconds) of the approval to the actions builder contract (0 means disapproval)
-   * @param _approvalExpiryTime The timestamp from which the actions builder contract is no longer approved to be queued
+   * @param _approvalExpiresAt The timestamp from which the actions builder contract is no longer approved to be queued
    */
   event ActionsBuilderApproved(
-    address indexed _actionsBuilder, uint256 indexed _approvalDuration, uint256 indexed _approvalExpiryTime
+    address indexed _actionsBuilder, uint256 indexed _approvalDuration, uint256 indexed _approvalExpiresAt
   );
 
   /**
@@ -139,14 +139,11 @@ interface ISafeEntrypoint is ISafeManageable {
   error ActionsBuilderNotApproved();
 
   /**
-   * @notice Thrown when an actions builder is already queued
+   * @notice Thrown when a signer is invalid
+   * @param _signer The address of the signer
+   * @param _safeTxHash The hash of the Safe transaction
    */
-  error ActionsBuilderAlreadyQueued();
-
-  /**
-   * @notice Thrown when a transaction is not yet executable
-   */
-  error TransactionNotYetExecutable();
+  error InvalidSigner(address _signer, bytes32 _safeTxHash);
 
   /**
    * @notice Thrown when a transaction has already been executed
@@ -154,19 +151,9 @@ interface ISafeEntrypoint is ISafeManageable {
   error TransactionAlreadyExecuted();
 
   /**
-   * @notice Thrown when a transaction is not queued
+   * @notice Thrown when a transaction is not yet executable
    */
-  error TransactionNotQueued();
-
-  /**
-   * @notice Thrown when attempting to disapprove a Safe transaction hash that hasn't been approved
-   */
-  error SafeTransactionHashNotApproved();
-
-  /**
-   * @notice Thrown when a call to an actions builder fails
-   */
-  error NotSuccess();
+  error TransactionNotYetExecutable();
 
   /**
    * @notice Thrown when a transaction has expired
@@ -174,16 +161,9 @@ interface ISafeEntrypoint is ISafeManageable {
   error TransactionExpired();
 
   /**
-   * @notice Thrown when a signer is invalid
-   * @param _safeTxHash The hash of the Safe transaction
-   * @param _signer The address of the signer
+   * @notice Thrown when attempting to disapprove a Safe transaction hash that hasn't been approved
    */
-  error InvalidSigner(bytes32 _safeTxHash, address _signer);
-
-  /**
-   * @notice Thrown when attempting to disapprove a transaction hash that hasn't been approved
-   */
-  error TxHashNotApproved();
+  error SafeTransactionHashNotApproved();
 
   // ~~~ ADMIN METHODS ~~~
 

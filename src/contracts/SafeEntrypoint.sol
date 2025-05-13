@@ -20,10 +20,10 @@ contract SafeEntrypoint is SafeManageable, ISafeEntrypoint {
   address public immutable MULTI_SEND_CALL_ONLY;
 
   /// @inheritdoc ISafeEntrypoint
-  uint256 public immutable SHORT_EXECUTION_DELAY;
+  uint256 public immutable SHORT_TX_EXECUTION_DELAY;
 
   /// @inheritdoc ISafeEntrypoint
-  uint256 public immutable LONG_EXECUTION_DELAY;
+  uint256 public immutable LONG_TX_EXECUTION_DELAY;
 
   /// @inheritdoc ISafeEntrypoint
   uint256 public immutable DEFAULT_TX_EXPIRY_DELAY;
@@ -31,10 +31,10 @@ contract SafeEntrypoint is SafeManageable, ISafeEntrypoint {
   /// @inheritdoc ISafeEntrypoint
   uint256 public transactionNonce;
 
-  /// @notice Maps an actions builder to its approval expiry time
-  mapping(address _actionsBuilder => uint256 _approvalExpiryTime) public approvalExpiries;
+  /// @inheritdoc ISafeEntrypoint
+  mapping(address _actionsBuilder => uint256 _approvalExpiresAt) public approvalExpiries;
 
-  /// @notice Maps a transaction ID to its information
+  /// @inheritdoc ISafeEntrypoint
   mapping(uint256 _txId => TransactionInfo _txInfo) public transactions;
 
   /// @inheritdoc ISafeEntrypoint
@@ -44,21 +44,21 @@ contract SafeEntrypoint is SafeManageable, ISafeEntrypoint {
    * @notice Constructor that sets up the Safe and MultiSendCallOnly contracts
    * @param _safe The Gnosis Safe contract address
    * @param _multiSendCallOnly The MultiSendCallOnly contract address
-   * @param _shortExecutionDelay The short execution delay (in seconds)
-   * @param _longExecutionDelay The long execution delay (in seconds)
-   * @param _defaultTxExpiryDelay The default expiry delay for transactions
+   * @param _shortTxExecutionDelay The short transaction execution delay (in seconds)
+   * @param _longTxExecutionDelay The long transaction execution delay (in seconds)
+   * @param _defaultTxExpiryDelay The default transaction expiry delay (in seconds)
    */
   constructor(
     address _safe,
     address _multiSendCallOnly,
-    uint256 _shortExecutionDelay,
-    uint256 _longExecutionDelay,
+    uint256 _shortTxExecutionDelay,
+    uint256 _longTxExecutionDelay,
     uint256 _defaultTxExpiryDelay
   ) SafeManageable(_safe) {
     MULTI_SEND_CALL_ONLY = _multiSendCallOnly;
 
-    SHORT_EXECUTION_DELAY = _shortExecutionDelay;
-    LONG_EXECUTION_DELAY = _longExecutionDelay;
+    SHORT_TX_EXECUTION_DELAY = _shortTxExecutionDelay;
+    LONG_TX_EXECUTION_DELAY = _longTxExecutionDelay;
     DEFAULT_TX_EXPIRY_DELAY = _defaultTxExpiryDelay;
   }
 
@@ -66,9 +66,9 @@ contract SafeEntrypoint is SafeManageable, ISafeEntrypoint {
 
   /// @inheritdoc ISafeEntrypoint
   function approveActionsBuilder(address _actionsBuilder, uint256 _approvalDuration) external isSafe {
-    uint256 _expiryTime = block.timestamp + _approvalDuration;
-    approvalExpiries[_actionsBuilder] = _expiryTime;
-    emit ActionsBuilderApproved(_actionsBuilder, _approvalDuration, _expiryTime);
+    uint256 _approvalExpiresAt = block.timestamp + _approvalDuration;
+    approvalExpiries[_actionsBuilder] = _approvalExpiresAt;
+    emit ActionsBuilderApproved(_actionsBuilder, _approvalDuration, _approvalExpiresAt);
   }
 
   // ~~~ TRANSACTION METHODS ~~~
@@ -82,8 +82,8 @@ contract SafeEntrypoint is SafeManageable, ISafeEntrypoint {
     // Generate a simple transaction ID
     _txId = ++transactionNonce;
 
-    // Collect actions from the builder
-    IActionsBuilder.Action[] memory _actions = _fetchActions(_actionsBuilder);
+    // Fetch actions from the builder
+    IActionsBuilder.Action[] memory _actions = IActionsBuilder(_actionsBuilder).getActions();
 
     // Use default expiry delay if duration is 0
     _expiryDelay = _expiryDelay == 0 ? DEFAULT_TX_EXPIRY_DELAY : _expiryDelay;
@@ -92,8 +92,8 @@ contract SafeEntrypoint is SafeManageable, ISafeEntrypoint {
     transactions[_txId] = TransactionInfo({
       actionsBuilder: _actionsBuilder,
       actionsData: abi.encode(_actions),
-      executableAt: block.timestamp + SHORT_EXECUTION_DELAY,
-      expiresAt: block.timestamp + SHORT_EXECUTION_DELAY + _expiryDelay,
+      executableAt: block.timestamp + SHORT_TX_EXECUTION_DELAY,
+      expiresAt: block.timestamp + SHORT_TX_EXECUTION_DELAY + _expiryDelay,
       isExecuted: false
     });
 
@@ -116,8 +116,8 @@ contract SafeEntrypoint is SafeManageable, ISafeEntrypoint {
     transactions[_txId] = TransactionInfo({
       actionsBuilder: address(0),
       actionsData: abi.encode(_action),
-      executableAt: block.timestamp + LONG_EXECUTION_DELAY,
-      expiresAt: block.timestamp + LONG_EXECUTION_DELAY + _expiryDelay,
+      executableAt: block.timestamp + LONG_TX_EXECUTION_DELAY,
+      expiresAt: block.timestamp + LONG_TX_EXECUTION_DELAY + _expiryDelay,
       isExecuted: false
     });
 
@@ -151,18 +151,14 @@ contract SafeEntrypoint is SafeManageable, ISafeEntrypoint {
     for (uint256 _i; _i < _signersLength; ++_i) {
       _signer = _signers[_i];
       if (disapprovedHashes[_signer][_safeTxHash] || SAFE.approvedHashes(_signer, _safeTxHash) != 1) {
-        revert InvalidSigner(_safeTxHash, _signer);
+        revert InvalidSigner(_signer, _safeTxHash);
       }
     }
 
     _executeTransaction(_txId, _safeTxHash, _signers, _multiSendData);
   }
 
-  /**
-   * @notice Disapproves a Safe transaction hash
-   * @dev Can be called by any Safe owner
-   * @param _safeTxHash The hash of the Safe transaction to disapprove
-   */
+  /// @inheritdoc ISafeEntrypoint
   function disapproveSafeTransactionHash(bytes32 _safeTxHash) external isSafeOwner {
     // Check if the hash has been approved in the Safe
     if (SAFE.approvedHashes(msg.sender, _safeTxHash) != 1) {
@@ -234,8 +230,8 @@ contract SafeEntrypoint is SafeManageable, ISafeEntrypoint {
   ) internal {
     TransactionInfo storage _txInfo = transactions[_txId];
 
-    if (_txInfo.executableAt > block.timestamp) revert TransactionNotYetExecutable();
     if (_txInfo.isExecuted) revert TransactionAlreadyExecuted();
+    if (_txInfo.executableAt > block.timestamp) revert TransactionNotYetExecutable();
     if (_txInfo.expiresAt <= block.timestamp) revert TransactionExpired();
 
     address[] memory _sortedSigners = _sortSigners(_signers);
@@ -275,27 +271,6 @@ contract SafeEntrypoint is SafeManageable, ISafeEntrypoint {
   }
 
   // ~~~ INTERNAL VIEW METHODS ~~~
-
-  /**
-   * @notice Internal function to fetch actions from an actions builder
-   * @dev Uses staticcall to prevent state changes
-   * @param _actionsBuilder The address of the actions builder contract
-   * @return _actions The batch of actions
-   */
-  function _fetchActions(address _actionsBuilder) internal view returns (IActionsBuilder.Action[] memory _actions) {
-    // Encode the function call for getActions()
-    bytes memory _callData = abi.encodeWithSelector(IActionsBuilder.getActions.selector, bytes(''));
-
-    // Make a static call (executes the code but reverts any state changes)
-    (bool _success, bytes memory _returnData) = _actionsBuilder.staticcall(_callData);
-
-    // If the call succeeded, decode the returned data
-    if (_success && _returnData.length > 0) {
-      _actions = abi.decode(_returnData, (IActionsBuilder.Action[]));
-    } else {
-      revert NotSuccess();
-    }
-  }
 
   /**
    * @notice Internal function to get the Safe transaction hash
