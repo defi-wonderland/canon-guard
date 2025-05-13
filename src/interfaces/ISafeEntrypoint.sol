@@ -37,19 +37,19 @@ interface ISafeEntrypoint is ISafeManageable {
 
   /**
    * @notice Gets the short execution delay applied to pre-approved transactions
-   * @return _shortExecutionDelay The short execution delay (in seconds)
+   * @return _shortTxExecutionDelay The short transaction execution delay (in seconds)
    */
-  function SHORT_EXECUTION_DELAY() external view returns (uint256 _shortExecutionDelay);
+  function SHORT_TX_EXECUTION_DELAY() external view returns (uint256 _shortTxExecutionDelay);
 
   /**
    * @notice Gets the long execution delay applied to arbitrary transactions
-   * @return _longExecutionDelay The long execution delay (in seconds)
+   * @return _longTxExecutionDelay The long transaction execution delay (in seconds)
    */
-  function LONG_EXECUTION_DELAY() external view returns (uint256 _longExecutionDelay);
+  function LONG_TX_EXECUTION_DELAY() external view returns (uint256 _longTxExecutionDelay);
 
   /**
    * @notice Gets the default expiry delay for transactions
-   * @return _defaultTxExpiryDelay The default expiry delay (in seconds)
+   * @return _defaultTxExpiryDelay The default transaction expiry delay (in seconds)
    */
   function DEFAULT_TX_EXPIRY_DELAY() external view returns (uint256 _defaultTxExpiryDelay);
 

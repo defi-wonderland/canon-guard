@@ -20,10 +20,10 @@ contract SafeEntrypoint is SafeManageable, ISafeEntrypoint {
   address public immutable MULTI_SEND_CALL_ONLY;
 
   /// @inheritdoc ISafeEntrypoint
-  uint256 public immutable SHORT_EXECUTION_DELAY;
+  uint256 public immutable SHORT_TX_EXECUTION_DELAY;
 
   /// @inheritdoc ISafeEntrypoint
-  uint256 public immutable LONG_EXECUTION_DELAY;
+  uint256 public immutable LONG_TX_EXECUTION_DELAY;
 
   /// @inheritdoc ISafeEntrypoint
   uint256 public immutable DEFAULT_TX_EXPIRY_DELAY;
@@ -44,21 +44,21 @@ contract SafeEntrypoint is SafeManageable, ISafeEntrypoint {
    * @notice Constructor that sets up the Safe and MultiSendCallOnly contracts
    * @param _safe The Gnosis Safe contract address
    * @param _multiSendCallOnly The MultiSendCallOnly contract address
-   * @param _shortExecutionDelay The short execution delay (in seconds)
-   * @param _longExecutionDelay The long execution delay (in seconds)
-   * @param _defaultTxExpiryDelay The default expiry delay for transactions
+   * @param _shortTxExecutionDelay The short transaction execution delay (in seconds)
+   * @param _longTxExecutionDelay The long transaction execution delay (in seconds)
+   * @param _defaultTxExpiryDelay The default transaction expiry delay (in seconds)
    */
   constructor(
     address _safe,
     address _multiSendCallOnly,
-    uint256 _shortExecutionDelay,
-    uint256 _longExecutionDelay,
+    uint256 _shortTxExecutionDelay,
+    uint256 _longTxExecutionDelay,
     uint256 _defaultTxExpiryDelay
   ) SafeManageable(_safe) {
     MULTI_SEND_CALL_ONLY = _multiSendCallOnly;
 
-    SHORT_EXECUTION_DELAY = _shortExecutionDelay;
-    LONG_EXECUTION_DELAY = _longExecutionDelay;
+    SHORT_TX_EXECUTION_DELAY = _shortTxExecutionDelay;
+    LONG_TX_EXECUTION_DELAY = _longTxExecutionDelay;
     DEFAULT_TX_EXPIRY_DELAY = _defaultTxExpiryDelay;
   }
 
@@ -92,8 +92,8 @@ contract SafeEntrypoint is SafeManageable, ISafeEntrypoint {
     transactions[_txId] = TransactionInfo({
       actionsBuilder: _actionsBuilder,
       actionsData: abi.encode(_actions),
-      executableAt: block.timestamp + SHORT_EXECUTION_DELAY,
-      expiresAt: block.timestamp + SHORT_EXECUTION_DELAY + _expiryDelay,
+      executableAt: block.timestamp + SHORT_TX_EXECUTION_DELAY,
+      expiresAt: block.timestamp + SHORT_TX_EXECUTION_DELAY + _expiryDelay,
       isExecuted: false
     });
 
@@ -116,8 +116,8 @@ contract SafeEntrypoint is SafeManageable, ISafeEntrypoint {
     transactions[_txId] = TransactionInfo({
       actionsBuilder: address(0),
       actionsData: abi.encode(_action),
-      executableAt: block.timestamp + LONG_EXECUTION_DELAY,
-      expiresAt: block.timestamp + LONG_EXECUTION_DELAY + _expiryDelay,
+      executableAt: block.timestamp + LONG_TX_EXECUTION_DELAY,
+      expiresAt: block.timestamp + LONG_TX_EXECUTION_DELAY + _expiryDelay,
       isExecuted: false
     });
 
