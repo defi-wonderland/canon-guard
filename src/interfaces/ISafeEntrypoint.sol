@@ -48,7 +48,7 @@ interface ISafeEntrypoint is ISafeManageable {
   function LONG_EXECUTION_DELAY() external view returns (uint256 _longExecutionDelay);
 
   /**
-   * @notice Gets the default expiration time for transactions
+   * @notice Gets the default expiry delay for transactions
    * @return _defaultTxExpiryDelay The default expiry delay (in seconds)
    */
   function DEFAULT_TX_EXPIRY_DELAY() external view returns (uint256 _defaultTxExpiryDelay);
@@ -62,9 +62,9 @@ interface ISafeEntrypoint is ISafeManageable {
   /**
    * @notice Gets the approval expiry time for an actions builder
    * @param _actionsBuilder The address of the actions builder contract
-   * @return _expiryTime The timestamp from which the actions builder contract is no longer approved to be queued
+   * @return _approvalExpiresAt The timestamp from which the actions builder contract is no longer approved to be queued
    */
-  function approvalExpiries(address _actionsBuilder) external view returns (uint256 _expiryTime);
+  function approvalExpiries(address _actionsBuilder) external view returns (uint256 _approvalExpiresAt);
 
   /**
    * @notice Gets the transaction info for a transaction ID
@@ -100,10 +100,10 @@ interface ISafeEntrypoint is ISafeManageable {
    * @notice Emitted when an actions builder is approved
    * @param _actionsBuilder The address of the actions builder contract
    * @param _approvalDuration The duration (in seconds) of the approval to the actions builder contract (0 means disapproval)
-   * @param _approvalExpiryTime The timestamp from which the actions builder contract is no longer approved to be queued
+   * @param _approvalExpiresAt The timestamp from which the actions builder contract is no longer approved to be queued
    */
   event ActionsBuilderApproved(
-    address indexed _actionsBuilder, uint256 indexed _approvalDuration, uint256 indexed _approvalExpiryTime
+    address indexed _actionsBuilder, uint256 indexed _approvalDuration, uint256 indexed _approvalExpiresAt
   );
 
   /**

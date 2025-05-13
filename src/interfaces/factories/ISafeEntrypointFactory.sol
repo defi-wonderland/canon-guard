@@ -8,6 +8,6 @@ interface ISafeEntrypointFactory {
     address _safe,
     uint256 _shortExecutionDelay,
     uint256 _longExecutionDelay,
-    uint256 _defaultExpirationTime
+    uint256 _defaultTxExpiryDelay
   ) external returns (address);
 }

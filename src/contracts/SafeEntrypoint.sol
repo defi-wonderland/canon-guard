@@ -32,7 +32,7 @@ contract SafeEntrypoint is SafeManageable, ISafeEntrypoint {
   uint256 public transactionNonce;
 
   /// @inheritdoc ISafeEntrypoint
-  mapping(address _actionsBuilder => uint256 _approvalExpiryTime) public approvalExpiries;
+  mapping(address _actionsBuilder => uint256 _approvalExpiresAt) public approvalExpiries;
 
   /// @inheritdoc ISafeEntrypoint
   mapping(uint256 _txId => TransactionInfo _txInfo) public transactions;
@@ -66,9 +66,9 @@ contract SafeEntrypoint is SafeManageable, ISafeEntrypoint {
 
   /// @inheritdoc ISafeEntrypoint
   function approveActionsBuilder(address _actionsBuilder, uint256 _approvalDuration) external isSafe {
-    uint256 _expiryTime = block.timestamp + _approvalDuration;
-    approvalExpiries[_actionsBuilder] = _expiryTime;
-    emit ActionsBuilderApproved(_actionsBuilder, _approvalDuration, _expiryTime);
+    uint256 _approvalExpiresAt = block.timestamp + _approvalDuration;
+    approvalExpiries[_actionsBuilder] = _approvalExpiresAt;
+    emit ActionsBuilderApproved(_actionsBuilder, _approvalDuration, _approvalExpiresAt);
   }
 
   // ~~~ TRANSACTION METHODS ~~~
