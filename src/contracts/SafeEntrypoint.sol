@@ -82,8 +82,8 @@ contract SafeEntrypoint is SafeManageable, ISafeEntrypoint {
     // Generate a simple transaction ID
     _txId = ++transactionNonce;
 
-    // Collect actions from the builder
-    IActionsBuilder.Action[] memory _actions = _fetchActions(_actionsBuilder);
+    // Fetch actions from the builder
+    IActionsBuilder.Action[] memory _actions = IActionsBuilder(_actionsBuilder).getActions();
 
     // Use default expiry delay if duration is 0
     _expiryDelay = _expiryDelay == 0 ? DEFAULT_TX_EXPIRY_DELAY : _expiryDelay;
@@ -275,27 +275,6 @@ contract SafeEntrypoint is SafeManageable, ISafeEntrypoint {
   }
 
   // ~~~ INTERNAL VIEW METHODS ~~~
-
-  /**
-   * @notice Internal function to fetch actions from an actions builder
-   * @dev Uses staticcall to prevent state changes
-   * @param _actionsBuilder The address of the actions builder contract
-   * @return _actions The batch of actions
-   */
-  function _fetchActions(address _actionsBuilder) internal view returns (IActionsBuilder.Action[] memory _actions) {
-    // Encode the function call for getActions()
-    bytes memory _callData = abi.encodeWithSelector(IActionsBuilder.getActions.selector, bytes(''));
-
-    // Make a static call (executes the code but reverts any state changes)
-    (bool _success, bytes memory _returnData) = _actionsBuilder.staticcall(_callData);
-
-    // If the call succeeded, decode the returned data
-    if (_success && _returnData.length > 0) {
-      _actions = abi.decode(_returnData, (IActionsBuilder.Action[]));
-    } else {
-      revert NotSuccess();
-    }
-  }
 
   /**
    * @notice Internal function to get the Safe transaction hash

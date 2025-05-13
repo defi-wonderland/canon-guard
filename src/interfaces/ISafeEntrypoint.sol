@@ -164,11 +164,6 @@ interface ISafeEntrypoint is ISafeManageable {
   error SafeTransactionHashNotApproved();
 
   /**
-   * @notice Thrown when a call to an actions builder fails
-   */
-  error NotSuccess();
-
-  /**
    * @notice Thrown when a transaction has expired
    */
   error TransactionExpired();
