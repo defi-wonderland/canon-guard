@@ -31,10 +31,10 @@ contract SafeEntrypoint is SafeManageable, ISafeEntrypoint {
   /// @inheritdoc ISafeEntrypoint
   uint256 public transactionNonce;
 
-  /// @notice Maps an actions builder to its approval expiry time
+  /// @inheritdoc ISafeEntrypoint
   mapping(address _actionsBuilder => uint256 _approvalExpiryTime) public approvalExpiries;
 
-  /// @notice Maps a transaction ID to its information
+  /// @inheritdoc ISafeEntrypoint
   mapping(uint256 _txId => TransactionInfo _txInfo) public transactions;
 
   /// @inheritdoc ISafeEntrypoint
@@ -151,18 +151,14 @@ contract SafeEntrypoint is SafeManageable, ISafeEntrypoint {
     for (uint256 _i; _i < _signersLength; ++_i) {
       _signer = _signers[_i];
       if (disapprovedHashes[_signer][_safeTxHash] || SAFE.approvedHashes(_signer, _safeTxHash) != 1) {
-        revert InvalidSigner(_safeTxHash, _signer);
+        revert InvalidSigner(_signer, _safeTxHash);
       }
     }
 
     _executeTransaction(_txId, _safeTxHash, _signers, _multiSendData);
   }
 
-  /**
-   * @notice Disapproves a Safe transaction hash
-   * @dev Can be called by any Safe owner
-   * @param _safeTxHash The hash of the Safe transaction to disapprove
-   */
+  /// @inheritdoc ISafeEntrypoint
   function disapproveSafeTransactionHash(bytes32 _safeTxHash) external isSafeOwner {
     // Check if the hash has been approved in the Safe
     if (SAFE.approvedHashes(msg.sender, _safeTxHash) != 1) {
@@ -234,8 +230,8 @@ contract SafeEntrypoint is SafeManageable, ISafeEntrypoint {
   ) internal {
     TransactionInfo storage _txInfo = transactions[_txId];
 
-    if (_txInfo.executableAt > block.timestamp) revert TransactionNotYetExecutable();
     if (_txInfo.isExecuted) revert TransactionAlreadyExecuted();
+    if (_txInfo.executableAt > block.timestamp) revert TransactionNotYetExecutable();
     if (_txInfo.expiresAt <= block.timestamp) revert TransactionExpired();
 
     address[] memory _sortedSigners = _sortSigners(_signers);

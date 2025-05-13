@@ -139,14 +139,11 @@ interface ISafeEntrypoint is ISafeManageable {
   error ActionsBuilderNotApproved();
 
   /**
-   * @notice Thrown when an actions builder is already queued
+   * @notice Thrown when a signer is invalid
+   * @param _signer The address of the signer
+   * @param _safeTxHash The hash of the Safe transaction
    */
-  error ActionsBuilderAlreadyQueued();
-
-  /**
-   * @notice Thrown when a transaction is not yet executable
-   */
-  error TransactionNotYetExecutable();
+  error InvalidSigner(address _signer, bytes32 _safeTxHash);
 
   /**
    * @notice Thrown when a transaction has already been executed
@@ -154,14 +151,9 @@ interface ISafeEntrypoint is ISafeManageable {
   error TransactionAlreadyExecuted();
 
   /**
-   * @notice Thrown when a transaction is not queued
+   * @notice Thrown when a transaction is not yet executable
    */
-  error TransactionNotQueued();
-
-  /**
-   * @notice Thrown when attempting to disapprove a Safe transaction hash that hasn't been approved
-   */
-  error SafeTransactionHashNotApproved();
+  error TransactionNotYetExecutable();
 
   /**
    * @notice Thrown when a transaction has expired
@@ -169,16 +161,9 @@ interface ISafeEntrypoint is ISafeManageable {
   error TransactionExpired();
 
   /**
-   * @notice Thrown when a signer is invalid
-   * @param _safeTxHash The hash of the Safe transaction
-   * @param _signer The address of the signer
+   * @notice Thrown when attempting to disapprove a Safe transaction hash that hasn't been approved
    */
-  error InvalidSigner(bytes32 _safeTxHash, address _signer);
-
-  /**
-   * @notice Thrown when attempting to disapprove a transaction hash that hasn't been approved
-   */
-  error TxHashNotApproved();
+  error SafeTransactionHashNotApproved();
 
   // ~~~ ADMIN METHODS ~~~
 
