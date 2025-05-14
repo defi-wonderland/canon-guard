@@ -9,13 +9,21 @@ import {SimpleActionsFactory} from 'contracts/factories/SimpleActionsFactory.sol
 
 import {ISimpleActions} from 'interfaces/actions/ISimpleActions.sol';
 
-import {Safe} from '@safe-smart-account/Safe.sol';
+import {ISafe} from '@safe-smart-account/interfaces/ISafe.sol';
 import {SafeProxyFactory} from '@safe-smart-account/proxies/SafeProxyFactory.sol';
+
+import {
+  DEFAULT_TX_EXPIRY_DELAY,
+  LONG_TX_EXECUTION_DELAY,
+  MULTI_SEND_CALL_ONLY,
+  SAFE,
+  SAFE_PROXY_FACTORY,
+  SHORT_TX_EXECUTION_DELAY,
+  WETH
+} from 'script/Constants.s.sol';
 
 contract BasicTest is Test {
   uint256 internal constant _FORK_BLOCK = 18_920_905;
-  address internal constant _MULTI_SEND_CALL_ONLY = 0x9641d764fc13c8B624c04430C7356C1C7C8102e2;
-  address internal constant _WETH = 0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2;
 
   address internal constant _OWNER = address(0xc0ffee);
 
@@ -28,12 +36,9 @@ contract BasicTest is Test {
     address[] memory _owners = new address[](1);
     _owners[0] = _OWNER;
 
-    address _safeProxyFactory = address(new SafeProxyFactory());
-    address _safeSingleton = address(new Safe());
+    address _safeProxy = address(SafeProxyFactory(SAFE_PROXY_FACTORY).createProxyWithNonce(SAFE, bytes(''), 1));
 
-    address _safeProxy = address(SafeProxyFactory(_safeProxyFactory).createProxyWithNonce(_safeSingleton, bytes(''), 1));
-
-    Safe _safe = Safe(payable(_safeProxy));
+    ISafe _safe = ISafe(payable(_safeProxy));
 
     _safe.setup({
       _owners: _owners,
@@ -47,22 +52,18 @@ contract BasicTest is Test {
     });
 
     // Deploy the SafeEntrypoint contract
-    uint256 _shortTxExecutionDelay = 1 hours;
-    uint256 _longTxExecutionDelay = 7 days;
-    uint256 _defaultTxExpiryDelay = 7 days;
-
-    SafeEntrypointFactory _safeEntrypointFactory = new SafeEntrypointFactory(_MULTI_SEND_CALL_ONLY);
+    SafeEntrypointFactory _safeEntrypointFactory = new SafeEntrypointFactory(MULTI_SEND_CALL_ONLY);
     SafeEntrypoint _safeEntrypoint = SafeEntrypoint(
       _safeEntrypointFactory.createSafeEntrypoint(
-        address(_safe), _shortTxExecutionDelay, _longTxExecutionDelay, _defaultTxExpiryDelay
+        address(_safe), SHORT_TX_EXECUTION_DELAY, LONG_TX_EXECUTION_DELAY, DEFAULT_TX_EXPIRY_DELAY
       )
     );
 
     // Deploy SimpleAction contract
     ISimpleActions.SimpleAction[] memory _simpleActions = new ISimpleActions.SimpleAction[](2);
-    _simpleActions[0] = ISimpleActions.SimpleAction({target: _WETH, signature: 'deposit()', data: bytes(''), value: 1});
+    _simpleActions[0] = ISimpleActions.SimpleAction({target: WETH, signature: 'deposit()', data: bytes(''), value: 1});
     _simpleActions[1] = ISimpleActions.SimpleAction({
-      target: _WETH,
+      target: WETH,
       signature: 'transfer(address,uint256)',
       data: abi.encode(_OWNER, 1),
       value: 0
@@ -74,16 +75,16 @@ contract BasicTest is Test {
     // Allow the SafeEntrypoint to call the SimpleActions contract
     uint256 _approvalDuration = block.timestamp + 1 days;
 
-    vm.prank(address(_safe)); // TODO: Replicate Safe transaction without pranking it
+    vm.prank(address(_safe));
     _safeEntrypoint.approveActionsBuilder(_actionsBuilder, _approvalDuration);
 
     vm.startPrank(_OWNER);
 
     // Queue the transaction
-    uint256 _txId = _safeEntrypoint.queueTransaction(_actionsBuilder, _defaultTxExpiryDelay);
+    uint256 _txId = _safeEntrypoint.queueTransaction(_actionsBuilder, DEFAULT_TX_EXPIRY_DELAY);
 
     // Wait for the timelock period
-    vm.warp(block.timestamp + _shortTxExecutionDelay);
+    vm.warp(block.timestamp + SHORT_TX_EXECUTION_DELAY);
 
     // Get and approve the Safe transaction hash
     bytes32 _safeTxHash = _safeEntrypoint.getSafeTransactionHash(_txId);
