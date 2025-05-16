@@ -21,7 +21,7 @@ abstract contract SafeManageable is ISafeManageable {
    * @notice Modifier that checks if the caller is the Safe contract
    */
   modifier isSafe() {
-    if (msg.sender != address(SAFE)) revert NotSafeOwner();
+    if (msg.sender != address(SAFE)) revert NotSafe();
     _;
   }
 
