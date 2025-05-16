@@ -10,7 +10,7 @@ address constant MULTI_SEND_CALL_ONLY = 0x9641d764fc13c8B624c04430C7356C1C7C8102
 address constant SAFE_ENTRYPOINT_FACTORY = address(0x5afe); // TODO: Replace with the address of the SafeEntrypointFactory contract once deployed
 
 // Wonderland Safer Safe
-address constant WONDERLAND_SAFE = 0x74fEa3FB0eD030e9228026E7F413D66186d3D107;
+address constant SAFE_PROXY = 0x74fEa3FB0eD030e9228026E7F413D66186d3D107;
 address constant EMERGENCY_CALLER = address(0); // TODO: Replace with the address of the emergency caller (can be contract or EOA)
 uint256 constant SHORT_TX_EXECUTION_DELAY = 1 hours;
 uint256 constant LONG_TX_EXECUTION_DELAY = 7 days;

@@ -16,29 +16,29 @@ import {
   LONG_TX_EXECUTION_DELAY,
   MULTI_SEND_CALL_ONLY,
   SAFE_ENTRYPOINT_FACTORY,
-  SHORT_TX_EXECUTION_DELAY,
-  WONDERLAND_SAFE
+  SAFE_PROXY,
+  SHORT_TX_EXECUTION_DELAY
 } from 'script/Constants.s.sol';
 
-contract DeployWonderlandEntrypoint is Script {
+contract DeployEntrypoint is Script {
   // ~~~ ENTRYPOINT ~~~
-  ISafeEntrypoint public wonderlandEntrypoint;
+  ISafeEntrypoint public safeEntrypoint;
 
   // ~~~ GUARD ~~~
-  IOnlyEntrypointGuard public wonderlandGuard;
+  IOnlyEntrypointGuard public onlyEntrypointGuard;
 
   function run() public {
     vm.startBroadcast();
 
     // Deploy the SafeEntrypoint contract
-    wonderlandEntrypoint = ISafeEntrypoint(
+    safeEntrypoint = ISafeEntrypoint(
       ISafeEntrypointFactory(SAFE_ENTRYPOINT_FACTORY).createSafeEntrypoint(
-        WONDERLAND_SAFE, SHORT_TX_EXECUTION_DELAY, LONG_TX_EXECUTION_DELAY, DEFAULT_TX_EXPIRY_DELAY
+        SAFE_PROXY, SHORT_TX_EXECUTION_DELAY, LONG_TX_EXECUTION_DELAY, DEFAULT_TX_EXPIRY_DELAY
       )
     );
 
     // Deploy the OnlyEntrypointGuard contract
-    wonderlandGuard = new OnlyEntrypointGuard(address(wonderlandEntrypoint), EMERGENCY_CALLER, MULTI_SEND_CALL_ONLY);
+    onlyEntrypointGuard = new OnlyEntrypointGuard(address(safeEntrypoint), EMERGENCY_CALLER, MULTI_SEND_CALL_ONLY);
 
     vm.stopBroadcast();
   }
