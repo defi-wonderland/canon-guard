@@ -123,12 +123,6 @@ jobs:
         with:
           version: stable
 
-      - name: Install lintspec via cargo
-        uses: baptiste0928/cargo-install@v3
-        with:
-          crate: lintspec
-          version: '0.5.0'
-
       - name: Use Node.js
         uses: actions/setup-node@v4
         with:
@@ -140,6 +134,6 @@ jobs:
 
       - name: Run solhint and forge-fmt
         run: yarn lint:check
- 
-      - name: Run lintspec
-        run: yarn lint:natspec
+
+      - name: Install and run Lintspec
+        uses: beeb/lintspec@v0.5.0
