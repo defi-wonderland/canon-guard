@@ -81,23 +81,23 @@ source .env
 Import your private keys into Foundry's encrypted keystore:
 
 ```bash
-cast wallet import $MAINNET_DEPLOYER_NAME --interactive
+cast wallet import $ETHEREUM_DEPLOYER_NAME --interactive
 ```
 
 ```bash
-cast wallet import $SEPOLIA_DEPLOYER_NAME --interactive
+cast wallet import $OPTIMISM_DEPLOYER_NAME --interactive
 ```
 
-### Sepolia
+### Ethereum
 
 ```bash
-yarn deploy:sepolia
+yarn deploy:ethereum
 ```
 
-### Mainnet
+### Optimism
 
 ```bash
-yarn deploy:mainnet
+yarn deploy:optimism
 ```
 
 The deployments are stored in ./broadcast

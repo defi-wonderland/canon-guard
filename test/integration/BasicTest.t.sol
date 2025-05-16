@@ -30,7 +30,7 @@ contract BasicTest is Test {
   ISimpleActions.SimpleAction internal _simpleAction;
 
   function setUp() public {
-    vm.createSelectFork(vm.rpcUrl('mainnet'), _FORK_BLOCK);
+    vm.createSelectFork(vm.rpcUrl('ethereum'), _FORK_BLOCK);
 
     // Deploy the Safe contract
     address[] memory _owners = new address[](1);

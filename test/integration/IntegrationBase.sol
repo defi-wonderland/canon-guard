@@ -16,7 +16,7 @@ contract IntegrationBase is Test {
   IGreeter internal _greeter;
 
   function setUp() public {
-    vm.createSelectFork(vm.rpcUrl('mainnet'), _FORK_BLOCK);
+    vm.createSelectFork(vm.rpcUrl('ethereum'), _FORK_BLOCK);
     vm.prank(_owner);
     _greeter = new Greeter(_initialGreeting, _dai);
   }
