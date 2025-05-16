@@ -1,9 +1,9 @@
-// SPDX-License-Identifier: LGPL-3.0-only
+// SPDX-License-Identifier: MIT
 pragma solidity 0.8.29;
 
-import {IActions} from 'interfaces/actions/IActions.sol';
+import {IActionsBuilder} from 'interfaces/actions/IActionsBuilder.sol';
 
-interface IAllowanceClaimor is IActions {
+interface IAllowanceClaimor is IActionsBuilder {
   function SAFE() external view returns (address _safe);
   function TOKEN() external view returns (address _token);
   function TOKEN_OWNER() external view returns (address _tokenOwner);

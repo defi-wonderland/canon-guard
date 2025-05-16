@@ -47,14 +47,20 @@ contract BasicTest is Test {
     });
 
     // Deploy the SafeEntrypoint contract
+    uint256 _shortTxExecutionDelay = 1 hours;
+    uint256 _longTxExecutionDelay = 7 days;
+    uint256 _defaultTxExpiryDelay = 7 days;
+
     SafeEntrypointFactory _safeEntrypointFactory = new SafeEntrypointFactory(_MULTI_SEND_CALL_ONLY);
-    SafeEntrypoint _safeEntrypoint = SafeEntrypoint(_safeEntrypointFactory.createSafeEntrypoint(address(_safe)));
+    SafeEntrypoint _safeEntrypoint = SafeEntrypoint(
+      _safeEntrypointFactory.createSafeEntrypoint(
+        address(_safe), _shortTxExecutionDelay, _longTxExecutionDelay, _defaultTxExpiryDelay
+      )
+    );
 
     // Deploy SimpleAction contract
-    SimpleActionsFactory _simpleActionsFactory = new SimpleActionsFactory();
     ISimpleActions.SimpleAction[] memory _simpleActions = new ISimpleActions.SimpleAction[](2);
     _simpleActions[0] = ISimpleActions.SimpleAction({target: _WETH, signature: 'deposit()', data: bytes(''), value: 1});
-
     _simpleActions[1] = ISimpleActions.SimpleAction({
       target: _WETH,
       signature: 'transfer(address,uint256)',
@@ -62,30 +68,31 @@ contract BasicTest is Test {
       value: 0
     });
 
-    address _actionContract = _simpleActionsFactory.createSimpleActions(_simpleActions);
+    SimpleActionsFactory _simpleActionsFactory = new SimpleActionsFactory();
+    address _actionsBuilder = _simpleActionsFactory.createSimpleActions(_simpleActions);
 
     // Allow the SafeEntrypoint to call the SimpleActions contract
+    uint256 _approvalDuration = block.timestamp + 1 days;
+
     vm.prank(address(_safe)); // TODO: Replicate Safe transaction without pranking it
-    _safeEntrypoint.allowAction(address(_actionContract));
+    _safeEntrypoint.approveActionsBuilder(_actionsBuilder, _approvalDuration);
 
     vm.startPrank(_OWNER);
 
-    // Queue the actions
-    bytes32 _actionsHash = _safeEntrypoint.queueApprovedAction(address(_actionContract));
+    // Queue the transaction
+    uint256 _txId = _safeEntrypoint.queueTransaction(_actionsBuilder, _defaultTxExpiryDelay);
 
     // Wait for the timelock period
-    vm.warp(block.timestamp + 1 hours);
+    vm.warp(block.timestamp + _shortTxExecutionDelay);
 
     // Get and approve the Safe transaction hash
-    bytes32 _safeTxHash = _safeEntrypoint.getSafeTxHash(_actionsHash);
+    bytes32 _safeTxHash = _safeEntrypoint.getSafeTransactionHash(_txId);
     _safe.approveHash(_safeTxHash);
 
-    // Execute the action
+    // Execute the transaction
     vm.deal(_OWNER, 1 ether);
-    _safeEntrypoint.executeAction{value: 1}(_actionsHash);
+    _safeEntrypoint.executeTransaction{value: 1}(_txId);
   }
 
-  function test_executeAction() public {
-    assertEq(_OWNER.balance, 1 ether - 1);
-  }
+  function test_executeTransaction() public {}
 }

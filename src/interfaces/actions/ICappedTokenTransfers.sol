@@ -1,38 +1,34 @@
-// SPDX-License-Identifier: LGPL-3.0-only
+// SPDX-License-Identifier: MIT
 pragma solidity 0.8.29;
 
 import {ISafeManageable} from 'interfaces/ISafeManageable.sol';
-import {IActions} from 'interfaces/actions/IActions.sol';
+import {IActionsBuilder} from 'interfaces/actions/IActionsBuilder.sol';
 
-interface ICappedTokenTransfers is ISafeManageable, IActions {
+interface ICappedTokenTransfers is ISafeManageable, IActionsBuilder {
   struct TokenTransfer {
-    address token;
     address recipient;
     uint256 amount;
   }
 
-  function tokenCap(address _token) external view returns (uint256 _transferCap);
-  function capSpent(address _token) external view returns (uint256 _transferCapSpent);
-  function tokenCooldown(address _token) external view returns (uint256 _transferCooldown);
+  function TOKEN() external view returns (address);
+  function CAP() external view returns (uint256);
+  function EPOCH_LENGTH() external view returns (uint256);
 
-  function tokenTransfers(uint256 _index) external view returns (address _token, address _recipient, uint256 _amount);
+  function totalSpent() external view returns (uint256);
+  function currentEpoch() external view returns (uint256);
+
+  function tokenTransfers(uint256 _index) external view returns (address _recipient, uint256 _amount);
 
   // ~~~ ERRORS ~~~
 
-  error LengthMismatch();
-  error ExceededCap();
-  error TokenCooldown();
-  error UnallowedToken();
-
+  error CapExceeded();
+  error InvalidIndex();
+  error InvalidAmount();
   // ~~~ ADMIN METHODS ~~~
 
-  function addCappedToken(address _token, uint256 _cap) external;
+  function addTokenTransfer(address _recipient, uint256 _amount) external;
+  function removeTokenTransfer(uint256 _index) external;
+  // ~~~ STATE MANAGEMENT ~~~
 
-  function addTokenTransfer(address _token, address _recipient, uint256 _amount) external;
-
-  function addTokenTransfers(
-    address[] memory _tokens,
-    address[] memory _recipients,
-    uint256[] memory _amounts
-  ) external;
+  function updateState(bytes memory _data) external;
 }

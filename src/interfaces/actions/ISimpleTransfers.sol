@@ -1,9 +1,9 @@
-// SPDX-License-Identifier: LGPL-3.0-only
+// SPDX-License-Identifier: MIT
 pragma solidity 0.8.29;
 
-import {IActions} from 'interfaces/actions/IActions.sol';
+import {IActionsBuilder} from 'interfaces/actions/IActionsBuilder.sol';
 
-interface ISimpleTransfers is IActions {
+interface ISimpleTransfers is IActionsBuilder {
   struct Transfer {
     address token;
     address to;

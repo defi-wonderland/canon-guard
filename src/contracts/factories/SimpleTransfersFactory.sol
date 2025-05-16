@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: LGPL-3.0-only
+// SPDX-License-Identifier: MIT
 pragma solidity 0.8.29;
 
 import {SimpleTransfers} from 'contracts/actions/SimpleTransfers.sol';
@@ -18,7 +18,10 @@ contract SimpleTransfersFactory is ISimpleTransfersFactory {
    *    ]
    *  ]
    */
-  function createSimpleTransfers(ISimpleTransfers.Transfer[] memory _transfers) external returns (address) {
-    return address(new SimpleTransfers(_transfers));
+  function createSimpleTransfers(ISimpleTransfers.Transfer[] calldata _transfers)
+    external
+    returns (address _simpleTransfers)
+  {
+    _simpleTransfers = address(new SimpleTransfers(_transfers));
   }
 }
