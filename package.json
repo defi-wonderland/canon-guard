@@ -13,10 +13,13 @@
     "build": "forge build",
     "build:optimized": "FOUNDRY_PROFILE=optimized forge build",
     "coverage": "forge coverage --report summary --report lcov --match-path 'test/unit/*'",
-    "deploy:mainnet": "bash -c 'source .env && forge script Deploy --rpc-url $MAINNET_RPC --account $MAINNET_DEPLOYER_NAME --broadcast --verify --chain mainnet -vvvvv'",
-    "deploy:sepolia": "bash -c 'source .env && forge script Deploy --rpc-url $SEPOLIA_RPC --account $SEPOLIA_DEPLOYER_NAME --broadcast --verify --chain sepolia -vvvvv'",
-    "lint:check": "yarn lint:sol && forge fmt --check",
-    "lint:fix": "sort-package-json && forge fmt && yarn lint:sol --fix",
+    "deploy:ethereum:entrypoint": "bash -c 'source .env && forge script DeployEntrypoint --rpc-url ethereum --account $ETHEREUM_DEPLOYER_NAME --broadcast --verify --chain ethereum -vvvvv'",
+    "deploy:ethereum:safer-safe": "bash -c 'source .env && forge script DeploySaferSafe --rpc-url ethereum --account $ETHEREUM_DEPLOYER_NAME --broadcast --verify --chain ethereum -vvvvv'",
+    "deploy:optimism:entrypoint": "bash -c 'source .env && forge script DeployEntrypoint --rpc-url optimism --account $OPTIMISM_DEPLOYER_NAME --broadcast --verify --chain optimism -vvvvv'",
+    "deploy:optimism:safer-safe": "bash -c 'source .env && forge script DeploySaferSafe --rpc-url optimism --account $OPTIMISM_DEPLOYER_NAME --broadcast --verify --chain optimism -vvvvv'",
+    "lint:bulloak": "find test/unit -name '*.tree' | xargs bulloak check",
+    "lint:check": "forge fmt --check && yarn lint:sol",
+    "lint:fix": "forge fmt && yarn lint:sol --fix && sort-package-json",
     "lint:sol": "solhint 'src/**/*.sol' 'script/**/*.sol' 'test/**/*.sol'",
     "prepare": "husky",
     "test": "forge test -vvv",
@@ -28,8 +31,9 @@
   },
   "lint-staged": {
     "*.{js,css,md,ts,sol}": "forge fmt",
-    "(src|test|script)/**/*.sol": "yarn lint:sol",
+    "(src|script|test)/**/*.sol": "yarn lint:sol --fix",
     "src/**/*.sol": "lintspec",
+    "test/unit/**/*.tree": "yarn lint:bulloak",
     "package.json": "sort-package-json"
   },
   "dependencies": {
