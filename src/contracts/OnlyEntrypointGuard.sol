@@ -27,7 +27,7 @@ contract OnlyEntrypointGuard is BaseTransactionGuard, SignatureDecoder, IOnlyEnt
   /**
    * @notice Constructor that sets up the guard
    * @param _entrypoint The address of the SafeEntrypoint contract
-   * @param _emergencyCaller The address of the emergency caller (can be a multisig or EOA)
+   * @param _emergencyCaller The address of the emergency caller (can be contract or EOA)
    * @param _multiSendCallOnly The address of the MultiSendCallOnly contract
    */
   constructor(address _entrypoint, address _emergencyCaller, address _multiSendCallOnly) {
