@@ -15,9 +15,9 @@ import {ISafeEntrypointFactory} from 'interfaces/factories/ISafeEntrypointFactor
 import {ISimpleActionsFactory} from 'interfaces/factories/ISimpleActionsFactory.sol';
 import {ISimpleTransfersFactory} from 'interfaces/factories/ISimpleTransfersFactory.sol';
 
-import {MULTI_SEND_CALL_ONLY} from 'script/Constants.s.sol';
+import {Constants} from 'script/Constants.sol';
 
-contract DeploySaferSafe is Script {
+contract DeploySaferSafe is Constants, Script {
   // ~~~ FACTORIES ~~~
   ISafeEntrypointFactory public safeEntrypointFactory;
   IAllowanceClaimorFactory public allowanceClaimorFactory;
@@ -25,11 +25,11 @@ contract DeploySaferSafe is Script {
   ISimpleActionsFactory public simpleActionsFactory;
   ISimpleTransfersFactory public simpleTransfersFactory;
 
-  function run() public {
+  function deploySaferSafe() public {
     vm.startBroadcast();
 
     // Deploy the SafeEntrypointFactory contract
-    safeEntrypointFactory = new SafeEntrypointFactory(MULTI_SEND_CALL_ONLY);
+    safeEntrypointFactory = new SafeEntrypointFactory(address(MULTI_SEND_CALL_ONLY));
 
     // Deploy the AllowanceClaimorFactory contract
     allowanceClaimorFactory = new AllowanceClaimorFactory();
