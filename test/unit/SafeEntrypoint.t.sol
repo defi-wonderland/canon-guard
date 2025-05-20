@@ -214,7 +214,7 @@ contract UnitQueueTransaction is UnitSafeEntrypoint {
     address _actionsBuilder,
     uint256 _expiryDelay
   ) external givenCallerIsSafeOwner(_caller) givenActionsBuilderIsApproved(_actionsBuilder) {
-    _expiryDelay = bound(_expiryDelay, 0, type(uint256).max - block.timestamp - SHORT_TX_EXECUTION_DELAY);
+    _expiryDelay = bound(_expiryDelay, 1, type(uint256).max - block.timestamp - SHORT_TX_EXECUTION_DELAY);
 
     _mockAndExpect(
       address(_actionsBuilder),
@@ -232,14 +232,40 @@ contract UnitQueueTransaction is UnitSafeEntrypoint {
     (address _actionsBuilder, bytes memory _actionsData, uint256 _executableAt, uint256 _expiresAt, bool _isExecuted) =
       safeEntrypoint.transactions(1);
 
-    uint256 _calculatedExpiresAt = _expiryDelay == 0
-      ? block.timestamp + SHORT_TX_EXECUTION_DELAY + DEFAULT_TX_EXPIRY_DELAY
-      : block.timestamp + SHORT_TX_EXECUTION_DELAY + _expiryDelay;
+    assertEq(_actionsBuilder, _actionsBuilder);
+    assertEq(_actionsData, abi.encode(new IActionsBuilder.Action[](0)));
+    assertEq(_executableAt, block.timestamp + SHORT_TX_EXECUTION_DELAY);
+    assertEq(_expiresAt, block.timestamp + SHORT_TX_EXECUTION_DELAY + _expiryDelay);
+    assertEq(_isExecuted, false);
+  }
+
+  function test_QueueApprovedTransactionWhenPassingValidParametersAndExpiryDelayIsZero(
+    address _caller,
+    address _actionsBuilder,
+    uint256 _expiryDelay
+  ) external givenCallerIsSafeOwner(_caller) givenActionsBuilderIsApproved(_actionsBuilder) {
+    _expiryDelay = 0;
+
+    _mockAndExpect(
+      address(_actionsBuilder),
+      abi.encodeWithSelector(IActionsBuilder.getActions.selector),
+      abi.encode(new IActionsBuilder.Action[](0))
+    );
+
+    vm.expectEmit(address(safeEntrypoint));
+    emit ISafeEntrypoint.TransactionQueued(1, false);
+
+    vm.prank(_caller);
+    safeEntrypoint.queueTransaction(_actionsBuilder, _expiryDelay);
+
+    // Verify transaction info
+    (address _actionsBuilder, bytes memory _actionsData, uint256 _executableAt, uint256 _expiresAt, bool _isExecuted) =
+      safeEntrypoint.transactions(1);
 
     assertEq(_actionsBuilder, _actionsBuilder);
     assertEq(_actionsData, abi.encode(new IActionsBuilder.Action[](0)));
     assertEq(_executableAt, block.timestamp + SHORT_TX_EXECUTION_DELAY);
-    assertEq(_expiresAt, _calculatedExpiresAt);
+    assertEq(_expiresAt, block.timestamp + SHORT_TX_EXECUTION_DELAY + DEFAULT_TX_EXPIRY_DELAY);
     assertEq(_isExecuted, false);
   }
 
@@ -250,7 +276,7 @@ contract UnitQueueTransaction is UnitSafeEntrypoint {
     bytes memory _data,
     uint256 _expiryDelay
   ) external givenCallerIsSafeOwner(_caller) {
-    _expiryDelay = bound(_expiryDelay, 0, type(uint256).max - block.timestamp - LONG_TX_EXECUTION_DELAY);
+    _expiryDelay = bound(_expiryDelay, 1, type(uint256).max - block.timestamp - LONG_TX_EXECUTION_DELAY);
 
     IActionsBuilder.Action[] memory _actions = new IActionsBuilder.Action[](1);
     _actions[0] = IActionsBuilder.Action({target: _target, value: _value, data: _data});
@@ -265,14 +291,39 @@ contract UnitQueueTransaction is UnitSafeEntrypoint {
     (address _actionsBuilder, bytes memory _actionsData, uint256 _executableAt, uint256 _expiresAt, bool _isExecuted) =
       safeEntrypoint.transactions(_txId);
 
-    uint256 _calculatedExpiresAt = _expiryDelay == 0
-      ? block.timestamp + LONG_TX_EXECUTION_DELAY + DEFAULT_TX_EXPIRY_DELAY
-      : block.timestamp + LONG_TX_EXECUTION_DELAY + _expiryDelay;
+    assertEq(_actionsBuilder, address(0));
+    assertEq(_actionsData, abi.encode(_actions));
+    assertEq(_executableAt, block.timestamp + LONG_TX_EXECUTION_DELAY);
+    assertEq(_expiresAt, block.timestamp + LONG_TX_EXECUTION_DELAY + _expiryDelay);
+    assertEq(_isExecuted, false);
+  }
+
+  function test_QueueArbitraryTransactionWhenPassingValidParametersAndExpiryDelayIsZero(
+    address _caller,
+    address _target,
+    uint256 _value,
+    bytes memory _data,
+    uint256 _expiryDelay
+  ) external givenCallerIsSafeOwner(_caller) {
+    _expiryDelay = 0;
+
+    IActionsBuilder.Action[] memory _actions = new IActionsBuilder.Action[](1);
+    _actions[0] = IActionsBuilder.Action({target: _target, value: _value, data: _data});
+
+    vm.expectEmit(address(safeEntrypoint));
+    emit ISafeEntrypoint.TransactionQueued(1, true);
+
+    vm.prank(_caller);
+    uint256 _txId = safeEntrypoint.queueTransaction(_actions[0], _expiryDelay);
+
+    // Verify transaction info
+    (address _actionsBuilder, bytes memory _actionsData, uint256 _executableAt, uint256 _expiresAt, bool _isExecuted) =
+      safeEntrypoint.transactions(_txId);
 
     assertEq(_actionsBuilder, address(0));
     assertEq(_actionsData, abi.encode(_actions));
     assertEq(_executableAt, block.timestamp + LONG_TX_EXECUTION_DELAY);
-    assertEq(_expiresAt, _calculatedExpiresAt);
+    assertEq(_expiresAt, block.timestamp + LONG_TX_EXECUTION_DELAY + DEFAULT_TX_EXPIRY_DELAY);
     assertEq(_isExecuted, false);
   }
 
@@ -340,7 +391,7 @@ contract UnitExecuteTransaction is UnitSafeEntrypoint {
     IActionsBuilder.Action calldata _action,
     ISafeEntrypoint.TransactionInfo memory _txInfo
   ) external {
-    vm.assume(_txInfo.expiresAt > block.timestamp);
+    _txInfo.expiresAt = bound(_txInfo.expiresAt, block.timestamp + 1, type(uint256).max);
     _txInfo.executableAt = bound(_txInfo.executableAt, 0, block.timestamp);
     _txInfo.isExecuted = true;
     IActionsBuilder.Action[] memory _actions = new IActionsBuilder.Action[](1);
@@ -372,7 +423,7 @@ contract UnitExecuteTransaction is UnitSafeEntrypoint {
     IActionsBuilder.Action calldata _action,
     ISafeEntrypoint.TransactionInfo memory _txInfo
   ) external {
-    vm.assume(_txInfo.expiresAt > block.timestamp);
+    _txInfo.expiresAt = bound(_txInfo.expiresAt, block.timestamp + 1, type(uint256).max);
     _txInfo.executableAt = bound(_txInfo.executableAt, block.timestamp + 1, type(uint256).max);
     _txInfo.isExecuted = false;
     IActionsBuilder.Action[] memory _actions = new IActionsBuilder.Action[](1);
@@ -404,7 +455,7 @@ contract UnitExecuteTransaction is UnitSafeEntrypoint {
     IActionsBuilder.Action calldata _action,
     ISafeEntrypoint.TransactionInfo memory _txInfo
   ) external {
-    vm.assume(_txInfo.expiresAt > block.timestamp);
+    _txInfo.expiresAt = bound(_txInfo.expiresAt, block.timestamp + 1, type(uint256).max);
     _txInfo.executableAt = bound(_txInfo.executableAt, block.timestamp - 1, block.timestamp);
     _txInfo.isExecuted = false;
     IActionsBuilder.Action[] memory _actions = new IActionsBuilder.Action[](1);
@@ -446,7 +497,7 @@ contract UnitExecuteTransaction is UnitSafeEntrypoint {
     IActionsBuilder.Action calldata _action,
     ISafeEntrypoint.TransactionInfo memory _txInfo
   ) external {
-    vm.assume(_txInfo.expiresAt > block.timestamp);
+    _txInfo.expiresAt = bound(_txInfo.expiresAt, block.timestamp + 1, type(uint256).max);
     _txInfo.executableAt = bound(_txInfo.executableAt, block.timestamp - 1, block.timestamp);
     _txInfo.isExecuted = false;
     IActionsBuilder.Action[] memory _actions = new IActionsBuilder.Action[](1);
@@ -500,7 +551,7 @@ contract UnitExecuteTransaction is UnitSafeEntrypoint {
     IActionsBuilder.Action calldata _action,
     ISafeEntrypoint.TransactionInfo memory _txInfo
   ) external {
-    vm.assume(_txInfo.expiresAt > block.timestamp);
+    _txInfo.expiresAt = bound(_txInfo.expiresAt, block.timestamp + 1, type(uint256).max);
     _txInfo.executableAt = bound(_txInfo.executableAt, block.timestamp - 1, block.timestamp);
     _txInfo.isExecuted = false;
     IActionsBuilder.Action[] memory _actions = new IActionsBuilder.Action[](1);
