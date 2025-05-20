@@ -1,4 +1,4 @@
-SafeEntrypoint::constructor
+SafeEntrypointForTest::constructor
 └── when passing valid parameters
     ├── it sets safe address
     ├── it sets multiSendCallOnly address
@@ -7,7 +7,7 @@ SafeEntrypoint::constructor
     └── it sets default transaction expiry delay
 
 
-SafeEntrypoint::approveActionsBuilder
+SafeEntrypointForTest::approveActionsBuilder
 ├── when caller is safe
 │   ├── it sets approval expiry time
 │   ├── it emits ActionsBuilderApproved event
@@ -18,7 +18,7 @@ SafeEntrypoint::approveActionsBuilder
     └── it reverts with NotSafeOwner
 
 
-SafeEntrypoint::queueTransaction
+SafeEntrypointForTest::queueTransaction
 ├── when caller is safe owner
 │   ├── when queueing pre approved action
 │   │   ├── when actions builder is not approved
@@ -37,7 +37,7 @@ SafeEntrypoint::queueTransaction
     └── it reverts with NotSafeOwner
 
 
-SafeEntrypoint::executeTransaction
+SafeEntrypointForTest::executeTransaction
 ├── when transaction is expired
 │   └── it reverts with TransactionExpired
 └── when transaction is not expired
@@ -59,7 +59,7 @@ SafeEntrypoint::executeTransaction
             └── it reverts with InvalidSigner
 
 
-SafeEntrypoint::disapproveSafeTransactionHash
+SafeEntrypointForTest::disapproveSafeTransactionHash
 ├── when caller is safe owner
 │   ├── when hash is not approved
 │   │   └── it reverts with SafeTransactionHashNotApproved
@@ -70,17 +70,23 @@ SafeEntrypoint::disapproveSafeTransactionHash
     └── it reverts with NotSafeOwner
 
 
-SafeEntrypoint::getSafeTransactionHash
+SafeEntrypointForTest::getSafeTransactionHash
 └── when transaction exists
     ├── it returns correct hash
     └── when getting hash with nonce
         └── it returns correct hash
 
 
-SafeEntrypoint::getApprovedHashSigners
+SafeEntrypointForTest::getApprovedHashSignersByTxId
 └── when transaction exists
-    ├── it returns approved signers
-    ├── when getting signers with nonce
-    │   └── it returns approved signers
-    └── when getting signers with hash
-        └── it returns approved signers 
+    └── it returns approved signers
+
+
+SafeEntrypointForTest::getApprovedHashSignersByTxIdAndNonce
+└── when transaction exists
+    └── it returns approved signers
+
+
+SafeEntrypointForTest::getApprovedHashSignersBySafeHash
+└── when transaction exists
+    └── it returns approved signers 
