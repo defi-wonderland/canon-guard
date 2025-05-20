@@ -93,6 +93,12 @@ contract UnitSafeEntrypoint is Test {
       _mockAndExpect(SAFE, _callData, _returnData);
     }
   }
+
+  function _assumeFuzzable(address _address) internal pure {
+    assumeNotForgeAddress(_address);
+    assumeNotZeroAddress(_address);
+    assumeNotPrecompile(_address);
+  }
 }
 
 contract UnitConstructor is UnitSafeEntrypoint {
@@ -214,6 +220,7 @@ contract UnitQueueTransaction is UnitSafeEntrypoint {
     address _actionsBuilder,
     uint256 _expiryDelay
   ) external givenCallerIsSafeOwner(_caller) givenActionsBuilderIsApproved(_actionsBuilder) {
+    _assumeFuzzable(_actionsBuilder);
     _expiryDelay = bound(_expiryDelay, 1, type(uint256).max - block.timestamp - SHORT_TX_EXECUTION_DELAY);
 
     _mockAndExpect(
@@ -244,6 +251,7 @@ contract UnitQueueTransaction is UnitSafeEntrypoint {
     address _actionsBuilder,
     uint256 _expiryDelay
   ) external givenCallerIsSafeOwner(_caller) givenActionsBuilderIsApproved(_actionsBuilder) {
+    _assumeFuzzable(_actionsBuilder);
     _expiryDelay = 0;
 
     _mockAndExpect(
