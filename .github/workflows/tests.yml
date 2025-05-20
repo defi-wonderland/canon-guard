@@ -7,8 +7,8 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  MAINNET_RPC: ${{ secrets.MAINNET_RPC }}
-  SEPOLIA_RPC: ${{ secrets.SEPOLIA_RPC }}
+  ETHEREUM_RPC: ${{ secrets.ETHEREUM_RPC }}
+  OPTIMISM_RPC: ${{ secrets.OPTIMISM_RPC }}
 
 jobs:
   unit-tests:
@@ -108,7 +108,7 @@ jobs:
         run: yarn test:integration
 
   lint:
-    name: Lint Commit Messages
+    name: Static Analysis
     runs-on: ubuntu-latest
 
     steps:
@@ -132,4 +132,10 @@ jobs:
       - name: Install dependencies
         run: yarn --frozen-lockfile --network-concurrency 1
 
-      - run: yarn lint:check
+      - name: Run Forge formatter and Solhint
+        run: yarn lint:check
+
+      - name: Install and run Bulloak
+        uses: "smol-ninja/bulloak-toolchain@v1"
+        with:
+          test-dir: "test/unit"
