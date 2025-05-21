@@ -364,13 +364,8 @@ contract UnitSafeEntrypoint is Test {
     vm.assume(_signer1 != address(0));
     vm.assume(_signer2 != address(0));
     address[] memory _signers = new address[](2);
-    if (_signer1 < _signer2) {
-      _signers[0] = _signer1;
-      _signers[1] = _signer2;
-    } else {
-      _signers[0] = _signer2;
-      _signers[1] = _signer1;
-    }
+    _signers[0] = _signer1;
+    _signers[1] = _signer2;
 
     safeEntrypoint.mockDisapprovedHashForSigner(_signers[0], bytes32(0));
     _mockAndExpect(SAFE, abi.encodeWithSelector(ISafe.nonce.selector), abi.encode(1));
@@ -410,13 +405,8 @@ contract UnitSafeEntrypoint is Test {
     vm.assume(_signer1 != address(0));
     vm.assume(_signer2 != address(0));
     address[] memory _signers = new address[](2);
-    if (_signer1 < _signer2) {
-      _signers[0] = _signer1;
-      _signers[1] = _signer2;
-    } else {
-      _signers[0] = _signer2;
-      _signers[1] = _signer1;
-    }
+    _signers[0] = _signer1;
+    _signers[1] = _signer2;
 
     safeEntrypoint.mockDisapprovedHashForSigner(_signers[0], bytes32(0));
     _mockAndExpect(SAFE, abi.encodeWithSelector(ISafe.nonce.selector), abi.encode(1));
@@ -654,13 +644,8 @@ contract UnitSafeEntrypoint is Test {
     vm.assume(_signer1 != address(0));
     vm.assume(_signer2 != address(0));
     address[] memory _signers = new address[](2);
-    if (_signer1 < _signer2) {
-      _signers[0] = _signer1;
-      _signers[1] = _signer2;
-    } else {
-      _signers[0] = _signer2;
-      _signers[1] = _signer1;
-    }
+    _signers[0] = _signer1;
+    _signers[1] = _signer2;
 
     _mockApprovedHashesForSigners(_signers, 1);
     _mockAndExpect(SAFE, abi.encodeWithSelector(ISafe.nonce.selector), abi.encode(1));
@@ -678,8 +663,17 @@ contract UnitSafeEntrypoint is Test {
 
     bool _isArbitrary = _txInfo.actionsBuilder == address(0);
 
+    address[] memory _sortedSigners = new address[](2);
+    if (_signer1 < _signer2) {
+      _sortedSigners[0] = _signer1;
+      _sortedSigners[1] = _signer2;
+    } else {
+      _sortedSigners[0] = _signer2;
+      _sortedSigners[1] = _signer1;
+    }
+
     vm.expectEmit(address(safeEntrypoint));
-    emit ISafeEntrypoint.TransactionExecuted(_txId, _isArbitrary, bytes32(0), _signers);
+    emit ISafeEntrypoint.TransactionExecuted(_txId, _isArbitrary, bytes32(0), _sortedSigners);
 
     vm.prank(_caller);
     safeEntrypoint.executeTransaction(_txId, _signers);
