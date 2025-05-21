@@ -19,7 +19,7 @@ contract SimpleTransfers is ISimpleTransfers {
 
       signature = 'transfer(address,uint256)';
       selector = bytes4(keccak256(bytes(signature)));
-      completeCallData = abi.encodePacked(selector, transfer.to, transfer.amount);
+      completeCallData = abi.encodePacked(selector, abi.encode(transfer.to, transfer.amount));
 
       standardAction = Action({target: transfer.token, data: completeCallData, value: 0});
 
