@@ -1,4 +1,4 @@
-SafeEntrypointForTest::constructor
+UnitSafeEntrypoint::constructor
 └── when passing valid parameters
     ├── it sets safe address
     ├── it sets multiSendCallOnly address
@@ -7,7 +7,7 @@ SafeEntrypointForTest::constructor
     └── it sets default transaction expiry delay
 
 
-SafeEntrypointForTest::approveActionsBuilder
+UnitSafeEntrypoint::approveActionsBuilder
 ├── when caller is safe
 │   ├── it sets approval expiry time
 │   ├── it emits ActionsBuilderApproved event
@@ -18,7 +18,7 @@ SafeEntrypointForTest::approveActionsBuilder
     └── it reverts with NotSafeOwner
 
 
-SafeEntrypointForTest::queueTransaction
+UnitSafeEntrypoint::queueTransaction
 ├── when caller is safe owner
 │   ├── when queueing pre approved action
 │   │   ├── when actions builder is not approved
@@ -37,7 +37,7 @@ SafeEntrypointForTest::queueTransaction
     └── it reverts with NotSafeOwner
 
 
-SafeEntrypointForTest::executeTransaction
+UnitSafeEntrypoint::executeTransaction
 ├── when transaction is expired
 │   └── it reverts with TransactionExpired
 └── when transaction is not expired
@@ -59,7 +59,7 @@ SafeEntrypointForTest::executeTransaction
             └── it reverts with InvalidSigner
 
 
-SafeEntrypointForTest::disapproveSafeTransactionHash
+UnitSafeEntrypoint::disapproveSafeTransactionHash
 ├── when caller is safe owner
 │   ├── when hash is not approved
 │   │   └── it reverts with SafeTransactionHashNotApproved
@@ -70,23 +70,18 @@ SafeEntrypointForTest::disapproveSafeTransactionHash
     └── it reverts with NotSafeOwner
 
 
-SafeEntrypointForTest::getSafeTransactionHash
+UnitSafeEntrypoint::getSafeTransactionHash
 └── when transaction exists
     ├── it returns correct hash
     └── when getting hash with nonce
         └── it returns correct hash
 
 
-SafeEntrypointForTest::getApprovedHashSignersByTxId
+UnitSafeEntrypoint::getApprovedHashSigners
 └── when transaction exists
-    └── it returns approved signers
-
-
-SafeEntrypointForTest::getApprovedHashSignersByTxIdAndNonce
-└── when transaction exists
-    └── it returns approved signers
-
-
-SafeEntrypointForTest::getApprovedHashSignersBySafeHash
-└── when transaction exists
-    └── it returns approved signers 
+    ├── when getting signers with txId
+    │   └── it returns approved signers
+    ├── when getting signers with txId and nonce
+    │   └── it returns approved signers
+    └── when getting signers with hash
+        └── it returns approved signers 
