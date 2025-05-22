@@ -1,0 +1,17 @@
+UnitSafeManageable::constructor
+└── when passing valid parameters
+    └── it sets safe address
+
+
+UnitSafeManageable::isSafe
+├── when caller is safe
+│   └── it allows execution
+└── when caller is not safe
+    └── it reverts with NotSafe
+
+
+UnitSafeManageable::isSafeOwner
+├── when caller is safe owner
+│   └── it allows execution
+└── when caller is not safe owner
+    └── it reverts with NotSafeOwner 
