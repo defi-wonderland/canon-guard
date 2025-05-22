@@ -8,17 +8,9 @@ import {DeployEntrypoint} from 'script/DeployEntrypoint.s.sol';
 import {IOnlyEntrypointGuard} from 'interfaces/IOnlyEntrypointGuard.sol';
 import {ISafeEntrypoint} from 'interfaces/ISafeEntrypoint.sol';
 
-import {
-  DEFAULT_TX_EXPIRY_DELAY,
-  EMERGENCY_CALLER,
-  LONG_TX_EXECUTION_DELAY,
-  MULTI_SEND_CALL_ONLY,
-  SAFE_ENTRYPOINT_FACTORY,
-  SAFE_PROXY,
-  SHORT_TX_EXECUTION_DELAY
-} from 'script/Constants.s.sol';
+import {Constants} from 'script/Constants.sol';
 
-contract UnitDeployEntrypoint is Test {
+contract UnitDeployEntrypoint is Constants, Test {
   DeployEntrypoint public deployEntrypoint;
 
   ISafeEntrypoint internal _ghost_safeEntrypoint;
@@ -39,12 +31,12 @@ contract UnitDeployEntrypoint is Test {
     );
 
     // Deploy the SafeEntrypointFactory contract
-    deployCodeTo('SafeEntrypointFactory', abi.encode(MULTI_SEND_CALL_ONLY), SAFE_ENTRYPOINT_FACTORY); // TODO: Remove once deployed
+    deployCodeTo('SafeEntrypointFactory', abi.encode(MULTI_SEND_CALL_ONLY), address(SAFE_ENTRYPOINT_FACTORY)); // TODO: Remove once deployed
   }
 
   function test_WhenRun() public {
     // Run the deployment script
-    deployEntrypoint.run();
+    deployEntrypoint.deployEntrypoint();
 
     // Get the deployed contracts
     ISafeEntrypoint _safeEntrypoint = deployEntrypoint.safeEntrypoint();
@@ -57,8 +49,8 @@ contract UnitDeployEntrypoint is Test {
 
     // It should deploy the SafeEntrypoint contract with correct args
     assertEq(address(_safeEntrypoint).code, address(_ghost_safeEntrypoint).code);
-    assertEq(address(_safeEntrypoint.SAFE()), SAFE_PROXY);
-    assertEq(_safeEntrypoint.MULTI_SEND_CALL_ONLY(), MULTI_SEND_CALL_ONLY);
+    assertEq(address(_safeEntrypoint.SAFE()), address(SAFE_PROXY));
+    assertEq(_safeEntrypoint.MULTI_SEND_CALL_ONLY(), address(MULTI_SEND_CALL_ONLY));
     assertEq(_safeEntrypoint.SHORT_TX_EXECUTION_DELAY(), SHORT_TX_EXECUTION_DELAY);
     assertEq(_safeEntrypoint.LONG_TX_EXECUTION_DELAY(), LONG_TX_EXECUTION_DELAY);
     assertEq(_safeEntrypoint.DEFAULT_TX_EXPIRY_DELAY(), DEFAULT_TX_EXPIRY_DELAY);
@@ -67,6 +59,6 @@ contract UnitDeployEntrypoint is Test {
     assertEq(address(_onlyEntrypointGuard).code, address(_ghost_onlyEntrypointGuard).code);
     assertEq(_onlyEntrypointGuard.ENTRYPOINT(), address(_safeEntrypoint));
     assertEq(_onlyEntrypointGuard.EMERGENCY_CALLER(), EMERGENCY_CALLER);
-    assertEq(_onlyEntrypointGuard.MULTI_SEND_CALL_ONLY(), MULTI_SEND_CALL_ONLY);
+    assertEq(_onlyEntrypointGuard.MULTI_SEND_CALL_ONLY(), address(MULTI_SEND_CALL_ONLY));
   }
 }
