@@ -4,6 +4,7 @@ pragma solidity 0.8.29;
 import {IOnlyEntrypointGuard} from 'interfaces/IOnlyEntrypointGuard.sol';
 
 import {BaseTransactionGuard} from '@safe-smart-account/base/GuardManager.sol';
+import {ITransactionGuard} from '@safe-smart-account/base/GuardManager.sol';
 import {SignatureDecoder} from '@safe-smart-account/common/SignatureDecoder.sol';
 import {Enum} from '@safe-smart-account/libraries/Enum.sol';
 
@@ -51,13 +52,7 @@ contract OnlyEntrypointGuard is BaseTransactionGuard, SignatureDecoder, IOnlyEnt
 
   // ~~~ GUARD METHODS ~~~
 
-  /**
-   * @notice Checks if a transaction is allowed to be executed before execution
-   * @param _to The address to which the transaction is intended
-   * @param _operation The type of operation of the transaction
-   * @param _signatures The signatures of the transaction
-   * @param _msgSender The address of the message sender
-   */
+  /// @inheritdoc ITransactionGuard
   function checkTransaction(
     address _to,
     uint256, /* _value */
@@ -89,11 +84,10 @@ contract OnlyEntrypointGuard is BaseTransactionGuard, SignatureDecoder, IOnlyEnt
     }
   }
 
-  /**
-   * @notice Checks if a transaction is allowed to be executed after execution
-   * @dev No post-execution checks needed
-   */
-  function checkAfterExecution(bytes32, /* _hash */ bool /* _success */ ) external pure override {}
+  /// @inheritdoc ITransactionGuard
+  function checkAfterExecution(bytes32, /* _hash */ bool /* _success */ ) external pure override {
+    // No post-execution checks needed
+  }
 
   // ~~~ INTERNAL PURE METHODS ~~~
 
