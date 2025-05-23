@@ -3,6 +3,8 @@ pragma solidity 0.8.29;
 
 import {IActionsBuilder} from 'interfaces/actions-builders/IActionsBuilder.sol';
 
+import {IERC20} from 'forge-std/interfaces/IERC20.sol';
+
 /**
  * @title IAllowanceClaimor
  * @notice Interface for the AllowanceClaimor contract
@@ -20,7 +22,7 @@ interface IAllowanceClaimor is IActionsBuilder {
    * @notice Gets the token contract
    * @return _token The token contract address
    */
-  function TOKEN() external view returns (address _token);
+  function TOKEN() external view returns (IERC20 _token);
 
   /**
    * @notice Gets the token owner

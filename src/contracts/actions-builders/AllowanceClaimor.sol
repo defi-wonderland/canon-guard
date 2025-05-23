@@ -17,7 +17,7 @@ contract AllowanceClaimor is IAllowanceClaimor {
   address public immutable SAFE;
 
   /// @inheritdoc IAllowanceClaimor
-  address public immutable TOKEN;
+  IERC20 public immutable TOKEN;
 
   /// @inheritdoc IAllowanceClaimor
   address public immutable TOKEN_OWNER;
@@ -36,7 +36,7 @@ contract AllowanceClaimor is IAllowanceClaimor {
    */
   constructor(address _safe, address _token, address _tokenOwner, address _tokenRecipient) {
     SAFE = _safe;
-    TOKEN = _token;
+    TOKEN = IERC20(_token);
     TOKEN_OWNER = _tokenOwner;
     TOKEN_RECIPIENT = _tokenRecipient;
   }
@@ -45,15 +45,15 @@ contract AllowanceClaimor is IAllowanceClaimor {
 
   /// @inheritdoc IActionsBuilder
   function getActions() external view returns (Action[] memory _actions) {
-    uint256 _amountToClaim = IERC20(TOKEN).allowance(TOKEN_OWNER, SAFE);
-    uint256 _balance = IERC20(TOKEN).balanceOf(TOKEN_OWNER);
+    uint256 _amountToClaim = TOKEN.allowance(TOKEN_OWNER, SAFE);
+    uint256 _balance = TOKEN.balanceOf(TOKEN_OWNER);
     if (_amountToClaim > _balance) {
       _amountToClaim = _balance;
     }
 
     _actions = new Action[](1);
     _actions[0] = Action({
-      target: TOKEN,
+      target: address(TOKEN),
       data: abi.encodeCall(IERC20.transferFrom, (TOKEN_OWNER, TOKEN_RECIPIENT, _amountToClaim)),
       value: 0
     });
