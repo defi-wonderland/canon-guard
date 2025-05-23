@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.29;
 
-import {CappedTokenTransfers} from 'contracts/actions/CappedTokenTransfers.sol';
+import {CappedTokenTransfers} from 'contracts/actions-builders/CappedTokenTransfers.sol';
 
 import {ICappedTokenTransfersFactory} from 'interfaces/factories/ICappedTokenTransfersFactory.sol';
 

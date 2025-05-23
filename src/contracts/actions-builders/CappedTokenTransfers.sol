@@ -3,8 +3,8 @@ pragma solidity 0.8.29;
 
 import {SafeManageable} from 'contracts/SafeManageable.sol';
 
-import {IActionsBuilder} from 'interfaces/actions/IActionsBuilder.sol';
-import {ICappedTokenTransfers} from 'interfaces/actions/ICappedTokenTransfers.sol';
+import {IActionsBuilder} from 'interfaces/actions-builders/IActionsBuilder.sol';
+import {ICappedTokenTransfers} from 'interfaces/actions-builders/ICappedTokenTransfers.sol';
 
 import {IERC20} from 'forge-std/interfaces/IERC20.sol';
 

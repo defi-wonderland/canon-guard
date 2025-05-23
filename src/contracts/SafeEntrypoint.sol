@@ -4,7 +4,7 @@ pragma solidity 0.8.29;
 import {SafeManageable} from 'contracts/SafeManageable.sol';
 
 import {ISafeEntrypoint} from 'interfaces/ISafeEntrypoint.sol';
-import {IActionsBuilder} from 'interfaces/actions/IActionsBuilder.sol';
+import {IActionsBuilder} from 'interfaces/actions-builders/IActionsBuilder.sol';
 
 import {Enum} from '@safe-smart-account/libraries/Enum.sol';
 import {MultiSendCallOnly} from '@safe-smart-account/libraries/MultiSendCallOnly.sol';

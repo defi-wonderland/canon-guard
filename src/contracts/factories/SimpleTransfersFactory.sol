@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.29;
 
-import {SimpleTransfers} from 'contracts/actions/SimpleTransfers.sol';
+import {SimpleTransfers} from 'contracts/actions-builders/SimpleTransfers.sol';
 
-import {ISimpleTransfers} from 'interfaces/actions/ISimpleTransfers.sol';
+import {ISimpleTransfers} from 'interfaces/actions-builders/ISimpleTransfers.sol';
 import {ISimpleTransfersFactory} from 'interfaces/factories/ISimpleTransfersFactory.sol';
 
 /**

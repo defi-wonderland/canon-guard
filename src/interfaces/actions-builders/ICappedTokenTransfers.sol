@@ -2,7 +2,7 @@
 pragma solidity 0.8.29;
 
 import {ISafeManageable} from 'interfaces/ISafeManageable.sol';
-import {IActionsBuilder} from 'interfaces/actions/IActionsBuilder.sol';
+import {IActionsBuilder} from 'interfaces/actions-builders/IActionsBuilder.sol';
 
 /**
  * @title ICappedTokenTransfers

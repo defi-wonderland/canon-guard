@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.29;
 
-import {IActionsBuilder} from 'interfaces/actions/IActionsBuilder.sol';
-import {IAllowanceClaimor} from 'interfaces/actions/IAllowanceClaimor.sol';
+import {IActionsBuilder} from 'interfaces/actions-builders/IActionsBuilder.sol';
+import {IAllowanceClaimor} from 'interfaces/actions-builders/IAllowanceClaimor.sol';
 
 import {IERC20} from 'forge-std/interfaces/IERC20.sol';
 

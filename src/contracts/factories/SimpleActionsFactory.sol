@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.29;
 
-import {SimpleActions} from 'contracts/actions/SimpleActions.sol';
+import {SimpleActions} from 'contracts/actions-builders/SimpleActions.sol';
 
-import {ISimpleActions} from 'interfaces/actions/ISimpleActions.sol';
+import {ISimpleActions} from 'interfaces/actions-builders/ISimpleActions.sol';
 import {ISimpleActionsFactory} from 'interfaces/factories/ISimpleActionsFactory.sol';
 
 /**

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.29;
 
-import {ISimpleTransfers} from 'interfaces/actions/ISimpleTransfers.sol';
+import {ISimpleTransfers} from 'interfaces/actions-builders/ISimpleTransfers.sol';
 
 import {IntegrationEthereumBase} from 'test/integration/ethereum/IntegrationEthereumBase.sol';
 
