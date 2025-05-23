@@ -19,16 +19,16 @@ contract AllowanceClaimor is IAllowanceClaimor {
   }
 
   function getActions() external view returns (Action[] memory _actions) {
-    uint256 amountToClaim = IERC20(TOKEN).allowance(TOKEN_OWNER, SAFE);
-    uint256 balance = IERC20(TOKEN).balanceOf(TOKEN_OWNER);
-    if (amountToClaim > balance) {
-      amountToClaim = balance;
+    uint256 _amountToClaim = IERC20(TOKEN).allowance(TOKEN_OWNER, SAFE);
+    uint256 _balance = IERC20(TOKEN).balanceOf(TOKEN_OWNER);
+    if (_amountToClaim > _balance) {
+      _amountToClaim = _balance;
     }
 
     _actions = new Action[](1);
     _actions[0] = Action({
       target: TOKEN,
-      data: abi.encodeWithSelector(IERC20.transferFrom.selector, TOKEN_OWNER, TOKEN_RECIPIENT, amountToClaim),
+      data: abi.encodeCall(IERC20.transferFrom, (TOKEN_OWNER, TOKEN_RECIPIENT, _amountToClaim)),
       value: 0
     });
   }
