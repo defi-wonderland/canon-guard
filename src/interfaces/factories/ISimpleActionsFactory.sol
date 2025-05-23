@@ -3,9 +3,16 @@ pragma solidity 0.8.29;
 
 import {ISimpleActions} from 'interfaces/actions/ISimpleActions.sol';
 
+/**
+ * @title ISimpleActionsFactory
+ * @notice Interface for the SimpleActionsFactory contract
+ */
 interface ISimpleActionsFactory {
+  // ~~~ FACTORY METHODS ~~~
+
   /**
-   * NOTE: in Etherscan interface, the transaction should be parsed as follows:
+   * @notice Creates a SimpleActions contract
+   * @dev In Etherscan interface, the transaction should be parsed as follows:
    * Describing a WETH.deposit{value:1}() & WETH.transfer(0x0000000000000000000000000000000000C0FFEE, 1)
    *  [
    *    [
@@ -21,9 +28,12 @@ interface ISimpleActionsFactory {
    *      "0"
    *    ]
    *  ]
-   *
    * Where 0x0000000000000000000000000000000000000000000000000000000000c0ffee0000000000000000000000000000000000000000000000000000000000000001
    * is the result of abi.encode(address(0xC0FFEE), uint256(1))
+   * @param _smplActions The array of simple actions
+   * @return _simpleActions The SimpleActions contract address
    */
-  function createSimpleActions(ISimpleActions.SimpleAction[] memory _actions) external returns (address);
+  function createSimpleActions(ISimpleActions.SimpleAction[] memory _smplActions)
+    external
+    returns (address _simpleActions);
 }

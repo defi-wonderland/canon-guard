@@ -5,7 +5,14 @@ import {CappedTokenTransfers} from 'contracts/actions/CappedTokenTransfers.sol';
 
 import {ICappedTokenTransfersFactory} from 'interfaces/factories/ICappedTokenTransfersFactory.sol';
 
+/**
+ * @title CappedTokenTransfersFactory
+ * @notice Contract that deploys CappedTokenTransfers contracts
+ */
 contract CappedTokenTransfersFactory is ICappedTokenTransfersFactory {
+  // ~~~ FACTORY METHODS ~~~
+
+  /// @inheritdoc ICappedTokenTransfersFactory
   function createCappedTokenTransfers(
     address _safe,
     address _token,

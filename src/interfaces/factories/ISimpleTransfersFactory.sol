@@ -3,9 +3,16 @@ pragma solidity 0.8.29;
 
 import {ISimpleTransfers} from 'interfaces/actions/ISimpleTransfers.sol';
 
+/**
+ * @title ISimpleTransfersFactory
+ * @notice Interface for the SimpleTransfersFactory contract
+ */
 interface ISimpleTransfersFactory {
+  // ~~~ FACTORY METHODS ~~~
+
   /**
-   * NOTE: in Etherscan interface, the transaction should be parsed as follows:
+   * @notice Creates a SimpleTransfers contract
+   * @dev In Etherscan interface, the transaction should be parsed as follows:
    * Describing a WETH.transfer(address(0xc0ffee), 1)
    *  [
    *    [
@@ -14,6 +21,10 @@ interface ISimpleTransfersFactory {
    *      "1"
    *    ]
    *  ]
+   * @param _transferActions The array of transfer actions
+   * @return _simpleTransfers The SimpleTransfers contract address
    */
-  function createSimpleTransfers(ISimpleTransfers.Transfer[] memory _transfers) external returns (address);
+  function createSimpleTransfers(ISimpleTransfers.TransferAction[] memory _transferActions)
+    external
+    returns (address _simpleTransfers);
 }

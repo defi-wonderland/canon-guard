@@ -15,16 +15,16 @@ contract IntegrationWonderlandTransfers is IntegrationEthereumBase {
     super.setUp();
 
     // Deploy the SimpleTransfers contract
-    ISimpleTransfers.Transfer memory _salariesTransfer =
-      ISimpleTransfers.Transfer({token: address(USDC), to: _salariesDeposit, amount: _safeBalance});
-    ISimpleTransfers.Transfer memory _bonusesTransfer =
-      ISimpleTransfers.Transfer({token: address(GRT), to: _bonusesPullSplit, amount: _safeBalance});
+    ISimpleTransfers.TransferAction memory _salariesTransferAction =
+      ISimpleTransfers.TransferAction({token: address(USDC), to: _salariesDeposit, amount: _safeBalance});
+    ISimpleTransfers.TransferAction memory _bonusesTransferAction =
+      ISimpleTransfers.TransferAction({token: address(GRT), to: _bonusesPullSplit, amount: _safeBalance});
 
-    ISimpleTransfers.Transfer[] memory _simpleTransfers = new ISimpleTransfers.Transfer[](2);
-    _simpleTransfers[0] = _salariesTransfer;
-    _simpleTransfers[1] = _bonusesTransfer;
+    ISimpleTransfers.TransferAction[] memory _transferActions = new ISimpleTransfers.TransferAction[](2);
+    _transferActions[0] = _salariesTransferAction;
+    _transferActions[1] = _bonusesTransferAction;
 
-    _actionsBuilder = simpleTransfersFactory.createSimpleTransfers(_simpleTransfers);
+    _actionsBuilder = simpleTransfersFactory.createSimpleTransfers(_transferActions);
   }
 
   function test_ExecuteTransaction() public {

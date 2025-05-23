@@ -1,32 +1,49 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.29;
 
+import {IActionsBuilder} from 'interfaces/actions/IActionsBuilder.sol';
 import {ISimpleTransfers} from 'interfaces/actions/ISimpleTransfers.sol';
 
 import {IERC20} from 'forge-std/interfaces/IERC20.sol';
 
+/**
+ * @title SimpleTransfers
+ * @notice Contract that builds actions from token transfer actions
+ */
 contract SimpleTransfers is ISimpleTransfers {
+  // ~~~ STORAGE ~~~
+
+  /// @notice The array of actions
   Action[] internal _actions;
 
-  constructor(Transfer[] memory _transfers) {
-    uint256 _transfersLength = _transfers.length;
-    Transfer memory _transfer;
+  // ~~~ CONSTRUCTOR ~~~
+
+  /**
+   * @notice Constructor that sets up the array of actions
+   * @param _transferActions The array of transfer actions
+   */
+  constructor(TransferAction[] memory _transferActions) {
+    uint256 _transferActionsLength = _transferActions.length;
+    TransferAction memory _transferAction;
     Action memory _action;
 
-    for (uint256 _i; _i < _transfersLength; ++_i) {
-      _transfer = _transfers[_i];
+    for (uint256 _i; _i < _transferActionsLength; ++_i) {
+      _transferAction = _transferActions[_i];
 
       _action = Action({
-        target: _transfer.token,
-        data: abi.encodeCall(IERC20.transfer, (_transfer.to, _transfer.amount)),
+        target: _transferAction.token,
+        data: abi.encodeCall(IERC20.transfer, (_transferAction.to, _transferAction.amount)),
         value: 0
       });
 
       _actions.push(_action);
-      emit SimpleTransferAdded(_transfer.token, _transfer.to, _transfer.amount);
+      emit TransferActionAdded(_transferAction.token, _transferAction.to, _transferAction.amount);
     }
   }
 
+  // ~~~ ACTIONS METHODS ~~~
+
+  /// @inheritdoc IActionsBuilder
   function getActions() external view returns (Action[] memory) {
     return _actions;
   }

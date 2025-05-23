@@ -14,13 +14,13 @@ contract IntegrationWonderlandTransfers is IntegrationOptimismBase {
     super.setUp();
 
     // Deploy the SimpleTransfers contract
-    ISimpleTransfers.Transfer memory _bonusesTransfer =
-      ISimpleTransfers.Transfer({token: address(KITE), to: _bonusesPullSplit, amount: _safeBalance});
+    ISimpleTransfers.TransferAction memory _bonusesTransferAction =
+      ISimpleTransfers.TransferAction({token: address(KITE), to: _bonusesPullSplit, amount: _safeBalance});
 
-    ISimpleTransfers.Transfer[] memory _simpleTransfers = new ISimpleTransfers.Transfer[](1);
-    _simpleTransfers[0] = _bonusesTransfer;
+    ISimpleTransfers.TransferAction[] memory _transferActions = new ISimpleTransfers.TransferAction[](1);
+    _transferActions[0] = _bonusesTransferAction;
 
-    _actionsBuilder = simpleTransfersFactory.createSimpleTransfers(_simpleTransfers);
+    _actionsBuilder = simpleTransfersFactory.createSimpleTransfers(_transferActions);
   }
 
   function test_ExecuteTransaction() public {

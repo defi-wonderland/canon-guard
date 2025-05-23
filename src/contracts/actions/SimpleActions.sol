@@ -1,11 +1,25 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.29;
 
+import {IActionsBuilder} from 'interfaces/actions/IActionsBuilder.sol';
 import {ISimpleActions} from 'interfaces/actions/ISimpleActions.sol';
 
+/**
+ * @title SimpleActions
+ * @notice Contract that builds actions from simple actions
+ */
 contract SimpleActions is ISimpleActions {
+  // ~~~ STORAGE ~~~
+
+  /// @notice The array of actions
   Action[] internal _actions;
 
+  // ~~~ CONSTRUCTOR ~~~
+
+  /**
+   * @notice Constructor that sets up the array of actions
+   * @param _simpleActions The array of simple actions
+   */
   constructor(SimpleAction[] memory _simpleActions) {
     uint256 _simpleActionsLength = _simpleActions.length;
     SimpleAction memory _simpleAction;
@@ -26,6 +40,9 @@ contract SimpleActions is ISimpleActions {
     }
   }
 
+  // ~~~ ACTIONS METHODS ~~~
+
+  /// @inheritdoc IActionsBuilder
   function getActions() external view returns (Action[] memory) {
     return _actions;
   }

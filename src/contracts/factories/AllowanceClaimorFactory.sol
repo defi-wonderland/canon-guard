@@ -5,7 +5,14 @@ import {AllowanceClaimor} from 'contracts/actions/AllowanceClaimor.sol';
 
 import {IAllowanceClaimorFactory} from 'interfaces/factories/IAllowanceClaimorFactory.sol';
 
+/**
+ * @title AllowanceClaimorFactory
+ * @notice Contract that deploys AllowanceClaimor contracts
+ */
 contract AllowanceClaimorFactory is IAllowanceClaimorFactory {
+  // ~~~ FACTORY METHODS ~~~
+
+  /// @inheritdoc IAllowanceClaimorFactory
   function createAllowanceClaimor(
     address _safe,
     address _token,

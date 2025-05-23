@@ -223,7 +223,7 @@ interface ISafeEntrypoint is ISafeManageable {
    */
   function disapproveSafeTransactionHash(bytes32 _safeTxHash) external;
 
-  // ~~~ VIEW METHODS ~~~
+  // ~~~ GETTER METHODS ~~~
 
   /**
    * @notice Gets the Safe transaction hash for a transaction ID

@@ -12,6 +12,8 @@ import {Enum} from '@safe-smart-account/libraries/Enum.sol';
  * @notice Guard that ensures transactions are either executed through the entrypoint or by an emergency caller
  */
 contract OnlyEntrypointGuard is BaseTransactionGuard, SignatureDecoder, IOnlyEntrypointGuard {
+  // ~~~ STORAGE ~~~
+
   /// @inheritdoc IOnlyEntrypointGuard
   uint8 public constant APPROVED_HASH_SIGNATURE_TYPE = 1;
 
@@ -23,6 +25,8 @@ contract OnlyEntrypointGuard is BaseTransactionGuard, SignatureDecoder, IOnlyEnt
 
   /// @inheritdoc IOnlyEntrypointGuard
   address public immutable MULTI_SEND_CALL_ONLY;
+
+  // ~~~ CONSTRUCTOR ~~~
 
   /**
    * @notice Constructor that sets up the guard
@@ -36,12 +40,16 @@ contract OnlyEntrypointGuard is BaseTransactionGuard, SignatureDecoder, IOnlyEnt
     MULTI_SEND_CALL_ONLY = _multiSendCallOnly;
   }
 
+  // ~~~ FALLBACK ~~~
+
   /**
    * @notice Fallback to avoid issues in case of a Safe upgrade
    * @dev The expected check method might change and then the Safe would be locked
    */
   // solhint-disable-next-line payable-fallback
   fallback() external {}
+
+  // ~~~ GUARD METHODS ~~~
 
   /**
    * @notice Checks if a transaction is allowed to be executed before execution
@@ -86,6 +94,8 @@ contract OnlyEntrypointGuard is BaseTransactionGuard, SignatureDecoder, IOnlyEnt
    * @dev No post-execution checks needed
    */
   function checkAfterExecution(bytes32, /* _hash */ bool /* _success */ ) external pure override {}
+
+  // ~~~ INTERNAL PURE METHODS ~~~
 
   /**
    * @notice Validates that all signatures are approved hash signatures

@@ -3,10 +3,20 @@ pragma solidity 0.8.29;
 
 import {IActionsBuilder} from 'interfaces/actions/IActionsBuilder.sol';
 
+/**
+ * @title ISimpleTransfers
+ * @notice Interface for the SimpleTransfers contract
+ */
 interface ISimpleTransfers is IActionsBuilder {
   // ~~~ STRUCTS ~~~
 
-  struct Transfer {
+  /**
+   * @notice Struct for a token transfer action
+   * @param token The token address of the transfer (e.g., WETH)
+   * @param to The recipient address of the transfer (e.g., msg.sender)
+   * @param amount The amount of the transfer (e.g., 1 ether)
+   */
+  struct TransferAction {
     address token;
     address to;
     uint256 amount;
@@ -14,5 +24,11 @@ interface ISimpleTransfers is IActionsBuilder {
 
   // ~~~ EVENTS ~~~
 
-  event SimpleTransferAdded(address indexed _token, address indexed _to, uint256 _amount);
+  /**
+   * @notice Emitted when a transfer action is added
+   * @param _token The token address of the transfer
+   * @param _to The recipient address of the transfer
+   * @param _amount The amount of the transfer
+   */
+  event TransferActionAdded(address indexed _token, address indexed _to, uint256 _amount);
 }
