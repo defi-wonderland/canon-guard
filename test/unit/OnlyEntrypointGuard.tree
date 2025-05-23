@@ -7,20 +7,20 @@ UnitOnlyEntrypointGuard::constructor
 
 UnitOnlyEntrypointGuard::checkTransaction
 ├── when caller is entrypoint
-│   ├── when operation is call
+│   ├── when operation is entrypoint call
 │   │   └── it allows transaction
-│   └── when operation is delegate call
-│       ├── when target is multiSendCallOnly
+│   └── when operation is entrypoint delegate call
+│       ├── when target is entrypoint multiSendCallOnly
 │       │   └── it allows transaction
-│       └── when target is not multiSendCallOnly
+│       └── when target is not entrypoint multiSendCallOnly
 │           └── it reverts with UnauthorizedDelegateCall
 ├── when caller is emergency caller
-│   ├── when operation is call
+│   ├── when operation is emergency call
 │   │   └── it allows transaction
-│   └── when operation is delegate call
-│       ├── when target is multiSendCallOnly
+│   └── when operation is emergency delegate call
+│       ├── when target is emergency multiSendCallOnly
 │       │   └── it allows transaction
-│       └── when target is not multiSendCallOnly
+│       └── when target is not emergency multiSendCallOnly
 │           └── it reverts with UnauthorizedDelegateCall
 └── when caller is not entrypoint or emergency caller
     └── it reverts with UnauthorizedSender
