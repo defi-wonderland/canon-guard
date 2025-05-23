@@ -4,29 +4,29 @@ pragma solidity 0.8.29;
 import {ISimpleActions} from 'interfaces/actions/ISimpleActions.sol';
 
 contract SimpleActions is ISimpleActions {
-  Action[] public actions;
+  Action[] internal _actions;
 
-  constructor(SimpleAction[] memory _actions) {
-    uint256 _actionsLength = _actions.length;
-    SimpleAction memory action;
-    Action memory standardAction;
-    bytes4 selector;
-    bytes memory completeCallData;
+  constructor(SimpleAction[] memory _simpleActions) {
+    uint256 _simpleActionsLength = _simpleActions.length;
+    SimpleAction memory _simpleAction;
+    Action memory _action;
+    bytes4 _selector;
+    bytes memory _completeCallData;
 
-    for (uint256 i; i < _actionsLength; ++i) {
-      action = _actions[i];
+    for (uint256 _i; _i < _simpleActionsLength; ++_i) {
+      _simpleAction = _simpleActions[_i];
 
-      selector = bytes4(keccak256(bytes(action.signature)));
-      completeCallData = abi.encodePacked(selector, action.data);
+      _selector = bytes4(keccak256(bytes(_simpleAction.signature)));
+      _completeCallData = abi.encodePacked(_selector, _simpleAction.data);
 
-      standardAction = Action({target: action.target, data: completeCallData, value: action.value});
+      _action = Action({target: _simpleAction.target, data: _completeCallData, value: _simpleAction.value});
 
-      actions.push(standardAction);
-      emit SimpleActionAdded(action.target, action.signature, action.data, action.value);
+      _actions.push(_action);
+      emit SimpleActionAdded(_simpleAction.target, _simpleAction.signature, _simpleAction.data, _simpleAction.value);
     }
   }
 
-  function getActions() external view returns (Action[] memory _actions) {
-    _actions = actions;
+  function getActions() external view returns (Action[] memory) {
+    return _actions;
   }
 }

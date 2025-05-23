@@ -3,32 +3,31 @@ pragma solidity 0.8.29;
 
 import {ISimpleTransfers} from 'interfaces/actions/ISimpleTransfers.sol';
 
+import {IERC20} from 'forge-std/interfaces/IERC20.sol';
+
 contract SimpleTransfers is ISimpleTransfers {
-  Action[] public actions;
+  Action[] internal _actions;
 
   constructor(Transfer[] memory _transfers) {
     uint256 _transfersLength = _transfers.length;
-    Transfer memory transfer;
-    Action memory standardAction;
-    string memory signature;
-    bytes4 selector;
-    bytes memory completeCallData;
+    Transfer memory _transfer;
+    Action memory _action;
 
-    for (uint256 i; i < _transfersLength; ++i) {
-      transfer = _transfers[i];
+    for (uint256 _i; _i < _transfersLength; ++_i) {
+      _transfer = _transfers[_i];
 
-      signature = 'transfer(address,uint256)';
-      selector = bytes4(keccak256(bytes(signature)));
-      completeCallData = abi.encodePacked(selector, abi.encode(transfer.to, transfer.amount));
+      _action = Action({
+        target: _transfer.token,
+        data: abi.encodeCall(IERC20.transfer, (_transfer.to, _transfer.amount)),
+        value: 0
+      });
 
-      standardAction = Action({target: transfer.token, data: completeCallData, value: 0});
-
-      actions.push(standardAction);
-      emit SimpleActionAdded(transfer.token, signature, completeCallData, 0);
+      _actions.push(_action);
+      emit SimpleTransferAdded(_transfer.token, _transfer.to, _transfer.amount);
     }
   }
 
-  function getActions() external view returns (Action[] memory _actions) {
-    _actions = actions;
+  function getActions() external view returns (Action[] memory) {
+    return _actions;
   }
 }
