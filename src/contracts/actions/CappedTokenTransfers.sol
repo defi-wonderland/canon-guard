@@ -42,7 +42,7 @@ contract CappedTokenTransfers is SafeManageable, ICappedTokenTransfers {
 
   // ~~~ ACTIONS METHODS ~~~
 
-  function getActions() external view returns (Action[] memory) {
+  function getActions() external view returns (Action[] memory _actions) {
     // Count valid transfers
     uint256 _validCount = 0;
     uint256 _totalAmount = 0;
@@ -55,12 +55,12 @@ contract CappedTokenTransfers is SafeManageable, ICappedTokenTransfers {
 
     // Create actions array: one for updateState + one for each valid transfer
     uint256 _numActions = _validCount + 1;
-    Action[] memory _actions = new Action[](_numActions);
+    _actions = new Action[](_numActions);
 
     // First action: update state
     _actions[0] = Action({
       target: address(this),
-      data: abi.encodeWithSelector(ICappedTokenTransfers.updateState.selector, abi.encode(_totalAmount)),
+      data: abi.encodeCall(ICappedTokenTransfers.updateState, (abi.encode(_totalAmount))),
       value: 0
     });
 
@@ -70,7 +70,7 @@ contract CappedTokenTransfers is SafeManageable, ICappedTokenTransfers {
       if (tokenTransfers[i].amount != 0) {
         _actions[_actionIndex] = Action({
           target: TOKEN,
-          data: abi.encodeWithSelector(IERC20.transfer.selector, tokenTransfers[i].recipient, tokenTransfers[i].amount),
+          data: abi.encodeCall(IERC20.transfer, (tokenTransfers[i].recipient, tokenTransfers[i].amount)),
           value: 0
         });
         _actionIndex++;
