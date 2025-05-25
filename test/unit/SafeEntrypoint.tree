@@ -1,0 +1,87 @@
+UnitSafeEntrypoint::constructor
+└── when passing valid parameters
+    ├── it sets safe address
+    ├── it sets multiSendCallOnly address
+    ├── it sets short execution delay
+    ├── it sets long execution delay
+    └── it sets default transaction expiry delay
+
+
+UnitSafeEntrypoint::approveActionsBuilder
+├── when caller is safe
+│   ├── it sets approval expiry time
+│   ├── it emits ActionsBuilderApproved event
+│   └── when extending approval
+│       ├── it updates approval expiry time
+│       └── it emits ActionsBuilderApproved event
+└── when caller is not safe
+    └── it reverts with NotSafeOwner
+
+
+UnitSafeEntrypoint::queueTransaction
+├── when caller is safe owner
+│   ├── when queueing pre approved action
+│   │   ├── when actions builder is not approved
+│   │   │   └── it reverts with ActionsBuilderNotApproved
+│   │   └── when passing valid parameters
+│   │       ├── it sets transaction info
+│   │       ├── it sets executable at to block timestamp plus short delay
+│   │       ├── it sets expiry time
+│   │       └── it emits TransactionQueued event
+│   └── when queueing arbitrary action
+│       ├── it sets transaction info
+│       ├── it sets executable at to block timestamp plus long delay
+│       ├── it sets expiry time
+│       └── it emits TransactionQueued event
+└── when caller is not safe owner
+    └── it reverts with NotSafeOwner
+
+
+UnitSafeEntrypoint::executeTransaction
+├── when transaction is expired
+│   └── it reverts with TransactionExpired
+└── when transaction is not expired
+    ├── when executing without signers
+    │   ├── when approved transaction is already executed
+    │   │   └── it reverts with TransactionAlreadyExecuted
+    │   ├── when approved transaction is not yet executable
+    │   │   └── it reverts with TransactionNotYetExecutable
+    │   └── when approved transaction is valid
+    │       ├── it executes transaction
+    │       ├── it updates transaction state
+    │       └── it emits TransactionExecuted event
+    └── when executing with signers
+        ├── when transaction is valid
+        │   ├── it executes transaction
+        │   ├── it updates transaction state
+        │   └── it emits TransactionExecuted event
+        └── when signer has disapproved hash
+            └── it reverts with InvalidSigner
+
+
+UnitSafeEntrypoint::disapproveSafeTransactionHash
+├── when caller is safe owner
+│   ├── when hash is not approved
+│   │   └── it reverts with SafeTransactionHashNotApproved
+│   └── when passing valid parameters
+│       ├── it marks hash as disapproved
+│       └── it emits SafeTransactionHashDisapproved event
+└── when caller is not safe owner
+    └── it reverts with NotSafeOwner
+
+
+UnitSafeEntrypoint::getSafeTransactionHash
+└── when transaction exists
+    ├── it returns correct hash
+    └── when getting hash with nonce
+        └── it returns correct hash
+
+
+UnitSafeEntrypoint::getApprovedHashSigners
+└── when transaction exists
+    ├── when getting signers with txId
+    │   └── it returns approved signers
+    ├── when getting signers with txId and nonce
+    │   └── it returns approved signers
+    └── when getting signers with hash
+        └── it returns approved signers 
