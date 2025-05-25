@@ -22,4 +22,9 @@ interface ISafeManageable {
    * @notice Thrown when the caller is not a Safe owner
    */
   error NotSafeOwner();
+
+  /**
+   * @notice Thrown when the caller is not a Safe
+   */
+  error NotSafe();
 }

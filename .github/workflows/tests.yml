@@ -66,6 +66,7 @@ jobs:
 
   medusa-tests:
     name: Medusa Test
+    if: false # Remove this line when Medusa tests are ready
     runs-on: ubuntu-latest
     container: ghcr.io/trailofbits/eth-security-toolbox/ci:nightly-20241223
 

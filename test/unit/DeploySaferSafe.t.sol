@@ -16,9 +16,9 @@ import {ISafeEntrypointFactory} from 'interfaces/factories/ISafeEntrypointFactor
 import {ISimpleActionsFactory} from 'interfaces/factories/ISimpleActionsFactory.sol';
 import {ISimpleTransfersFactory} from 'interfaces/factories/ISimpleTransfersFactory.sol';
 
-import {MULTI_SEND_CALL_ONLY} from 'script/Constants.s.sol';
+import {Constants} from 'script/Constants.sol';
 
-contract UnitDeploySaferSafe is Test {
+contract UnitDeploySaferSafe is Constants, Test {
   DeploySaferSafe public deploySaferSafe;
 
   ISafeEntrypointFactory internal _ghost_safeEntrypointFactory;
@@ -34,7 +34,7 @@ contract UnitDeploySaferSafe is Test {
 
   function test_WhenRun() public {
     // Run the deployment script
-    deploySaferSafe.run();
+    deploySaferSafe.deploySaferSafe();
 
     // Get the deployed contracts
     ISafeEntrypointFactory _safeEntrypointFactory = deploySaferSafe.safeEntrypointFactory();
@@ -45,7 +45,7 @@ contract UnitDeploySaferSafe is Test {
 
     // It should deploy the SafeEntrypointFactory contract with correct args
     assertEq(address(_safeEntrypointFactory).code, address(_ghost_safeEntrypointFactory).code);
-    assertEq(_safeEntrypointFactory.MULTI_SEND_CALL_ONLY(), MULTI_SEND_CALL_ONLY);
+    assertEq(_safeEntrypointFactory.MULTI_SEND_CALL_ONLY(), address(MULTI_SEND_CALL_ONLY));
 
     // It should deploy the AllowanceClaimorFactory contract
     assertEq(address(_allowanceClaimorFactory).code, type(AllowanceClaimorFactory).runtimeCode);

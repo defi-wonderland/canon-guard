@@ -3,46 +3,51 @@ pragma solidity 0.8.29;
 
 import {Test} from 'forge-std/Test.sol';
 
-import {SafeEntrypoint} from 'contracts/SafeEntrypoint.sol';
-import {SafeEntrypointFactory} from 'contracts/factories/SafeEntrypointFactory.sol';
-import {SimpleActionsFactory} from 'contracts/factories/SimpleActionsFactory.sol';
+import {OnlyEntrypointGuard} from 'contracts/OnlyEntrypointGuard.sol';
 
-import {ISimpleActions} from 'interfaces/actions/ISimpleActions.sol';
+import {IOnlyEntrypointGuard} from 'interfaces/IOnlyEntrypointGuard.sol';
+import {ISafeEntrypoint} from 'interfaces/ISafeEntrypoint.sol';
+import {ISimpleActions} from 'interfaces/actions-builders/ISimpleActions.sol';
 
 import {ISafe} from '@safe-smart-account/interfaces/ISafe.sol';
-import {SafeProxyFactory} from '@safe-smart-account/proxies/SafeProxyFactory.sol';
 
-import {
-  DEFAULT_TX_EXPIRY_DELAY,
-  LONG_TX_EXECUTION_DELAY,
-  MULTI_SEND_CALL_ONLY,
-  SAFE,
-  SAFE_PROXY_FACTORY,
-  SHORT_TX_EXECUTION_DELAY,
-  WETH
-} from 'script/Constants.s.sol';
+import {DeploySaferSafe} from 'script/DeploySaferSafe.s.sol';
 
-contract BasicTest is Test {
-  uint256 internal constant _FORK_BLOCK = 18_920_905;
+import {EthereumConstants} from 'script/Constants.sol';
 
-  address internal constant _OWNER = address(0xc0ffee);
+contract IntegrationBasicTest is DeploySaferSafe, EthereumConstants, Test {
+  uint256 internal constant _ETHEREUM_FORK_BLOCK = 18_920_905;
 
-  ISimpleActions.SimpleAction internal _simpleAction;
+  // ~~~ SAFE ~~~
+  ISafe internal _safeProxy;
+  address internal _safeOwner;
+  uint256 internal _safeThreshold;
+
+  // ~~~ ENTRYPOINT ~~~
+  ISafeEntrypoint internal _safeEntrypoint;
+
+  // ~~~ GUARD ~~~
+  IOnlyEntrypointGuard internal _onlyEntrypointGuard;
+
+  // ~~~ ACTIONS ~~~
+  address internal _actionsBuilder;
 
   function setUp() public {
-    vm.createSelectFork(vm.rpcUrl('ethereum'), _FORK_BLOCK);
+    vm.createSelectFork(vm.rpcUrl('ethereum'), _ETHEREUM_FORK_BLOCK);
 
-    // Deploy the Safe contract
-    address[] memory _owners = new address[](1);
-    _owners[0] = _OWNER;
+    // Deploy the SafeProxy contract
+    _safeProxy = ISafe(address(SAFE_PROXY_FACTORY.createProxyWithNonce(address(SAFE), bytes(''), 1)));
 
-    address _safeProxy = address(SafeProxyFactory(SAFE_PROXY_FACTORY).createProxyWithNonce(SAFE, bytes(''), 1));
+    _safeOwner = makeAddr('safeOwner');
+    vm.deal(_safeOwner, 1 ether);
 
-    ISafe _safe = ISafe(payable(_safeProxy));
+    address[] memory _safeOwners = new address[](1);
+    _safeOwners[0] = _safeOwner;
+    _safeThreshold = 1;
 
-    _safe.setup({
-      _owners: _owners,
-      _threshold: 1,
+    _safeProxy.setup({
+      _owners: _safeOwners,
+      _threshold: _safeThreshold,
       to: address(0),
       data: bytes(''),
       fallbackHandler: address(0),
@@ -51,34 +56,48 @@ contract BasicTest is Test {
       paymentReceiver: payable(address(0))
     });
 
+    // Deploy the SaferSafe factory contracts
+    deploySaferSafe();
+
     // Deploy the SafeEntrypoint contract
-    SafeEntrypointFactory _safeEntrypointFactory = new SafeEntrypointFactory(MULTI_SEND_CALL_ONLY);
-    SafeEntrypoint _safeEntrypoint = SafeEntrypoint(
-      _safeEntrypointFactory.createSafeEntrypoint(
-        address(_safe), SHORT_TX_EXECUTION_DELAY, LONG_TX_EXECUTION_DELAY, DEFAULT_TX_EXPIRY_DELAY
+    _safeEntrypoint = ISafeEntrypoint(
+      safeEntrypointFactory.createSafeEntrypoint(
+        address(_safeProxy), SHORT_TX_EXECUTION_DELAY, LONG_TX_EXECUTION_DELAY, DEFAULT_TX_EXPIRY_DELAY
       )
     );
 
-    // Deploy SimpleAction contract
-    ISimpleActions.SimpleAction[] memory _simpleActions = new ISimpleActions.SimpleAction[](2);
-    _simpleActions[0] = ISimpleActions.SimpleAction({target: WETH, signature: 'deposit()', data: bytes(''), value: 1});
-    _simpleActions[1] = ISimpleActions.SimpleAction({
-      target: WETH,
+    // Deploy the OnlyEntrypointGuard contract
+    _onlyEntrypointGuard =
+      new OnlyEntrypointGuard(address(_safeEntrypoint), EMERGENCY_CALLER, address(MULTI_SEND_CALL_ONLY));
+
+    vm.prank(address(_safeProxy));
+    _safeProxy.setGuard(address(_onlyEntrypointGuard));
+
+    // Deploy the SimpleActions contract
+    ISimpleActions.SimpleAction memory _depositAction =
+      ISimpleActions.SimpleAction({target: address(WETH), signature: 'deposit()', data: bytes(''), value: 1});
+    ISimpleActions.SimpleAction memory _transferAction = ISimpleActions.SimpleAction({
+      target: address(WETH),
       signature: 'transfer(address,uint256)',
-      data: abi.encode(_OWNER, 1),
+      data: abi.encode(_safeOwner, 1),
       value: 0
     });
 
-    SimpleActionsFactory _simpleActionsFactory = new SimpleActionsFactory();
-    address _actionsBuilder = _simpleActionsFactory.createSimpleActions(_simpleActions);
+    ISimpleActions.SimpleAction[] memory _simpleActions = new ISimpleActions.SimpleAction[](2);
+    _simpleActions[0] = _depositAction;
+    _simpleActions[1] = _transferAction;
 
+    _actionsBuilder = simpleActionsFactory.createSimpleActions(_simpleActions);
+  }
+
+  function test_ExecuteTransaction() public {
     // Allow the SafeEntrypoint to call the SimpleActions contract
     uint256 _approvalDuration = block.timestamp + 1 days;
 
-    vm.prank(address(_safe));
+    vm.prank(address(_safeProxy));
     _safeEntrypoint.approveActionsBuilder(_actionsBuilder, _approvalDuration);
 
-    vm.startPrank(_OWNER);
+    vm.startPrank(_safeOwner);
 
     // Queue the transaction
     uint256 _txId = _safeEntrypoint.queueTransaction(_actionsBuilder, DEFAULT_TX_EXPIRY_DELAY);
@@ -88,12 +107,9 @@ contract BasicTest is Test {
 
     // Get and approve the Safe transaction hash
     bytes32 _safeTxHash = _safeEntrypoint.getSafeTransactionHash(_txId);
-    _safe.approveHash(_safeTxHash);
+    _safeProxy.approveHash(_safeTxHash);
 
     // Execute the transaction
-    vm.deal(_OWNER, 1 ether);
     _safeEntrypoint.executeTransaction{value: 1}(_txId);
   }
-
-  function test_executeTransaction() public {}
 }

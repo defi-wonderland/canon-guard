@@ -3,23 +3,46 @@ pragma solidity 0.8.29;
 
 import {SafeManageable} from 'contracts/SafeManageable.sol';
 
-import {ICappedTokenTransfers} from 'interfaces/actions/ICappedTokenTransfers.sol';
+import {IActionsBuilder} from 'interfaces/actions-builders/IActionsBuilder.sol';
+import {ICappedTokenTransfers} from 'interfaces/actions-builders/ICappedTokenTransfers.sol';
 
 import {IERC20} from 'forge-std/interfaces/IERC20.sol';
 
+/**
+ * @title CappedTokenTransfers
+ * @notice Contract that builds actions from capped token transfers
+ */
 contract CappedTokenTransfers is SafeManageable, ICappedTokenTransfers {
+  // ~~~ STORAGE ~~~
+
   // Token configuration
+  /// @inheritdoc ICappedTokenTransfers
   address public immutable TOKEN;
+  /// @inheritdoc ICappedTokenTransfers
   uint256 public immutable CAP;
+  /// @inheritdoc ICappedTokenTransfers
   uint256 public immutable EPOCH_LENGTH;
 
   // State tracking
+  /// @inheritdoc ICappedTokenTransfers
   uint256 public totalSpent;
+  /// @inheritdoc ICappedTokenTransfers
   uint256 public currentEpoch;
+  /// @inheritdoc ICappedTokenTransfers
   uint256 public startingTimestamp;
 
+  /// @inheritdoc ICappedTokenTransfers
   TokenTransfer[] public tokenTransfers;
 
+  // ~~~ CONSTRUCTOR ~~~
+
+  /**
+   * @notice Constructor that sets up the Safe, token, cap, epoch length and starting timestamp
+   * @param _safe The Gnosis Safe contract address
+   * @param _token The token contract address
+   * @param _cap The cap for the token transfers
+   * @param _epochLength The epoch length for the token transfers
+   */
   constructor(address _safe, address _token, uint256 _cap, uint256 _epochLength) SafeManageable(_safe) {
     TOKEN = _token;
     CAP = _cap;
@@ -29,57 +52,22 @@ contract CappedTokenTransfers is SafeManageable, ICappedTokenTransfers {
 
   // ~~~ ADMIN METHODS ~~~
 
+  /// @inheritdoc ICappedTokenTransfers
   function addTokenTransfer(address _recipient, uint256 _amount) external isSafeOwner {
     if (_amount == 0) revert InvalidAmount();
     tokenTransfers.push(TokenTransfer({recipient: _recipient, amount: _amount}));
   }
 
+  /// @inheritdoc ICappedTokenTransfers
   function removeTokenTransfer(uint256 _index) external isSafeOwner {
     if (_index >= tokenTransfers.length) revert InvalidIndex();
 
     delete tokenTransfers[_index];
   }
 
-  // ~~~ ACTIONS METHODS ~~~
+  // ~~~ STATE MANAGEMENT ~~~
 
-  function getActions() external view returns (Action[] memory) {
-    // Count valid transfers
-    uint256 _validCount = 0;
-    uint256 _totalAmount = 0;
-    for (uint256 i = 0; i < tokenTransfers.length; i++) {
-      if (tokenTransfers[i].amount != 0) {
-        _validCount++;
-        _totalAmount += tokenTransfers[i].amount;
-      }
-    }
-
-    // Create actions array: one for updateState + one for each valid transfer
-    uint256 _numActions = _validCount + 1;
-    Action[] memory _actions = new Action[](_numActions);
-
-    // First action: update state
-    _actions[0] = Action({
-      target: address(this),
-      data: abi.encodeWithSelector(ICappedTokenTransfers.updateState.selector, abi.encode(_totalAmount)),
-      value: 0
-    });
-
-    // Remaining actions: valid token transfers
-    uint256 _actionIndex = 1;
-    for (uint256 i = 0; i < tokenTransfers.length; i++) {
-      if (tokenTransfers[i].amount != 0) {
-        _actions[_actionIndex] = Action({
-          target: TOKEN,
-          data: abi.encodeWithSelector(IERC20.transfer.selector, tokenTransfers[i].recipient, tokenTransfers[i].amount),
-          value: 0
-        });
-        _actionIndex++;
-      }
-    }
-
-    return _actions;
-  }
-
+  /// @inheritdoc ICappedTokenTransfers
   function updateState(bytes memory _data) external isSafe {
     uint256 _currentEpoch = (block.timestamp - startingTimestamp) / EPOCH_LENGTH;
 
@@ -100,5 +88,46 @@ contract CappedTokenTransfers is SafeManageable, ICappedTokenTransfers {
 
     // Clean up
     delete tokenTransfers;
+  }
+
+  // ~~~ ACTIONS METHODS ~~~
+
+  /// @inheritdoc IActionsBuilder
+  function getActions() external view returns (Action[] memory _actions) {
+    // Count valid transfers
+    uint256 _validCount = 0;
+    uint256 _totalAmount = 0;
+    for (uint256 i = 0; i < tokenTransfers.length; i++) {
+      if (tokenTransfers[i].amount != 0) {
+        _validCount++;
+        _totalAmount += tokenTransfers[i].amount;
+      }
+    }
+
+    // Create actions array: one for updateState + one for each valid transfer
+    uint256 _numActions = _validCount + 1;
+    _actions = new Action[](_numActions);
+
+    // First action: update state
+    _actions[0] = Action({
+      target: address(this),
+      data: abi.encodeCall(ICappedTokenTransfers.updateState, (abi.encode(_totalAmount))),
+      value: 0
+    });
+
+    // Remaining actions: valid token transfers
+    uint256 _actionIndex = 1;
+    for (uint256 i = 0; i < tokenTransfers.length; i++) {
+      if (tokenTransfers[i].amount != 0) {
+        _actions[_actionIndex] = Action({
+          target: TOKEN,
+          data: abi.encodeCall(IERC20.transfer, (tokenTransfers[i].recipient, tokenTransfers[i].amount)),
+          value: 0
+        });
+        _actionIndex++;
+      }
+    }
+
+    return _actions;
   }
 }
