@@ -3,16 +3,16 @@ pragma solidity 0.8.29;
 
 /**
  * @title IActionsBuilder
- * @notice Interface for a ActionsBuilder contract
+ * @notice Interface for an ActionsBuilder contract
  */
 interface IActionsBuilder {
   // ~~~ STRUCTS ~~~
 
   /**
    * @notice Struct for a transaction action
-   * @param target The target address of the action
-   * @param data The data of the action
-   * @param value The value of the action
+   * @param target The target address of the action (e.g., WETH)
+   * @param data The data of the action (i.e., abi.encodeCall(function, (args)))
+   * @param value The value of the action (i.e., msg.value)
    */
   struct Action {
     address target;
@@ -20,7 +20,7 @@ interface IActionsBuilder {
     uint256 value;
   }
 
-  // ~~~ VIEW METHODS ~~~
+  // ~~~ ACTIONS METHODS ~~~
 
   /**
    * @notice Gets the list of transaction actions

@@ -2,7 +2,7 @@
 pragma solidity 0.8.29;
 
 import {ISafeManageable} from 'interfaces/ISafeManageable.sol';
-import {IActionsBuilder} from 'interfaces/actions/IActionsBuilder.sol';
+import {IActionsBuilder} from 'interfaces/actions-builders/IActionsBuilder.sol';
 
 /**
  * @title ISafeEntrypoint
@@ -223,7 +223,7 @@ interface ISafeEntrypoint is ISafeManageable {
    */
   function disapproveSafeTransactionHash(bytes32 _safeTxHash) external;
 
-  // ~~~ VIEW METHODS ~~~
+  // ~~~ GETTER METHODS ~~~
 
   /**
    * @notice Gets the Safe transaction hash for a transaction ID

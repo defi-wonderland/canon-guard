@@ -3,23 +3,46 @@ pragma solidity 0.8.29;
 
 import {SafeManageable} from 'contracts/SafeManageable.sol';
 
-import {ICappedTokenTransfers} from 'interfaces/actions/ICappedTokenTransfers.sol';
+import {IActionsBuilder} from 'interfaces/actions-builders/IActionsBuilder.sol';
+import {ICappedTokenTransfers} from 'interfaces/actions-builders/ICappedTokenTransfers.sol';
 
 import {IERC20} from 'forge-std/interfaces/IERC20.sol';
 
+/**
+ * @title CappedTokenTransfers
+ * @notice Contract that builds actions from capped token transfers
+ */
 contract CappedTokenTransfers is SafeManageable, ICappedTokenTransfers {
+  // ~~~ STORAGE ~~~
+
   // Token configuration
+  /// @inheritdoc ICappedTokenTransfers
   address public immutable TOKEN;
+  /// @inheritdoc ICappedTokenTransfers
   uint256 public immutable CAP;
+  /// @inheritdoc ICappedTokenTransfers
   uint256 public immutable EPOCH_LENGTH;
 
   // State tracking
+  /// @inheritdoc ICappedTokenTransfers
   uint256 public totalSpent;
+  /// @inheritdoc ICappedTokenTransfers
   uint256 public currentEpoch;
+  /// @inheritdoc ICappedTokenTransfers
   uint256 public startingTimestamp;
 
+  /// @inheritdoc ICappedTokenTransfers
   TokenTransfer[] public tokenTransfers;
 
+  // ~~~ CONSTRUCTOR ~~~
+
+  /**
+   * @notice Constructor that sets up the Safe, token, cap, epoch length and starting timestamp
+   * @param _safe The Gnosis Safe contract address
+   * @param _token The token contract address
+   * @param _cap The cap for the token transfers
+   * @param _epochLength The epoch length for the token transfers
+   */
   constructor(address _safe, address _token, uint256 _cap, uint256 _epochLength) SafeManageable(_safe) {
     TOKEN = _token;
     CAP = _cap;
@@ -29,19 +52,47 @@ contract CappedTokenTransfers is SafeManageable, ICappedTokenTransfers {
 
   // ~~~ ADMIN METHODS ~~~
 
+  /// @inheritdoc ICappedTokenTransfers
   function addTokenTransfer(address _recipient, uint256 _amount) external isSafeOwner {
     if (_amount == 0) revert InvalidAmount();
     tokenTransfers.push(TokenTransfer({recipient: _recipient, amount: _amount}));
   }
 
+  /// @inheritdoc ICappedTokenTransfers
   function removeTokenTransfer(uint256 _index) external isSafeOwner {
     if (_index >= tokenTransfers.length) revert InvalidIndex();
 
     delete tokenTransfers[_index];
   }
 
+  // ~~~ STATE MANAGEMENT ~~~
+
+  /// @inheritdoc ICappedTokenTransfers
+  function updateState(bytes memory _data) external isSafe {
+    uint256 _currentEpoch = (block.timestamp - startingTimestamp) / EPOCH_LENGTH;
+
+    // If we're in a new epoch, reset the spending
+    if (_currentEpoch > currentEpoch) {
+      totalSpent = 0;
+      currentEpoch = _currentEpoch;
+    }
+
+    uint256 _amount = abi.decode(_data, (uint256));
+    uint256 _totalSpent = totalSpent + _amount;
+
+    if (_totalSpent > CAP) {
+      revert CapExceeded();
+    }
+
+    totalSpent = _totalSpent;
+
+    // Clean up
+    delete tokenTransfers;
+  }
+
   // ~~~ ACTIONS METHODS ~~~
 
+  /// @inheritdoc IActionsBuilder
   function getActions() external view returns (Action[] memory _actions) {
     // Count valid transfers
     uint256 _validCount = 0;
@@ -78,27 +129,5 @@ contract CappedTokenTransfers is SafeManageable, ICappedTokenTransfers {
     }
 
     return _actions;
-  }
-
-  function updateState(bytes memory _data) external isSafe {
-    uint256 _currentEpoch = (block.timestamp - startingTimestamp) / EPOCH_LENGTH;
-
-    // If we're in a new epoch, reset the spending
-    if (_currentEpoch > currentEpoch) {
-      totalSpent = 0;
-      currentEpoch = _currentEpoch;
-    }
-
-    uint256 _amount = abi.decode(_data, (uint256));
-    uint256 _totalSpent = totalSpent + _amount;
-
-    if (_totalSpent > CAP) {
-      revert CapExceeded();
-    }
-
-    totalSpent = _totalSpent;
-
-    // Clean up
-    delete tokenTransfers;
   }
 }
