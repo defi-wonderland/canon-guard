@@ -1,0 +1,50 @@
+// SPDX-License-Identifier: UNLICENSED
+pragma solidity 0.8.29;
+
+import {Test} from 'forge-std/Test.sol';
+import {ISafeEntrypoint, SafeEntrypoint} from 'src/contracts/SafeEntrypoint.sol';
+import {SafeEntrypointFactory} from 'src/contracts/factories/SafeEntrypointFactory.sol';
+import {ISafeManageable} from 'src/interfaces/ISafeManageable.sol';
+
+contract UnitSafeEntrypointFactory is Test {
+  SafeEntrypointFactory public safeEntrypointFactory;
+  ISafeEntrypoint public ghost_safeEntrypoint;
+  address public multiSendCallOnly;
+
+  function setUp() external {
+    multiSendCallOnly = makeAddr('multiSendCallOnly');
+    safeEntrypointFactory = new SafeEntrypointFactory(multiSendCallOnly);
+  }
+
+  function test_ConstructorWhenCalledWithTheCorrectParameters() external {
+    // it should deploy a new SafeEntrypointFactory with correct parameters
+    assertEq(safeEntrypointFactory.MULTI_SEND_CALL_ONLY(), multiSendCallOnly);
+  }
+
+  function test_CreateSafeEntrypointWhenCalledWithTheCorrectParameters(
+    address _safe,
+    uint256 _shortTxExecutionDelay,
+    uint256 _longTxExecutionDelay,
+    uint256 _defaultTxExpiryDelay
+  ) external {
+    address _safeEntrypoint = safeEntrypointFactory.createSafeEntrypoint(
+      _safe, _shortTxExecutionDelay, _longTxExecutionDelay, _defaultTxExpiryDelay
+    );
+    ghost_safeEntrypoint = ISafeEntrypoint(
+      deployCode(
+        'SafeEntrypoint',
+        abi.encode(_safe, multiSendCallOnly, _shortTxExecutionDelay, _longTxExecutionDelay, _defaultTxExpiryDelay)
+      )
+    );
+
+    // it should deploy a new SafeEntrypoint with correct parameters
+    assertEq(address(ghost_safeEntrypoint).code, _safeEntrypoint.code);
+
+    // it should match the parameters sent to the constructor
+    assertEq(address(ISafeManageable(_safeEntrypoint).SAFE()), _safe);
+    assertEq(ISafeEntrypoint(_safeEntrypoint).MULTI_SEND_CALL_ONLY(), multiSendCallOnly);
+    assertEq(ISafeEntrypoint(_safeEntrypoint).SHORT_TX_EXECUTION_DELAY(), _shortTxExecutionDelay);
+    assertEq(ISafeEntrypoint(_safeEntrypoint).LONG_TX_EXECUTION_DELAY(), _longTxExecutionDelay);
+    assertEq(ISafeEntrypoint(_safeEntrypoint).DEFAULT_TX_EXPIRY_DELAY(), _defaultTxExpiryDelay);
+  }
+}
