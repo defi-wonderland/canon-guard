@@ -100,7 +100,8 @@ contract IntegrationBasicTest is DeploySaferSafe, EthereumConstants, Test {
     vm.startPrank(_safeOwner);
 
     // Queue the transaction
-    uint256 _txId = _safeEntrypoint.queueTransaction(_actionsBuilder, DEFAULT_TX_EXPIRY_DELAY);
+    bytes memory _emptyData;
+    uint256 _txId = _safeEntrypoint.queueTransaction(_actionsBuilder, DEFAULT_TX_EXPIRY_DELAY, _emptyData);
 
     // Wait for the timelock period
     vm.warp(block.timestamp + SHORT_TX_EXECUTION_DELAY);

@@ -20,11 +20,18 @@ interface IActionsBuilder {
     uint256 value;
   }
 
+  // ~~~ ERRORS ~~~
+
+  /**
+   * @notice Thrown when the data is invalid
+   */
+  error InvalidData();
+
   // ~~~ ACTIONS METHODS ~~~
 
   /**
    * @notice Gets the list of transaction actions
    * @return _actions The array of actions
    */
-  function getActions() external view returns (Action[] memory _actions);
+  function getActions(bytes memory _data) external view returns (Action[] memory _actions);
 }

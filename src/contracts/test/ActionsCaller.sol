@@ -6,8 +6,8 @@ import {IActionsBuilder} from 'interfaces/actions-builders/IActionsBuilder.sol';
 contract ActionsCaller {
   error ActionFailed(uint256 _index);
 
-  function callActions(address _actionsBuilder) external payable {
-    IActionsBuilder.Action[] memory _actions = IActionsBuilder(_actionsBuilder).getActions();
+  function callActions(address _actionsBuilder, bytes memory _actionsData) external payable {
+    IActionsBuilder.Action[] memory _actions = IActionsBuilder(_actionsBuilder).getActions(_actionsData);
 
     for (uint256 _i; _i < _actions.length; ++_i) {
       IActionsBuilder.Action memory _action = _actions[_i];

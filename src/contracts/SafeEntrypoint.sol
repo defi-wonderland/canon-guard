@@ -76,7 +76,11 @@ contract SafeEntrypoint is SafeManageable, ISafeEntrypoint {
   // ~~~ TRANSACTION METHODS ~~~
 
   /// @inheritdoc ISafeEntrypoint
-  function queueTransaction(address _actionsBuilder, uint256 _expiryDelay) external isSafeOwner returns (uint256 _txId) {
+  function queueTransaction(
+    address _actionsBuilder,
+    uint256 _expiryDelay,
+    bytes memory _actionsData
+  ) external isSafeOwner returns (uint256 _txId) {
     if (approvalExpiries[_actionsBuilder] <= block.timestamp) {
       revert ActionsBuilderNotApproved();
     }
@@ -85,7 +89,7 @@ contract SafeEntrypoint is SafeManageable, ISafeEntrypoint {
     _txId = ++transactionNonce;
 
     // Fetch actions from the builder
-    IActionsBuilder.Action[] memory _actions = IActionsBuilder(_actionsBuilder).getActions();
+    IActionsBuilder.Action[] memory _actions = IActionsBuilder(_actionsBuilder).getActions(_actionsData);
 
     // Use default expiry delay if duration is 0
     _expiryDelay = _expiryDelay == 0 ? DEFAULT_TX_EXPIRY_DELAY : _expiryDelay;

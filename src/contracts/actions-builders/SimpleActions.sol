@@ -43,7 +43,9 @@ contract SimpleActions is ISimpleActions {
   // ~~~ ACTIONS METHODS ~~~
 
   /// @inheritdoc IActionsBuilder
-  function getActions() external view returns (Action[] memory) {
+  function getActions(bytes memory _data) external view returns (Action[] memory) {
+    if (_data.length != 0) revert InvalidData();
+
     return _actions;
   }
 }

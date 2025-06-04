@@ -44,7 +44,9 @@ contract AllowanceClaimor is IAllowanceClaimor {
   // ~~~ ACTIONS METHODS ~~~
 
   /// @inheritdoc IActionsBuilder
-  function getActions() external view returns (Action[] memory _actions) {
+  function getActions(bytes memory _data) external view returns (Action[] memory _actions) {
+    if (_data.length != 0) revert InvalidData();
+
     uint256 _amountToClaim = TOKEN.allowance(TOKEN_OWNER, SAFE);
     uint256 _balance = TOKEN.balanceOf(TOKEN_OWNER);
     if (_amountToClaim > _balance) {

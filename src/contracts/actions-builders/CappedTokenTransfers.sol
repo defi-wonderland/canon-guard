@@ -31,9 +31,6 @@ contract CappedTokenTransfers is SafeManageable, ICappedTokenTransfers {
   /// @inheritdoc ICappedTokenTransfers
   uint256 public startingTimestamp;
 
-  /// @inheritdoc ICappedTokenTransfers
-  TokenTransfer[] public tokenTransfers;
-
   // ~~~ CONSTRUCTOR ~~~
 
   /**
@@ -48,21 +45,6 @@ contract CappedTokenTransfers is SafeManageable, ICappedTokenTransfers {
     CAP = _cap;
     EPOCH_LENGTH = _epochLength;
     startingTimestamp = block.timestamp;
-  }
-
-  // ~~~ ADMIN METHODS ~~~
-
-  /// @inheritdoc ICappedTokenTransfers
-  function addTokenTransfer(address _recipient, uint256 _amount) external isSafeOwner {
-    if (_amount == 0) revert InvalidAmount();
-    tokenTransfers.push(TokenTransfer({recipient: _recipient, amount: _amount}));
-  }
-
-  /// @inheritdoc ICappedTokenTransfers
-  function removeTokenTransfer(uint256 _index) external isSafeOwner {
-    if (_index >= tokenTransfers.length) revert InvalidIndex();
-
-    delete tokenTransfers[_index];
   }
 
   // ~~~ STATE MANAGEMENT ~~~
@@ -85,48 +67,37 @@ contract CappedTokenTransfers is SafeManageable, ICappedTokenTransfers {
     }
 
     totalSpent = _totalSpent;
-
-    // Clean up
-    delete tokenTransfers;
   }
 
   // ~~~ ACTIONS METHODS ~~~
 
   /// @inheritdoc IActionsBuilder
-  function getActions() external view returns (Action[] memory _actions) {
-    // Count valid transfers
-    uint256 _validCount = 0;
+  function getActions(bytes memory _data) external view returns (Action[] memory _actions) {
+    TokenTransfer[] memory _tokenTransfers = abi.decode(_data, (TokenTransfer[]));
+
+    // Create actions array: one for each valid transfer + one for updateState
+    _actions = new Action[](_tokenTransfers.length + 1);
+    // Initialize the total amount counter
     uint256 _totalAmount = 0;
-    for (uint256 i = 0; i < tokenTransfers.length; i++) {
-      if (tokenTransfers[i].amount != 0) {
-        _validCount++;
-        _totalAmount += tokenTransfers[i].amount;
-      }
+    // Add token transfers to the actions array
+    uint256 _actionIndex = 0;
+    for (uint256 i = 0; i < _tokenTransfers.length; i++) {
+      uint256 _amount = _tokenTransfers[i].amount;
+      _totalAmount += _amount;
+      _actions[_actionIndex] = Action({
+        target: TOKEN,
+        data: abi.encodeCall(IERC20.transfer, (_tokenTransfers[i].recipient, _amount)),
+        value: 0
+      });
+      _actionIndex++;
     }
 
-    // Create actions array: one for updateState + one for each valid transfer
-    uint256 _numActions = _validCount + 1;
-    _actions = new Action[](_numActions);
-
-    // First action: update state
-    _actions[0] = Action({
+    // Last action: update state
+    _actions[_actionIndex] = Action({
       target: address(this),
       data: abi.encodeCall(ICappedTokenTransfers.updateState, (abi.encode(_totalAmount))),
       value: 0
     });
-
-    // Remaining actions: valid token transfers
-    uint256 _actionIndex = 1;
-    for (uint256 i = 0; i < tokenTransfers.length; i++) {
-      if (tokenTransfers[i].amount != 0) {
-        _actions[_actionIndex] = Action({
-          target: TOKEN,
-          data: abi.encodeCall(IERC20.transfer, (tokenTransfers[i].recipient, tokenTransfers[i].amount)),
-          value: 0
-        });
-        _actionIndex++;
-      }
-    }
 
     return _actions;
   }

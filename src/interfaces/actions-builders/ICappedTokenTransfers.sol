@@ -26,8 +26,6 @@ interface ICappedTokenTransfers is ISafeManageable, IActionsBuilder {
   function currentEpoch() external view returns (uint256 _currentEpoch);
   function startingTimestamp() external view returns (uint256 _startingTimestamp);
 
-  function tokenTransfers(uint256 _index) external view returns (address _recipient, uint256 _amount);
-
   // ~~~ EVENTS ~~~
 
   // ~~~ ERRORS ~~~
@@ -35,11 +33,6 @@ interface ICappedTokenTransfers is ISafeManageable, IActionsBuilder {
   error CapExceeded();
   error InvalidAmount();
   error InvalidIndex();
-
-  // ~~~ ADMIN METHODS ~~~
-
-  function addTokenTransfer(address _recipient, uint256 _amount) external;
-  function removeTokenTransfer(uint256 _index) external;
 
   // ~~~ STATE MANAGEMENT ~~~
 

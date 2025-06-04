@@ -185,7 +185,11 @@ interface ISafeEntrypoint is ISafeManageable {
    * @param _expiryDelay The duration (in seconds) after which the transaction expires (after execution delay)
    * @return _txId The ID of the queued transaction
    */
-  function queueTransaction(address _actionsBuilder, uint256 _expiryDelay) external returns (uint256 _txId);
+  function queueTransaction(
+    address _actionsBuilder,
+    uint256 _expiryDelay,
+    bytes memory _actionsData
+  ) external returns (uint256 _txId);
 
   /**
    * @notice Queues an arbitrary transaction for execution after a long delay

@@ -127,7 +127,8 @@ contract UnitSafeEntrypoint is Test {
   ) external givenCallerIsSafeOwner(_caller) {
     vm.expectRevert(ISafeEntrypoint.ActionsBuilderNotApproved.selector);
     vm.prank(_caller);
-    safeEntrypoint.queueTransaction(_actionsBuilder, _expiryDelay);
+    bytes memory _emptyData;
+    safeEntrypoint.queueTransaction(_actionsBuilder, _expiryDelay, _emptyData);
   }
 
   function test_QueueTransactionWhenPassingValidParameters(
@@ -148,7 +149,8 @@ contract UnitSafeEntrypoint is Test {
     emit ISafeEntrypoint.TransactionQueued(1, false);
 
     vm.prank(_caller);
-    safeEntrypoint.queueTransaction(_actionsBuilder, _expiryDelay);
+    bytes memory _emptyData;
+    safeEntrypoint.queueTransaction(_actionsBuilder, _expiryDelay, _emptyData);
 
     // Verify transaction info
     (address _actionsBldr, bytes memory _actionsData, uint256 _executableAt, uint256 _expiresAt, bool _isExecuted) =
@@ -199,7 +201,8 @@ contract UnitSafeEntrypoint is Test {
 
     vm.expectRevert(ISafeManageable.NotSafeOwner.selector);
     vm.prank(_caller);
-    safeEntrypoint.queueTransaction(_actionsBuilder, _expiryDelay);
+    bytes memory _emptyData;
+    safeEntrypoint.queueTransaction(_actionsBuilder, _expiryDelay, _emptyData);
   }
 
   function test_ExecuteTransactionWhenTransactionIsExpired(
