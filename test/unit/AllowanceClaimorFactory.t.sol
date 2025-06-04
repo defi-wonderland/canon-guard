@@ -1,0 +1,38 @@
+// SPDX-License-Identifier: UNLICENSED
+pragma solidity 0.8.29;
+
+import {AllowanceClaimor} from 'contracts/actions-builders/AllowanceClaimor.sol';
+import {AllowanceClaimorFactory} from 'contracts/factories/AllowanceClaimorFactory.sol';
+import {Test} from 'forge-std/Test.sol';
+import {IAllowanceClaimor} from 'interfaces/actions-builders/IAllowanceClaimor.sol';
+
+contract UnitAllowanceClaimorFactorycreateAllowanceClaimor is Test {
+  AllowanceClaimorFactory public allowanceClaimorFactory;
+  IAllowanceClaimor public ghost_allowanceClaimor;
+
+  function setUp() external {
+    allowanceClaimorFactory = new AllowanceClaimorFactory();
+  }
+
+  function test_WhenCalledWithValidParameters(
+    address _safe,
+    address _token,
+    address _tokenOwner,
+    address _tokenRecipient
+  ) external {
+    address _allowanceClaimor =
+      allowanceClaimorFactory.createAllowanceClaimor(_safe, _token, _tokenOwner, _tokenRecipient);
+
+    ghost_allowanceClaimor =
+      IAllowanceClaimor(deployCode('AllowanceClaimor', abi.encode(_safe, _token, _tokenOwner, _tokenRecipient)));
+
+    // it should deploy a AllowanceClaimor contract with correct args
+    assertEq(address(ghost_allowanceClaimor).code, _allowanceClaimor.code);
+
+    // it should match the parameters sent to the constructor
+    assertEq(IAllowanceClaimor(_allowanceClaimor).SAFE(), _safe);
+    assertEq(address(IAllowanceClaimor(_allowanceClaimor).TOKEN()), _token);
+    assertEq(IAllowanceClaimor(_allowanceClaimor).TOKEN_OWNER(), _tokenOwner);
+    assertEq(IAllowanceClaimor(_allowanceClaimor).TOKEN_RECIPIENT(), _tokenRecipient);
+  }
+}
