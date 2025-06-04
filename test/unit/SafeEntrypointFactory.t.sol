@@ -2,8 +2,8 @@
 pragma solidity 0.8.29;
 
 import {Test} from 'forge-std/Test.sol';
-import {ISafeEntrypoint, SafeEntrypoint} from 'src/contracts/SafeEntrypoint.sol';
 import {SafeEntrypointFactory} from 'src/contracts/factories/SafeEntrypointFactory.sol';
+import {ISafeEntrypoint} from 'src/interfaces/ISafeEntrypoint.sol';
 import {ISafeManageable} from 'src/interfaces/ISafeManageable.sol';
 
 contract UnitSafeEntrypointFactory is Test {
