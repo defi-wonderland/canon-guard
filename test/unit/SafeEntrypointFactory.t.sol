@@ -16,12 +16,12 @@ contract UnitSafeEntrypointFactory is Test {
     safeEntrypointFactory = new SafeEntrypointFactory(multiSendCallOnly);
   }
 
-  function test_ConstructorWhenCalledWithTheCorrectParameters() external {
+  function test_ConstructorWhenCalled() external {
     // it should deploy a new SafeEntrypointFactory with correct parameters
     assertEq(safeEntrypointFactory.MULTI_SEND_CALL_ONLY(), multiSendCallOnly);
   }
 
-  function test_CreateSafeEntrypointWhenCalledWithTheCorrectParameters(
+  function test_CreateSafeEntrypointWhenCalled(
     address _safe,
     uint256 _shortTxExecutionDelay,
     uint256 _longTxExecutionDelay,

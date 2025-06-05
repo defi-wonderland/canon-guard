@@ -1,8 +1,8 @@
 UnitSafeEntrypointFactory::constructor
-└── when called with the correct parameters
+└── when called
     └── it should deploy a new SafeEntrypointFactory with correct parameters
 
 UnitSafeEntrypointFactory::createSafeEntrypoint
-└── when called with the correct parameters
+└── when called
     ├── it should deploy a new SafeEntrypoint with correct parameters
     └── it should match the parameters sent to the constructor
