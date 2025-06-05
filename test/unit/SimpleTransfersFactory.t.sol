@@ -13,7 +13,7 @@ contract UnitSimpleTransfersFactorycreateSimpleTransfers is Test {
     simpleTransfersFactory = new SimpleTransfersFactory();
   }
 
-  function test_WhenCalledWithValidParameters(address _token, address _to, uint256 _amount) external {
+  function test_WhenCalled(address _token, address _to, uint256 _amount) external {
     ISimpleTransfers.TransferAction[] memory _transferActions = new ISimpleTransfers.TransferAction[](1);
     _transferActions[0] = ISimpleTransfers.TransferAction({token: _token, to: _to, amount: _amount});
 
