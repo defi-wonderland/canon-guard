@@ -7,7 +7,7 @@ import {OnlyEntrypointGuard} from 'contracts/OnlyEntrypointGuard.sol';
 
 import {IOnlyEntrypointGuard} from 'interfaces/IOnlyEntrypointGuard.sol';
 import {ISafeEntrypoint} from 'interfaces/ISafeEntrypoint.sol';
-import {ISimpleActions} from 'interfaces/actions/ISimpleActions.sol';
+import {ISimpleActions} from 'interfaces/actions-builders/ISimpleActions.sol';
 
 import {ISafe} from '@safe-smart-account/interfaces/ISafe.sol';
 

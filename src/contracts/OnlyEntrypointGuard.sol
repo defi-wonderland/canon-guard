@@ -4,6 +4,7 @@ pragma solidity 0.8.29;
 import {IOnlyEntrypointGuard} from 'interfaces/IOnlyEntrypointGuard.sol';
 
 import {BaseTransactionGuard} from '@safe-smart-account/base/GuardManager.sol';
+import {ITransactionGuard} from '@safe-smart-account/base/GuardManager.sol';
 import {SignatureDecoder} from '@safe-smart-account/common/SignatureDecoder.sol';
 import {Enum} from '@safe-smart-account/libraries/Enum.sol';
 
@@ -12,6 +13,8 @@ import {Enum} from '@safe-smart-account/libraries/Enum.sol';
  * @notice Guard that ensures transactions are either executed through the entrypoint or by an emergency caller
  */
 contract OnlyEntrypointGuard is BaseTransactionGuard, SignatureDecoder, IOnlyEntrypointGuard {
+  // ~~~ STORAGE ~~~
+
   /// @inheritdoc IOnlyEntrypointGuard
   uint8 public constant APPROVED_HASH_SIGNATURE_TYPE = 1;
 
@@ -23,6 +26,8 @@ contract OnlyEntrypointGuard is BaseTransactionGuard, SignatureDecoder, IOnlyEnt
 
   /// @inheritdoc IOnlyEntrypointGuard
   address public immutable MULTI_SEND_CALL_ONLY;
+
+  // ~~~ CONSTRUCTOR ~~~
 
   /**
    * @notice Constructor that sets up the guard
@@ -36,6 +41,8 @@ contract OnlyEntrypointGuard is BaseTransactionGuard, SignatureDecoder, IOnlyEnt
     MULTI_SEND_CALL_ONLY = _multiSendCallOnly;
   }
 
+  // ~~~ FALLBACK ~~~
+
   /**
    * @notice Fallback to avoid issues in case of a Safe upgrade
    * @dev The expected check method might change and then the Safe would be locked
@@ -43,13 +50,9 @@ contract OnlyEntrypointGuard is BaseTransactionGuard, SignatureDecoder, IOnlyEnt
   // solhint-disable-next-line payable-fallback
   fallback() external {}
 
-  /**
-   * @notice Checks if a transaction is allowed to be executed before execution
-   * @param _to The address to which the transaction is intended
-   * @param _operation The type of operation of the transaction
-   * @param _signatures The signatures of the transaction
-   * @param _msgSender The address of the message sender
-   */
+  // ~~~ GUARD METHODS ~~~
+
+  /// @inheritdoc ITransactionGuard
   function checkTransaction(
     address _to,
     uint256, /* _value */
@@ -81,11 +84,12 @@ contract OnlyEntrypointGuard is BaseTransactionGuard, SignatureDecoder, IOnlyEnt
     }
   }
 
-  /**
-   * @notice Checks if a transaction is allowed to be executed after execution
-   * @dev No post-execution checks needed
-   */
-  function checkAfterExecution(bytes32, /* _hash */ bool /* _success */ ) external pure override {}
+  /// @inheritdoc ITransactionGuard
+  function checkAfterExecution(bytes32, /* _hash */ bool /* _success */ ) external pure override {
+    // No post-execution checks needed
+  }
+
+  // ~~~ INTERNAL PURE METHODS ~~~
 
   /**
    * @notice Validates that all signatures are approved hash signatures

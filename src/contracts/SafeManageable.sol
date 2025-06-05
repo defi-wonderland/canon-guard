@@ -33,6 +33,8 @@ abstract contract SafeManageable is ISafeManageable {
     _;
   }
 
+  // ~~~ CONSTRUCTOR ~~~
+
   /**
    * @notice Constructor that sets up the Safe contract
    * @param _safe The Gnosis Safe contract address

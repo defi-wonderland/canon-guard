@@ -4,7 +4,7 @@ pragma solidity 0.8.29;
 import {SafeManageable} from 'contracts/SafeManageable.sol';
 
 import {ISafeEntrypoint} from 'interfaces/ISafeEntrypoint.sol';
-import {IActionsBuilder} from 'interfaces/actions/IActionsBuilder.sol';
+import {IActionsBuilder} from 'interfaces/actions-builders/IActionsBuilder.sol';
 
 import {Enum} from '@safe-smart-account/libraries/Enum.sol';
 import {MultiSendCallOnly} from '@safe-smart-account/libraries/MultiSendCallOnly.sol';
@@ -40,8 +40,10 @@ contract SafeEntrypoint is SafeManageable, ISafeEntrypoint {
   /// @inheritdoc ISafeEntrypoint
   mapping(address _signer => mapping(bytes32 _safeTxHash => bool _isDisapproved)) public disapprovedHashes;
 
+  // ~~~ CONSTRUCTOR ~~~
+
   /**
-   * @notice Constructor that sets up the Safe and MultiSendCallOnly contracts
+   * @notice Constructor that sets up the Safe, MultiSendCallOnly, execution delays and default expiry delay
    * @param _safe The Gnosis Safe contract address
    * @param _multiSendCallOnly The MultiSendCallOnly contract address
    * @param _shortTxExecutionDelay The short transaction execution delay (in seconds)
@@ -174,7 +176,7 @@ contract SafeEntrypoint is SafeManageable, ISafeEntrypoint {
     emit SafeTransactionHashDisapproved(_safeTxHash, msg.sender);
   }
 
-  // ~~~ EXTERNAL VIEW METHODS ~~~
+  // ~~~ GETTER METHODS ~~~
 
   /// @inheritdoc ISafeEntrypoint
   function getSafeTransactionHash(uint256 _txId) external view returns (bytes32 _safeTxHash) {
@@ -190,8 +192,6 @@ contract SafeEntrypoint is SafeManageable, ISafeEntrypoint {
   function getApprovedHashSigners(bytes32 _safeTxHash) external view returns (address[] memory _approvedHashSigners) {
     _approvedHashSigners = _getApprovedHashSigners(_safeTxHash);
   }
-
-  // ~~~ PUBLIC VIEW METHODS ~~~
 
   /// @inheritdoc ISafeEntrypoint
   function getSafeTransactionHash(uint256 _txId, uint256 _safeNonce) public view returns (bytes32 _safeTxHash) {

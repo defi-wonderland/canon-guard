@@ -1,16 +1,16 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.29;
 
-import {SafeEntrypointForTest} from './mocks/SafeEntrypointForTest.sol';
+import {SafeEntrypointForTest} from './SafeEntrypointForTest.sol';
 import {IOwnerManager} from '@safe-smart-account/interfaces/IOwnerManager.sol';
 import {ISafe} from '@safe-smart-account/interfaces/ISafe.sol';
-import {ISafeEntrypoint, SafeEntrypoint} from 'contracts/SafeEntrypoint.sol';
-import {ISafeManageable, SafeManageable} from 'contracts/SafeManageable.sol';
+import {ISafeEntrypoint} from 'contracts/SafeEntrypoint.sol';
+import {ISafeManageable} from 'contracts/SafeManageable.sol';
 import {Test} from 'forge-std/Test.sol';
-import {IActionsBuilder} from 'interfaces/actions/IActionsBuilder.sol';
+import {IActionsBuilder} from 'interfaces/actions-builders/IActionsBuilder.sol';
 
 contract UnitSafeEntrypoint is Test {
-  SafeEntrypointForTest safeEntrypoint;
+  SafeEntrypointForTest public safeEntrypoint;
 
   uint256 public constant SHORT_TX_EXECUTION_DELAY = 1 hours;
   uint256 public constant LONG_TX_EXECUTION_DELAY = 7 days;
@@ -151,10 +151,10 @@ contract UnitSafeEntrypoint is Test {
     safeEntrypoint.queueTransaction(_actionsBuilder, _expiryDelay);
 
     // Verify transaction info
-    (address _actionsBuilder, bytes memory _actionsData, uint256 _executableAt, uint256 _expiresAt, bool _isExecuted) =
+    (address _actionsBldr, bytes memory _actionsData, uint256 _executableAt, uint256 _expiresAt, bool _isExecuted) =
       safeEntrypoint.transactions(1);
 
-    assertEq(_actionsBuilder, _actionsBuilder);
+    assertEq(_actionsBldr, _actionsBuilder);
     assertEq(_actionsData, abi.encode(new IActionsBuilder.Action[](0)));
     assertEq(_executableAt, block.timestamp + SHORT_TX_EXECUTION_DELAY);
     assertEq(_expiresAt, block.timestamp + SHORT_TX_EXECUTION_DELAY + _expiryDelay);
@@ -208,7 +208,7 @@ contract UnitSafeEntrypoint is Test {
     IActionsBuilder.Action calldata _action,
     ISafeEntrypoint.TransactionInfo memory _txInfo
   ) external {
-    vm.assume(_txInfo.expiresAt < type(uint256).max);
+    vm.assume(_txInfo.expiresAt < type(uint64).max - 1);
     _txInfo.executableAt = bound(_txInfo.executableAt, 0, block.timestamp);
     _txInfo.isExecuted = false;
     IActionsBuilder.Action[] memory _actions = new IActionsBuilder.Action[](1);
@@ -226,6 +226,7 @@ contract UnitSafeEntrypoint is Test {
     vm.warp(_txInfo.expiresAt + 1);
 
     vm.expectRevert(ISafeEntrypoint.TransactionExpired.selector);
+    vm.prank(_caller);
     safeEntrypoint.executeTransaction(_txId);
   }
 
