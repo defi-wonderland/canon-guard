@@ -8,7 +8,7 @@ import {ISafeManageable} from 'src/interfaces/ISafeManageable.sol';
 
 contract UnitSafeEntrypointFactory is Test {
   SafeEntrypointFactory public safeEntrypointFactory;
-  ISafeEntrypoint public ghost_safeEntrypoint;
+  ISafeEntrypoint public auxSafeEntrypoint;
   address public multiSendCallOnly;
 
   function setUp() external {
@@ -30,7 +30,7 @@ contract UnitSafeEntrypointFactory is Test {
     address _safeEntrypoint = safeEntrypointFactory.createSafeEntrypoint(
       _safe, _shortTxExecutionDelay, _longTxExecutionDelay, _defaultTxExpiryDelay
     );
-    ghost_safeEntrypoint = ISafeEntrypoint(
+    auxSafeEntrypoint = ISafeEntrypoint(
       deployCode(
         'SafeEntrypoint',
         abi.encode(_safe, multiSendCallOnly, _shortTxExecutionDelay, _longTxExecutionDelay, _defaultTxExpiryDelay)
@@ -38,7 +38,7 @@ contract UnitSafeEntrypointFactory is Test {
     );
 
     // it should deploy a new SafeEntrypoint with correct parameters
-    assertEq(address(ghost_safeEntrypoint).code, _safeEntrypoint.code);
+    assertEq(address(auxSafeEntrypoint).code, _safeEntrypoint.code);
 
     // it should match the parameters sent to the constructor
     assertEq(address(ISafeManageable(_safeEntrypoint).SAFE()), _safe);
