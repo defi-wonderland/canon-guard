@@ -13,7 +13,7 @@ contract UnitSimpleActionsFactorycreateSimpleActions is Test {
     simpleActionsFactory = new SimpleActionsFactory();
   }
 
-  function test_WhenCalledWithValidParameters(ISimpleActions.SimpleAction memory _simpleActions) external {
+  function test_WhenCalled(ISimpleActions.SimpleAction memory _simpleActions) external {
     ISimpleActions.SimpleAction[] memory _actions = new ISimpleActions.SimpleAction[](1);
     _actions[0] = _simpleActions;
 
