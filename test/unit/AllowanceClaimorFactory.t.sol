@@ -7,7 +7,7 @@ import {IAllowanceClaimor} from 'interfaces/actions-builders/IAllowanceClaimor.s
 
 contract UnitAllowanceClaimorFactorycreateAllowanceClaimor is Test {
   AllowanceClaimorFactory public allowanceClaimorFactory;
-  IAllowanceClaimor public ghost_allowanceClaimor;
+  IAllowanceClaimor public auxAllowanceClaimor;
 
   function setUp() external {
     allowanceClaimorFactory = new AllowanceClaimorFactory();
@@ -17,11 +17,11 @@ contract UnitAllowanceClaimorFactorycreateAllowanceClaimor is Test {
     address _allowanceClaimor =
       allowanceClaimorFactory.createAllowanceClaimor(_safe, _token, _tokenOwner, _tokenRecipient);
 
-    ghost_allowanceClaimor =
+    auxAllowanceClaimor =
       IAllowanceClaimor(deployCode('AllowanceClaimor', abi.encode(_safe, _token, _tokenOwner, _tokenRecipient)));
 
     // it should deploy a AllowanceClaimor contract with correct args
-    assertEq(address(ghost_allowanceClaimor).code, _allowanceClaimor.code);
+    assertEq(address(auxAllowanceClaimor).code, _allowanceClaimor.code);
 
     // it should match the parameters sent to the constructor
     assertEq(IAllowanceClaimor(_allowanceClaimor).SAFE(), _safe);
