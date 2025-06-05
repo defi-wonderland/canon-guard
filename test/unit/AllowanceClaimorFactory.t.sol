@@ -13,12 +13,7 @@ contract UnitAllowanceClaimorFactorycreateAllowanceClaimor is Test {
     allowanceClaimorFactory = new AllowanceClaimorFactory();
   }
 
-  function test_WhenCalledWithValidParameters(
-    address _safe,
-    address _token,
-    address _tokenOwner,
-    address _tokenRecipient
-  ) external {
+  function test_WhenCalled(address _safe, address _token, address _tokenOwner, address _tokenRecipient) external {
     address _allowanceClaimor =
       allowanceClaimorFactory.createAllowanceClaimor(_safe, _token, _tokenOwner, _tokenRecipient);
 

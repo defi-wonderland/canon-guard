@@ -1,4 +1,4 @@
 UnitAllowanceClaimorFactory::createAllowanceClaimor
-└── when called with valid parameters
+└── when called
     ├── it should deploy a AllowanceClaimor contract with correct args
     └── it should match the parameters sent to the constructor
