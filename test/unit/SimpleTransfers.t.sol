@@ -7,36 +7,36 @@ import {SimpleTransfers} from 'src/contracts/actions-builders/SimpleTransfers.so
 import {ISimpleTransfers} from 'src/interfaces/actions-builders/ISimpleTransfers.sol';
 
 contract UnitSimpleTransfersconstructor is Test {
-  SimpleTransfers public _simpleTransfers;
-  ISimpleTransfers.TransferAction[] public _transferActions;
+  SimpleTransfers public simpleTransfers;
+  ISimpleTransfers.TransferAction[] public transferActions;
 
   function setUp() external {
-    _transferActions.push(ISimpleTransfers.TransferAction({token: address(0), to: address(1), amount: 100}));
-    _transferActions.push(ISimpleTransfers.TransferAction({token: address(1), to: address(2), amount: 200}));
+    transferActions.push(ISimpleTransfers.TransferAction({token: address(0), to: address(1), amount: 100}));
+    transferActions.push(ISimpleTransfers.TransferAction({token: address(1), to: address(2), amount: 200}));
   }
 
   function test_WhenRun() external {
     // it should emit the events
-    for (uint256 _i; _i < _transferActions.length; _i++) {
+    for (uint256 _i; _i < transferActions.length; _i++) {
       vm.expectEmit();
       emit ISimpleTransfers.TransferActionAdded(
-        _transferActions[_i].token, _transferActions[_i].to, _transferActions[_i].amount
+        transferActions[_i].token, transferActions[_i].to, transferActions[_i].amount
       );
     }
 
-    _simpleTransfers = new SimpleTransfers(_transferActions);
+    simpleTransfers = new SimpleTransfers(transferActions);
 
     // it should add the transfer to the actions array with correct values
-    for (uint256 _i; _i < _transferActions.length; _i++) {
-      ISimpleTransfers.TransferAction memory _transferAction = _transferActions[_i];
+    for (uint256 _i; _i < transferActions.length; _i++) {
+      ISimpleTransfers.TransferAction memory _transferAction = transferActions[_i];
 
       // it should add the actions to the actions array with correct values
-      assertEq(_simpleTransfers.getActions()[_i].target, _transferActions[_i].token);
+      assertEq(simpleTransfers.getActions()[_i].target, transferActions[_i].token);
       assertEq(
-        _simpleTransfers.getActions()[_i].data,
+        simpleTransfers.getActions()[_i].data,
         abi.encodeCall(IERC20.transfer, (_transferAction.to, _transferAction.amount))
       );
-      assertEq(_simpleTransfers.getActions()[_i].value, 0);
+      assertEq(simpleTransfers.getActions()[_i].value, 0);
     }
   }
 }
