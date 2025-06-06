@@ -7,7 +7,7 @@ import {AllowanceClaimor} from 'src/contracts/actions-builders/AllowanceClaimor.
 import {IActionsBuilder} from 'src/interfaces/actions-builders/IActionsBuilder.sol';
 
 contract UnitAllowanceClaimor is Test {
-  AllowanceClaimor public _allowanceClaimor;
+  AllowanceClaimor public allowanceClaimor;
   address public safe;
   address public token;
   address public tokenOwner;
@@ -19,7 +19,7 @@ contract UnitAllowanceClaimor is Test {
     tokenOwner = makeAddr('tokenOwner');
     tokenRecipient = makeAddr('tokenRecipient');
 
-    _allowanceClaimor = new AllowanceClaimor(safe, token, tokenOwner, tokenRecipient);
+    allowanceClaimor = new AllowanceClaimor(safe, token, tokenOwner, tokenRecipient);
   }
 
   function _mockAndExpect(address _target, bytes memory _call, bytes memory _returnData) internal {
@@ -33,13 +33,13 @@ contract UnitAllowanceClaimor is Test {
     address _tokenOwner,
     address _tokenRecipient
   ) external {
-    _allowanceClaimor = new AllowanceClaimor(_safe, _token, _tokenOwner, _tokenRecipient);
+    allowanceClaimor = new AllowanceClaimor(_safe, _token, _tokenOwner, _tokenRecipient);
 
     // it should set the correct values
-    assertEq(_allowanceClaimor.SAFE(), _safe);
-    assertEq(address(_allowanceClaimor.TOKEN()), _token);
-    assertEq(_allowanceClaimor.TOKEN_OWNER(), _tokenOwner);
-    assertEq(_allowanceClaimor.TOKEN_RECIPIENT(), _tokenRecipient);
+    assertEq(allowanceClaimor.SAFE(), _safe);
+    assertEq(address(allowanceClaimor.TOKEN()), _token);
+    assertEq(allowanceClaimor.TOKEN_OWNER(), _tokenOwner);
+    assertEq(allowanceClaimor.TOKEN_RECIPIENT(), _tokenRecipient);
   }
 
   modifier whenCalled() {
@@ -53,7 +53,7 @@ contract UnitAllowanceClaimor is Test {
     // it should call balanceOf on the token
     _mockAndExpect(token, abi.encodeWithSelector(IERC20.balanceOf.selector, tokenOwner), abi.encode(_balance));
 
-    _allowanceClaimor.getActions();
+    allowanceClaimor.getActions();
   }
 
   function test_GetActionsWhenAmountToClaimIsGreaterThanBalance(
@@ -67,7 +67,7 @@ contract UnitAllowanceClaimor is Test {
     _mockAndExpect(token, abi.encodeWithSelector(IERC20.balanceOf.selector, tokenOwner), abi.encode(_balance));
 
     // it should set amount to claim to balance
-    IActionsBuilder.Action[] memory _actions = _allowanceClaimor.getActions();
+    IActionsBuilder.Action[] memory _actions = allowanceClaimor.getActions();
     assertEq(_actions.length, 1);
     assertEq(_actions[0].target, token);
     assertEq(
@@ -87,7 +87,7 @@ contract UnitAllowanceClaimor is Test {
     _mockAndExpect(token, abi.encodeWithSelector(IERC20.balanceOf.selector, tokenOwner), abi.encode(_balance));
 
     // it should return the correct actions
-    IActionsBuilder.Action[] memory _actions = _allowanceClaimor.getActions();
+    IActionsBuilder.Action[] memory _actions = allowanceClaimor.getActions();
     assertEq(_actions.length, 1);
     assertEq(_actions[0].target, token);
     assertEq(
