@@ -1,0 +1,25 @@
+UnitOnlyEntrypointGuard::constructor
+└── when passing valid parameters
+    ├── it sets entrypoint address
+    ├── it sets emergency caller address
+    └── it sets multiSendCallOnly address
+
+
+UnitOnlyEntrypointGuard::checkTransaction
+├── when caller is entrypoint or emergency caller
+│   ├── when operation is delegate call
+│   │   ├── when target is multiSendCallOnly
+│   │   │   └── it allows transaction
+│   │   └── when target is not multiSendCallOnly
+│   │       └── it reverts with UnauthorizedDelegateCall
+│   └── when signature is not approved hash signature
+│       └── it reverts with InvalidSignatureType
+└── when caller is not entrypoint or emergency caller
+    └── it reverts with UnauthorizedSender
+
+
+UnitOnlyEntrypointGuard::_isValidSignatureType
+├── when at least one of the signatures is not an approved hash signature
+│   └── it returns false
+└── when all signatures are approved hash signatures
+    └── it returns true
