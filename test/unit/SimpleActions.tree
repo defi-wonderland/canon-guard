@@ -1,0 +1,4 @@
+UnitSimpleActions::constructor
+└── when run
+    ├── it should add the actions to the actions array with correct values
+    └── it should emit the events
