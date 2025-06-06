@@ -9,4 +9,8 @@ contract OnlyEntrypointGuardForTest is OnlyEntrypointGuard {
     address _emergencyCaller,
     address _multiSendCallOnly
   ) OnlyEntrypointGuard(_entrypoint, _emergencyCaller, _multiSendCallOnly) {}
+
+  function isValidSignatureType(bytes memory _signatures) public pure returns (bool _isValid) {
+    return _isValidSignatureType(_signatures);
+  }
 }

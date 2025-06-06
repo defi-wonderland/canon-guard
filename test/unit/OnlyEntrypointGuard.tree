@@ -6,21 +6,20 @@ UnitOnlyEntrypointGuard::constructor
 
 
 UnitOnlyEntrypointGuard::checkTransaction
-├── when caller is entrypoint
-│   ├── when operation is entrypoint call
-│   │   └── it allows transaction
-│   └── when operation is entrypoint delegate call
-│       ├── when target is entrypoint multiSendCallOnly
-│       │   └── it allows transaction
-│       └── when target is not entrypoint multiSendCallOnly
-│           └── it reverts with UnauthorizedDelegateCall
-├── when caller is emergency caller
-│   ├── when operation is emergency call
-│   │   └── it allows transaction
-│   └── when operation is emergency delegate call
-│       ├── when target is emergency multiSendCallOnly
-│       │   └── it allows transaction
-│       └── when target is not emergency multiSendCallOnly
-│           └── it reverts with UnauthorizedDelegateCall
+├── when caller is entrypoint or emergency caller
+│   ├── when operation is delegate call
+│   │   ├── when target is multiSendCallOnly
+│   │   │   └── it allows transaction
+│   │   └── when target is not multiSendCallOnly
+│   │       └── it reverts with UnauthorizedDelegateCall
+│   └── when signature is not approved hash signature
+│       └── it reverts with InvalidSignatureType
 └── when caller is not entrypoint or emergency caller
     └── it reverts with UnauthorizedSender
+
+
+UnitOnlyEntrypointGuard::_isValidSignatureType
+├── when at least one of the signatures is not an approved hash signature
+│   └── it returns false
+└── when all signatures are approved hash signatures
+    └── it returns true
