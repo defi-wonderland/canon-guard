@@ -1,0 +1,4 @@
+UnitSimpleTransfers::constructor
+└── when run
+    ├── it should add the transfer to the actions array with correct values
+    └── it should emit the events
