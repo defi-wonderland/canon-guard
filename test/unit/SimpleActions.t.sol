@@ -27,8 +27,6 @@ contract UnitSimpleActionsconstructor is Test {
         value: 0
       })
     );
-
-    simpleActions = new SimpleActions(actions);
   }
 
   function test_WhenRun() external {
