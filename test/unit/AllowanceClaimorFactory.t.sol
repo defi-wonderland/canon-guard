@@ -20,7 +20,7 @@ contract UnitAllowanceClaimorFactorycreateAllowanceClaimor is Test {
     auxAllowanceClaimor =
       IAllowanceClaimor(deployCode('AllowanceClaimor', abi.encode(_safe, _token, _tokenOwner, _tokenRecipient)));
 
-    // it should deploy a AllowanceClaimor contract with correct args
+    // it should deploy a AllowanceClaimor contract
     assertEq(address(auxAllowanceClaimor).code, _allowanceClaimor.code);
 
     // it should match the parameters sent to the constructor
