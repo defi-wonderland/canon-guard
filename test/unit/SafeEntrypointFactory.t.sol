@@ -37,7 +37,7 @@ contract UnitSafeEntrypointFactory is Test {
       )
     );
 
-    // it should deploy a new SafeEntrypoint with correct parameters
+    // it should deploy a new SafeEntrypoint
     assertEq(address(auxSafeEntrypoint).code, _safeEntrypoint.code);
 
     // it should match the parameters sent to the constructor

@@ -4,5 +4,5 @@ UnitSafeEntrypointFactory::constructor
 
 UnitSafeEntrypointFactory::createSafeEntrypoint
 └── when called
-    ├── it should deploy a new SafeEntrypoint with correct parameters
+    ├── it should deploy a new SafeEntrypoint
     └── it should match the parameters sent to the constructor
