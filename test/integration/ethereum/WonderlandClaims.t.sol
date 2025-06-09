@@ -33,6 +33,10 @@ contract IntegrationWonderlandClaims is IntegrationEthereumBase {
   }
 
   function test_ExecuteTransaction() public {
+    assertEq(GTC.balanceOf(address(SAFE_PROXY)), _safeBalance);
+    assertEq(BAL.balanceOf(address(SAFE_PROXY)), _safeBalance);
+    assertEq(KP3R.balanceOf(address(SAFE_PROXY)), _safeBalance);
+
     // Allow the SafeEntrypoint to call the SimpleTransfers contract
     uint256 _approvalDuration = block.timestamp + 1 days;
 

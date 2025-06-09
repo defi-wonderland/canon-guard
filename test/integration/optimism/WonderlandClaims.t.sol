@@ -49,6 +49,10 @@ contract IntegrationWonderlandClaims is IntegrationOptimismBase {
   }
 
   function test_ExecuteTransaction() public {
+    assertEq(OP.balanceOf(address(SAFE_PROXY)), _safeBalance);
+    assertEq(KITE.balanceOf(address(SAFE_PROXY)), _safeBalance);
+    assertEq(WLD.balanceOf(address(SAFE_PROXY)), _safeBalance);
+
     // Allow the SafeEntrypoint to call the SimpleTransfers contract
     uint256 _approvalDuration = block.timestamp + 1 days;
 
