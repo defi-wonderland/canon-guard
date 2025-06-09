@@ -8,17 +8,17 @@ import {IntegrationOptimismBase} from 'test/integration/optimism/IntegrationOpti
 contract IntegrationWonderlandClaims is IntegrationOptimismBase {
   address internal _actionsBuilder;
 
-  address internal OPx = 0x1828Bff08BD244F7990edDCd9B19cc654b33cDB4;
-  address internal KITEVestingPlans = 0x1bb64AF7FE05fc69c740609267d2AbE3e119Ef82;
-  address internal WLDVestingWallet = 0x5823c2D5cDB86547d10c312E7d3260603CdD085b;
+  address internal _OPx = 0x1828Bff08BD244F7990edDCd9B19cc654b33cDB4;
+  address internal _KITEVestingPlans = 0x1bb64AF7FE05fc69c740609267d2AbE3e119Ef82;
+  address internal _WLDVestingWallet = 0x5823c2D5cDB86547d10c312E7d3260603CdD085b;
 
   function setUp() public override {
     super.setUp();
 
     // Deploy the SimpleActions contract
-    uint256 _opxBalance = IERC20(OPx).balanceOf(address(SAFE_PROXY));
+    uint256 _opxBalance = IERC20(_OPx).balanceOf(address(SAFE_PROXY));
     ISimpleActions.SimpleAction memory _claimOP = ISimpleActions.SimpleAction({
-      target: address(OPx),
+      target: address(_OPx),
       signature: 'downgrade(uint256)',
       data: abi.encode(_opxBalance),
       value: 0
@@ -27,14 +27,14 @@ contract IntegrationWonderlandClaims is IntegrationOptimismBase {
     uint256[] memory _kiteVestingPlans = new uint256[](1);
     _kiteVestingPlans[0] = 9;
     ISimpleActions.SimpleAction memory _claimKITE = ISimpleActions.SimpleAction({
-      target: address(KITEVestingPlans),
+      target: address(_KITEVestingPlans),
       signature: 'redeemPlans(uint256[])',
       data: abi.encode(_kiteVestingPlans),
       value: 0
     });
 
     ISimpleActions.SimpleAction memory _claimWLD = ISimpleActions.SimpleAction({
-      target: address(WLDVestingWallet),
+      target: address(_WLDVestingWallet),
       signature: 'release(address)',
       data: abi.encode(address(WLD)),
       value: 0
