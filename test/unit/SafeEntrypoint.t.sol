@@ -208,7 +208,7 @@ contract UnitSafeEntrypoint is Test {
     IActionsBuilder.Action calldata _action,
     ISafeEntrypoint.TransactionInfo memory _txInfo
   ) external {
-    vm.assume(_txInfo.expiresAt < type(uint256).max);
+    vm.assume(_txInfo.expiresAt < type(uint64).max - 1);
     _txInfo.executableAt = bound(_txInfo.executableAt, 0, block.timestamp);
     _txInfo.isExecuted = false;
     IActionsBuilder.Action[] memory _actions = new IActionsBuilder.Action[](1);

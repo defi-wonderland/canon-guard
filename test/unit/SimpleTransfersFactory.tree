@@ -1,0 +1,4 @@
+UnitSimpleTransfersFactory::createSimpleTransfers
+└── when called
+    ├── it should deploy a SimpleTransfers contract with correct args
+    └── it should match the parameters sent to the constructor
