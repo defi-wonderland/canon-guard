@@ -7,22 +7,22 @@ import {IntegrationEthereumBase} from 'test/integration/ethereum/IntegrationEthe
 contract IntegrationWonderlandClaims is IntegrationEthereumBase {
   address internal _actionsBuilder;
 
-  address internal _GTCSimpleEscrow = 0x7DAE0a882bd4511fa6918e6A35B21aD31a89E3Ab;
-  address internal _BALSimpleEscrow = 0xD6208F3B61640baEbb71aa59b58Cc61E32F8Ddf5;
-  address internal _KP3RSimpleEscrow = 0x164A0619E3C18023fbbCBBB5ab8f332F389Eb731;
+  address internal _gtcSimpleEscrow = 0x7DAE0a882bd4511fa6918e6A35B21aD31a89E3Ab;
+  address internal _balSimpleEscrow = 0xD6208F3B61640baEbb71aa59b58Cc61E32F8Ddf5;
+  address internal _kp3rSimpleEscrow = 0x164A0619E3C18023fbbCBBB5ab8f332F389Eb731;
 
   function setUp() public override {
     super.setUp();
 
     // Deploy the SimpleActions contract
     ISimpleActions.SimpleAction memory _claimGTC =
-      ISimpleActions.SimpleAction({target: address(_GTCSimpleEscrow), signature: 'claim()', data: '', value: 0});
+      ISimpleActions.SimpleAction({target: address(_gtcSimpleEscrow), signature: 'claim()', data: '', value: 0});
 
     ISimpleActions.SimpleAction memory _claimBAL =
-      ISimpleActions.SimpleAction({target: address(_BALSimpleEscrow), signature: 'claim()', data: '', value: 0});
+      ISimpleActions.SimpleAction({target: address(_balSimpleEscrow), signature: 'claim()', data: '', value: 0});
 
     ISimpleActions.SimpleAction memory _claimKP3R =
-      ISimpleActions.SimpleAction({target: address(_KP3RSimpleEscrow), signature: 'claim()', data: '', value: 0});
+      ISimpleActions.SimpleAction({target: address(_kp3rSimpleEscrow), signature: 'claim()', data: '', value: 0});
 
     ISimpleActions.SimpleAction[] memory _simpleActions = new ISimpleActions.SimpleAction[](3);
     _simpleActions[0] = _claimGTC;
