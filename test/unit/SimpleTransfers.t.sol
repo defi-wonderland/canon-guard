@@ -4,6 +4,7 @@ pragma solidity 0.8.29;
 import {Test} from 'forge-std/Test.sol';
 import {IERC20} from 'forge-std/interfaces/IERC20.sol';
 import {SimpleTransfers} from 'src/contracts/actions-builders/SimpleTransfers.sol';
+import {IActionsBuilder} from 'src/interfaces/actions-builders/IActionsBuilder.sol';
 import {ISimpleTransfers} from 'src/interfaces/actions-builders/ISimpleTransfers.sol';
 
 contract UnitSimpleTransfersconstructor is Test {
@@ -27,16 +28,14 @@ contract UnitSimpleTransfersconstructor is Test {
     simpleTransfers = new SimpleTransfers(transferActions);
 
     // it should add the transfer to the actions array with correct values
+    IActionsBuilder.Action[] memory _actions = simpleTransfers.getActions();
     for (uint256 _i; _i < transferActions.length; _i++) {
       ISimpleTransfers.TransferAction memory _transferAction = transferActions[_i];
 
       // it should add the actions to the actions array with correct values
-      assertEq(simpleTransfers.getActions()[_i].target, transferActions[_i].token);
-      assertEq(
-        simpleTransfers.getActions()[_i].data,
-        abi.encodeCall(IERC20.transfer, (_transferAction.to, _transferAction.amount))
-      );
-      assertEq(simpleTransfers.getActions()[_i].value, 0);
+      assertEq(_actions[_i].target, transferActions[_i].token);
+      assertEq(_actions[_i].data, abi.encodeCall(IERC20.transfer, (_transferAction.to, _transferAction.amount)));
+      assertEq(_actions[_i].value, 0);
     }
   }
 }
