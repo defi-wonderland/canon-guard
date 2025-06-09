@@ -1,0 +1,122 @@
+// SPDX-License-Identifier: MIT
+pragma solidity 0.8.29;
+
+import {IERC20} from 'forge-std/interfaces/IERC20.sol';
+import {IActionsBuilder} from 'interfaces/actions-builders/IActionsBuilder.sol';
+import {IEverclearTokenStake} from 'interfaces/actions-builders/IEverclearTokenStake.sol';
+import {ISpokeBridge} from 'interfaces/external/ISpokeBridge.sol';
+import {IVestingEscrow} from 'interfaces/external/IVestingEscrow.sol';
+import {IVestingWallet} from 'interfaces/external/IVestingWallet.sol';
+import {IxERC20Lockbox} from 'interfaces/external/IxERC20Lockbox.sol';
+
+/**
+ * @title EverclearTokenStake
+ * @notice Contract that increases the stake of CLEAR
+ */
+contract EverclearTokenStake is IEverclearTokenStake {
+  // ~~~ STORAGE ~~~
+
+  /// @inheritdoc IEverclearTokenStake
+  IVestingEscrow public immutable VESTING_ESCROW;
+
+  /// @inheritdoc IEverclearTokenStake
+  IVestingWallet public immutable VESTING_WALLET;
+
+  /// @inheritdoc IEverclearTokenStake
+  ISpokeBridge public immutable SPOKE_BRIDGE;
+
+  /// @inheritdoc IEverclearTokenStake
+  IxERC20Lockbox public immutable CLEAR_LOCKBOX;
+
+  /// @inheritdoc IEverclearTokenStake
+  IERC20 public immutable NEXT;
+
+  /// @inheritdoc IEverclearTokenStake
+  IERC20 public immutable CLEAR;
+
+  // ~~~ CONSTRUCTOR ~~~
+
+  /**
+   * @notice Constructor that sets up the variables
+   * @param _vestingEscrow The vesting escrow contract address
+   * @param _vestingWallet The vesting wallet contract address
+   * @param _spokeBridge The spoke bridge contract address
+   * @param _clearLockbox The clear lockbox contract address
+   * @param _next The NEXT contract address
+   * @param _clear The CLEAR contract address
+   */
+  constructor(
+    address _vestingEscrow,
+    address _vestingWallet,
+    address _spokeBridge,
+    address _clearLockbox,
+    address _next,
+    address _clear
+  ) {
+    VESTING_ESCROW = IVestingEscrow(_vestingEscrow);
+    VESTING_WALLET = IVestingWallet(_vestingWallet);
+    SPOKE_BRIDGE = ISpokeBridge(_spokeBridge);
+    CLEAR_LOCKBOX = IxERC20Lockbox(_clearLockbox);
+    NEXT = IERC20(_next);
+    CLEAR = IERC20(_clear);
+  }
+
+  // ~~~ ACTIONS METHODS ~~~
+
+  /// @inheritdoc IActionsBuilder
+  function getActions() external view returns (Action[] memory _actions) {
+    _actions = new Action[](6);
+
+    // NOTE: since this is a view function and does not update state, we need to calculate
+    // how much tokens are transferred when calling release() on step 2.
+
+    // First get the unclaimed amount
+    uint256 _unclaimed = VESTING_ESCROW.unclaimed();
+    // Get current balance of NEXT
+    uint256 _nextBalance = NEXT.balanceOf(address(VESTING_WALLET));
+    // Get the releaseable amount (same behaviour as releaseable() on VESTING_WALLET)
+    uint256 _amountReleasable = VESTING_WALLET.vestedAmount(uint64(block.timestamp)) - VESTING_WALLET.released();
+    uint256 _nextBalanceAfterRelease = _nextBalance + _unclaimed;
+    uint256 _amountToBeReleased =
+      _nextBalanceAfterRelease < _amountReleasable ? _nextBalanceAfterRelease : _amountReleasable;
+
+    // 1) Claim
+    _actions[0] = Action({
+      target: address(VESTING_WALLET),
+      data: abi.encodeCall(IVestingWallet.claim, (address(VESTING_ESCROW))),
+      value: 0
+    });
+
+    // 2) Release
+    _actions[1] = Action({target: address(VESTING_ESCROW), data: abi.encodeCall(IVestingEscrow.release, ()), value: 0});
+
+    // 3) Approve
+    _actions[2] = Action({
+      target: address(NEXT),
+      data: abi.encodeCall(IERC20.approve, (address(CLEAR_LOCKBOX), _amountToBeReleased)),
+      value: 0
+    });
+
+    // 4) Deposit
+    _actions[3] = Action({
+      target: address(CLEAR_LOCKBOX),
+      data: abi.encodeCall(IxERC20Lockbox.deposit, (_amountToBeReleased)),
+      value: 0
+    });
+
+    // 5) Approve
+    _actions[4] = Action({
+      target: address(CLEAR),
+      data: abi.encodeCall(IERC20.approve, (address(SPOKE_BRIDGE), _amountToBeReleased)),
+      value: 0
+    });
+
+    // 6) Increase lock position
+    _actions[5] = Action({
+      target: address(SPOKE_BRIDGE),
+      /// TODO: expiry, gasLimit
+      data: abi.encodeCall(ISpokeBridge.increaseLockPosition, (uint128(_amountToBeReleased), 0, 0)),
+      value: 0
+    });
+  }
+}
