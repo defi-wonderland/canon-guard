@@ -21,6 +21,46 @@ interface ICappedTokenTransfers is ISafeManageable, IActionsBuilder {
     uint256 amount;
   }
 
+  // ~~~ ERRORS ~~~
+
+  /**
+   * @notice Thrown when the cap is exceeded
+   */
+  error CapExceeded();
+
+  /**
+   * @notice Thrown when the amount is invalid
+   */
+  error InvalidAmount();
+
+  /**
+   * @notice Thrown when the index is invalid
+   */
+  error InvalidIndex();
+
+  // ~~~ ADMIN METHODS ~~~
+
+  /**
+   * @notice Adds a token transfer
+   * @param _recipient The recipient address
+   * @param _amount The amount of tokens to transfer
+   */
+  function addTokenTransfer(address _recipient, uint256 _amount) external;
+
+  /**
+   * @notice Removes a token transfer
+   * @param _index The index of the token transfer
+   */
+  function removeTokenTransfer(uint256 _index) external;
+
+  // ~~~ STATE MANAGEMENT ~~~
+
+  /**
+   * @notice Updates the state
+   * @param _data The data to update the state with
+   */
+  function updateState(bytes memory _data) external;
+
   // ~~~ STORAGE METHODS ~~~
 
   /**
@@ -66,46 +106,4 @@ interface ICappedTokenTransfers is ISafeManageable, IActionsBuilder {
    * @return _amount The amount of tokens to transfer
    */
   function tokenTransfers(uint256 _index) external view returns (address _recipient, uint256 _amount);
-
-  // ~~~ EVENTS ~~~
-
-  // ~~~ ERRORS ~~~
-
-  /**
-   * @notice Thrown when the cap is exceeded
-   */
-  error CapExceeded();
-
-  /**
-   * @notice Thrown when the amount is invalid
-   */
-  error InvalidAmount();
-
-  /**
-   * @notice Thrown when the index is invalid
-   */
-  error InvalidIndex();
-
-  // ~~~ ADMIN METHODS ~~~
-
-  /**
-   * @notice Adds a token transfer
-   * @param _recipient The recipient address
-   * @param _amount The amount of tokens to transfer
-   */
-  function addTokenTransfer(address _recipient, uint256 _amount) external;
-
-  /**
-   * @notice Removes a token transfer
-   * @param _index The index of the token transfer
-   */
-  function removeTokenTransfer(uint256 _index) external;
-
-  // ~~~ STATE MANAGEMENT ~~~
-
-  /**
-   * @notice Updates the state
-   * @param _data The data to update the state with
-   */
-  function updateState(bytes memory _data) external;
 }

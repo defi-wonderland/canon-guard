@@ -27,73 +27,6 @@ interface ISafeEntrypoint is ISafeManageable {
     bool isExecuted;
   }
 
-  // ~~~ STORAGE METHODS ~~~
-
-  /**
-   * @notice Gets the MultiSendCallOnly contract
-   * @return _multiSendCallOnly The MultiSendCallOnly contract address
-   */
-  function MULTI_SEND_CALL_ONLY() external view returns (address _multiSendCallOnly);
-
-  /**
-   * @notice Gets the short execution delay applied to pre-approved transactions
-   * @return _shortTxExecutionDelay The short transaction execution delay (in seconds)
-   */
-  function SHORT_TX_EXECUTION_DELAY() external view returns (uint256 _shortTxExecutionDelay);
-
-  /**
-   * @notice Gets the long execution delay applied to arbitrary transactions
-   * @return _longTxExecutionDelay The long transaction execution delay (in seconds)
-   */
-  function LONG_TX_EXECUTION_DELAY() external view returns (uint256 _longTxExecutionDelay);
-
-  /**
-   * @notice Gets the default expiry delay for transactions
-   * @return _defaultTxExpiryDelay The default transaction expiry delay (in seconds)
-   */
-  function DEFAULT_TX_EXPIRY_DELAY() external view returns (uint256 _defaultTxExpiryDelay);
-
-  /**
-   * @notice Gets the global nonce
-   * @return _txNonce The nonce to ensure unique IDs for identical transactions
-   */
-  function transactionNonce() external view returns (uint256 _txNonce);
-
-  /**
-   * @notice Gets the approval expiry time for an actions builder
-   * @param _actionsBuilder The address of the actions builder contract
-   * @return _approvalExpiresAt The timestamp from which the actions builder contract is no longer approved to be queued
-   */
-  function approvalExpiries(address _actionsBuilder) external view returns (uint256 _approvalExpiresAt);
-
-  /**
-   * @notice Gets the transaction info for a transaction ID
-   * @param _txId The ID of the transaction
-   * @return _actionsBuilder The actions builder contract address associated
-   * @return _actionsData The encoded actions data
-   * @return _executableAt The timestamp from which the transaction can be executed
-   * @return _expiresAt The timestamp from which the transaction expires
-   * @return _isExecuted Whether the transaction has been executed
-   */
-  function transactions(uint256 _txId)
-    external
-    view
-    returns (
-      address _actionsBuilder,
-      bytes memory _actionsData,
-      uint256 _executableAt,
-      uint256 _expiresAt,
-      bool _isExecuted
-    );
-
-  /**
-   * @notice Gets a signer's disapproved Safe transaction hashes
-   * @param _signer The address of the signer
-   * @param _safeTxHash The hash of the Safe transaction
-   * @return _isDisapproved Whether the Safe transaction hash has been disapproved by the signer
-   */
-  function disapprovedHashes(address _signer, bytes32 _safeTxHash) external view returns (bool _isDisapproved);
-
   // ~~~ EVENTS ~~~
 
   /**
@@ -222,6 +155,73 @@ interface ISafeEntrypoint is ISafeManageable {
    * @param _safeTxHash The hash of the Safe transaction to disapprove
    */
   function disapproveSafeTransactionHash(bytes32 _safeTxHash) external;
+
+  // ~~~ STORAGE METHODS ~~~
+
+  /**
+   * @notice Gets the MultiSendCallOnly contract
+   * @return _multiSendCallOnly The MultiSendCallOnly contract address
+   */
+  function MULTI_SEND_CALL_ONLY() external view returns (address _multiSendCallOnly);
+
+  /**
+   * @notice Gets the short execution delay applied to pre-approved transactions
+   * @return _shortTxExecutionDelay The short transaction execution delay (in seconds)
+   */
+  function SHORT_TX_EXECUTION_DELAY() external view returns (uint256 _shortTxExecutionDelay);
+
+  /**
+   * @notice Gets the long execution delay applied to arbitrary transactions
+   * @return _longTxExecutionDelay The long transaction execution delay (in seconds)
+   */
+  function LONG_TX_EXECUTION_DELAY() external view returns (uint256 _longTxExecutionDelay);
+
+  /**
+   * @notice Gets the default expiry delay for transactions
+   * @return _defaultTxExpiryDelay The default transaction expiry delay (in seconds)
+   */
+  function DEFAULT_TX_EXPIRY_DELAY() external view returns (uint256 _defaultTxExpiryDelay);
+
+  /**
+   * @notice Gets the global nonce
+   * @return _txNonce The nonce to ensure unique IDs for identical transactions
+   */
+  function transactionNonce() external view returns (uint256 _txNonce);
+
+  /**
+   * @notice Gets the approval expiry time for an actions builder
+   * @param _actionsBuilder The address of the actions builder contract
+   * @return _approvalExpiresAt The timestamp from which the actions builder contract is no longer approved to be queued
+   */
+  function approvalExpiries(address _actionsBuilder) external view returns (uint256 _approvalExpiresAt);
+
+  /**
+   * @notice Gets the transaction info for a transaction ID
+   * @param _txId The ID of the transaction
+   * @return _actionsBuilder The actions builder contract address associated
+   * @return _actionsData The encoded actions data
+   * @return _executableAt The timestamp from which the transaction can be executed
+   * @return _expiresAt The timestamp from which the transaction expires
+   * @return _isExecuted Whether the transaction has been executed
+   */
+  function transactions(uint256 _txId)
+    external
+    view
+    returns (
+      address _actionsBuilder,
+      bytes memory _actionsData,
+      uint256 _executableAt,
+      uint256 _expiresAt,
+      bool _isExecuted
+    );
+
+  /**
+   * @notice Gets a signer's disapproved Safe transaction hashes
+   * @param _signer The address of the signer
+   * @param _safeTxHash The hash of the Safe transaction
+   * @return _isDisapproved Whether the Safe transaction hash has been disapproved by the signer
+   */
+  function disapprovedHashes(address _signer, bytes32 _safeTxHash) external view returns (bool _isDisapproved);
 
   // ~~~ GETTER METHODS ~~~
 
