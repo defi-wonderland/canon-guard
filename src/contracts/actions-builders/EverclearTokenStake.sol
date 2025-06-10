@@ -4,15 +4,16 @@ pragma solidity 0.8.29;
 import {IERC20} from 'forge-std/interfaces/IERC20.sol';
 import {IActionsBuilder} from 'interfaces/actions-builders/IActionsBuilder.sol';
 import {IEverclearTokenStake} from 'interfaces/actions-builders/IEverclearTokenStake.sol';
+import {IGateway} from 'interfaces/external/IGateway.sol';
 import {ISpokeBridge} from 'interfaces/external/ISpokeBridge.sol';
 import {IVestingEscrow} from 'interfaces/external/IVestingEscrow.sol';
 import {IVestingWallet} from 'interfaces/external/IVestingWallet.sol';
 import {IxERC20Lockbox} from 'interfaces/external/IxERC20Lockbox.sol';
-
 /**
  * @title EverclearTokenStake
  * @notice Contract that increases the stake of CLEAR
  */
+
 contract EverclearTokenStake is IEverclearTokenStake {
   // ~~~ STORAGE ~~~
 
@@ -34,6 +35,9 @@ contract EverclearTokenStake is IEverclearTokenStake {
   /// @inheritdoc IEverclearTokenStake
   IERC20 public immutable CLEAR;
 
+  /// @inheritdoc IEverclearTokenStake
+  uint256 public immutable LOCK_TIME;
+
   // ~~~ CONSTRUCTOR ~~~
 
   /**
@@ -44,6 +48,7 @@ contract EverclearTokenStake is IEverclearTokenStake {
    * @param _clearLockbox The clear lockbox contract address
    * @param _next The NEXT contract address
    * @param _clear The CLEAR contract address
+   * @param _lockTime The lock time
    */
   constructor(
     address _vestingEscrow,
@@ -51,7 +56,8 @@ contract EverclearTokenStake is IEverclearTokenStake {
     address _spokeBridge,
     address _clearLockbox,
     address _next,
-    address _clear
+    address _clear,
+    uint256 _lockTime
   ) {
     VESTING_ESCROW = IVestingEscrow(_vestingEscrow);
     VESTING_WALLET = IVestingWallet(_vestingWallet);
@@ -59,6 +65,7 @@ contract EverclearTokenStake is IEverclearTokenStake {
     CLEAR_LOCKBOX = IxERC20Lockbox(_clearLockbox);
     NEXT = IERC20(_next);
     CLEAR = IERC20(_clear);
+    LOCK_TIME = _lockTime;
   }
 
   // ~~~ ACTIONS METHODS ~~~
@@ -88,7 +95,7 @@ contract EverclearTokenStake is IEverclearTokenStake {
     });
 
     // 2) Release
-    _actions[1] = Action({target: address(VESTING_ESCROW), data: abi.encodeCall(IVestingEscrow.release, ()), value: 0});
+    _actions[1] = Action({target: address(VESTING_WALLET), data: abi.encodeCall(IVestingWallet.release, ()), value: 0});
 
     // 3) Approve
     _actions[2] = Action({
@@ -112,11 +119,22 @@ contract EverclearTokenStake is IEverclearTokenStake {
     });
 
     // 6) Increase lock position
+
+    uint256 _gasLimit = 500_000;
+
+    // NOTE: expiry % 7 days must be 0
+    uint128 _lockTime = uint128(block.timestamp + LOCK_TIME);
+    _lockTime = (_lockTime / 1 weeks) * 1 weeks;
+
+    // NOTE: get the fee from the gateway
+    uint256 _value = IGateway(SPOKE_BRIDGE.gateway()).quoteMessage(
+      SPOKE_BRIDGE.EVERCLEAR_ID(), abi.encode(2, msg.sender, _amountToBeReleased, _lockTime), _gasLimit
+    );
+
     _actions[5] = Action({
       target: address(SPOKE_BRIDGE),
-      /// TODO: expiry, gasLimit
-      data: abi.encodeCall(ISpokeBridge.increaseLockPosition, (uint128(_amountToBeReleased), 0, 0)),
-      value: 0
+      data: abi.encodeCall(ISpokeBridge.increaseLockPosition, (uint128(_amountToBeReleased), _lockTime, _gasLimit)),
+      value: _value
     });
   }
 }

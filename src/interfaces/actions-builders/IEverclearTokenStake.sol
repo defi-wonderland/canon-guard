@@ -15,4 +15,5 @@ interface IEverclearTokenStake is IActionsBuilder {
   function CLEAR_LOCKBOX() external view returns (IxERC20Lockbox);
   function NEXT() external view returns (IERC20);
   function CLEAR() external view returns (IERC20);
+  function LOCK_TIME() external view returns (uint256);
 }
