@@ -2,6 +2,7 @@
 pragma solidity 0.8.29;
 
 import {IERC20} from 'forge-std/interfaces/IERC20.sol';
+import {ISafeManageable} from 'interfaces/ISafeManageable.sol';
 import {IActionsBuilder} from 'interfaces/actions-builders/IActionsBuilder.sol';
 import {IEverclearTokenStake} from 'interfaces/actions-builders/IEverclearTokenStake.sol';
 import {IGateway} from 'interfaces/external/IGateway.sol';
@@ -9,11 +10,11 @@ import {ISpokeBridge} from 'interfaces/external/ISpokeBridge.sol';
 import {IVestingEscrow} from 'interfaces/external/IVestingEscrow.sol';
 import {IVestingWallet} from 'interfaces/external/IVestingWallet.sol';
 import {IxERC20Lockbox} from 'interfaces/external/IxERC20Lockbox.sol';
+
 /**
  * @title EverclearTokenStake
  * @notice Contract that increases the stake of CLEAR
  */
-
 contract EverclearTokenStake is IEverclearTokenStake {
   // ~~~ STORAGE ~~~
 
@@ -128,7 +129,7 @@ contract EverclearTokenStake is IEverclearTokenStake {
 
     // NOTE: get the fee from the gateway
     uint256 _value = IGateway(SPOKE_BRIDGE.gateway()).quoteMessage(
-      SPOKE_BRIDGE.EVERCLEAR_ID(), abi.encode(2, msg.sender, _amountToBeReleased, _lockTime), _gasLimit
+      SPOKE_BRIDGE.EVERCLEAR_ID(), abi.encode(2, _getSenderFromEntrypoint(), _amountToBeReleased, _lockTime), _gasLimit
     );
 
     _actions[5] = Action({
@@ -136,5 +137,15 @@ contract EverclearTokenStake is IEverclearTokenStake {
       data: abi.encodeCall(ISpokeBridge.increaseLockPosition, (uint128(_amountToBeReleased), _lockTime, _gasLimit)),
       value: _value
     });
+  }
+
+  /**
+   * @notice Get the sender from the entrypoint.
+   * @dev Assuming msg.sender is a SafeEntrypoint (because getActions() will be called when calling queueTransaction()),
+   * we can get the sender from the Safe contract.
+   * @return _sender The sender address
+   */
+  function _getSenderFromEntrypoint() internal view returns (address _sender) {
+    _sender = address(ISafeManageable(msg.sender).SAFE());
   }
 }
