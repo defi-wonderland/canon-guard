@@ -8,6 +8,25 @@ import {ITransactionGuard} from '@safe-smart-account/base/GuardManager.sol';
  * @notice Interface for the OnlyEntrypointGuard contract
  */
 interface IOnlyEntrypointGuard is ITransactionGuard {
+  // ~~~ ERRORS ~~~
+
+  /**
+   * @notice Thrown when a transaction is attempted by an unauthorized sender
+   * @param _sender The unauthorized sender address
+   */
+  error UnauthorizedSender(address _sender);
+
+  /**
+   * @notice Thrown when a delegate call is attempted to an unauthorized address
+   * @param _target The unauthorized target address
+   */
+  error UnauthorizedDelegateCall(address _target);
+
+  /**
+   * @notice Thrown when the signature type is invalid
+   */
+  error InvalidSignatureType();
+
   // ~~~ STORAGE METHODS ~~~
 
   /**
@@ -33,23 +52,4 @@ interface IOnlyEntrypointGuard is ITransactionGuard {
    * @return _multiSendCallOnly The address of the MultiSendCallOnly contract
    */
   function MULTI_SEND_CALL_ONLY() external view returns (address _multiSendCallOnly);
-
-  // ~~~ ERRORS ~~~
-
-  /**
-   * @notice Thrown when a transaction is attempted by an unauthorized sender
-   * @param _sender The unauthorized sender address
-   */
-  error UnauthorizedSender(address _sender);
-
-  /**
-   * @notice Thrown when a delegate call is attempted to an unauthorized address
-   * @param _target The unauthorized target address
-   */
-  error UnauthorizedDelegateCall(address _target);
-
-  /**
-   * @notice Thrown when the signature type is invalid
-   */
-  error InvalidSignatureType();
 }
