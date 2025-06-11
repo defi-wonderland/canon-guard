@@ -56,9 +56,10 @@ contract IntegrationEverclearStakes is IntegrationEthereumBase {
     safeEntrypoint.executeTransaction(_txId);
 
     // Assert the token balances
-    // assertEq(NEXT.balanceOf(address(SAFE_PROXY)), _safeBalance); // TODO: fix this
     assertEq(CLEAR.balanceOf(address(SAFE_PROXY)), _safeBalance);
     assertEq(IEverclearTokenStake(_actionsBuilder).VESTING_ESCROW().unclaimed(), 0);
     assertEq(IEverclearTokenStake(_actionsBuilder).VESTING_WALLET().releasable(), 0);
+    // NOTE: given that the tx was executed in a later block, some dust may have been added to the balance
+    assertEq(NEXT.balanceOf(address(SAFE_PROXY)), 2_631_136_986_301_369_863_014);
   }
 }
