@@ -12,6 +12,7 @@ import {ISafeEntrypoint} from 'interfaces/ISafeEntrypoint.sol';
  * @title OnlyEntrypointGuard
  * @notice Guard that ensures transactions are either executed through the entrypoint or by an emergency caller
  */
+// solhint-disable-next-line payable-fallback
 contract OnlyEntrypointGuard is BaseTransactionGuard, SignatureDecoder, IOnlyEntrypointGuard {
   // ~~~ STORAGE ~~~
 
@@ -46,7 +47,6 @@ contract OnlyEntrypointGuard is BaseTransactionGuard, SignatureDecoder, IOnlyEnt
    * @notice Fallback to avoid issues in case of a Safe upgrade
    * @dev The expected check method might change and then the Safe would be locked
    */
-  // solhint-disable-next-line payable-fallback
   fallback() external {}
 
   // ~~~ GUARD METHODS ~~~
