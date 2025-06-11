@@ -11,6 +11,8 @@ contract IntegrationWonderlandClaims is IntegrationEthereumBase {
   address internal _balSimpleEscrow = 0xD6208F3B61640baEbb71aa59b58Cc61E32F8Ddf5;
   address internal _kp3rSimpleEscrow = 0x164A0619E3C18023fbbCBBB5ab8f332F389Eb731;
 
+  uint256 internal _claimableGTC = 37_451_341_324_200_913_242_010;
+
   function setUp() public override {
     super.setUp();
 
@@ -64,7 +66,7 @@ contract IntegrationWonderlandClaims is IntegrationEthereumBase {
     safeEntrypoint.executeTransaction(_txId);
 
     // Assert the token balances (only GTC increased)
-    assertEq(GTC.balanceOf(address(SAFE_PROXY)), 37_452_341_324_200_913_242_010);
+    assertEq(GTC.balanceOf(address(SAFE_PROXY)), _claimableGTC + _safeBalance);
     assertEq(BAL.balanceOf(address(SAFE_PROXY)), _safeBalance);
     assertEq(KP3R.balanceOf(address(SAFE_PROXY)), _safeBalance);
   }
