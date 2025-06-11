@@ -6,14 +6,6 @@ pragma solidity 0.8.29;
  * @notice Interface for the SafeEntrypointFactory contract
  */
 interface ISafeEntrypointFactory {
-  // ~~~ STORAGE METHODS ~~~
-
-  /**
-   * @notice Gets the MultiSendCallOnly contract
-   * @return _multiSendCallOnly The MultiSendCallOnly contract address
-   */
-  function MULTI_SEND_CALL_ONLY() external view returns (address _multiSendCallOnly);
-
   // ~~~ FACTORY METHODS ~~~
 
   /**
@@ -30,4 +22,12 @@ interface ISafeEntrypointFactory {
     uint256 _longTxExecutionDelay,
     uint256 _defaultTxExpiryDelay
   ) external returns (address _safeEntrypoint);
+
+  // ~~~ STORAGE METHODS ~~~
+
+  /**
+   * @notice Gets the MultiSendCallOnly contract
+   * @return _multiSendCallOnly The MultiSendCallOnly contract address
+   */
+  function MULTI_SEND_CALL_ONLY() external view returns (address _multiSendCallOnly);
 }
