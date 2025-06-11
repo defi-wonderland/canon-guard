@@ -2,7 +2,6 @@
 pragma solidity 0.8.29;
 
 import {EverclearTokenConversion} from 'src/contracts/actions-builders/EverclearTokenConversion.sol';
-import {IEverclearTokenConversion} from 'src/interfaces/actions-builders/IEverclearTokenConversion.sol';
 import {IntegrationEthereumBase} from 'test/integration/ethereum/IntegrationEthereumBase.sol';
 
 contract IntegrationEverclearConversion is IntegrationEthereumBase {
