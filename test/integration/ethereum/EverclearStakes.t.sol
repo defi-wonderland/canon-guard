@@ -16,6 +16,8 @@ contract IntegrationEverclearStakes is IntegrationEthereumBase {
   address internal _clear = 0x58b9cB810A68a7f3e1E4f8Cb45D1B9B3c79705E8;
   uint256 internal _lockTime = 24 * 30 days;
 
+  uint256 internal _nextDust = 2_631_136_986_301_369_863_014;
+
   function setUp() public override {
     super.setUp();
 
@@ -60,6 +62,6 @@ contract IntegrationEverclearStakes is IntegrationEthereumBase {
     assertEq(IEverclearTokenStake(_actionsBuilder).VESTING_ESCROW().unclaimed(), 0);
     assertEq(IEverclearTokenStake(_actionsBuilder).VESTING_WALLET().releasable(), 0);
     // NOTE: given that the tx was executed in a later block, some dust may have been added to the balance
-    assertEq(NEXT.balanceOf(address(SAFE_PROXY)), 2_631_136_986_301_369_863_014);
+    assertEq(NEXT.balanceOf(address(SAFE_PROXY)), _nextDust);
   }
 }
