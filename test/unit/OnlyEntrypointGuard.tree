@@ -2,6 +2,7 @@ UnitOnlyEntrypointGuard::constructor
 └── when passing valid parameters
     ├── it sets entrypoint address
     ├── it sets emergency caller address
+    ├── it calls entrypoint's MULTI_SEND_CALL_ONLY()
     └── it sets multiSendCallOnly address
 
 
