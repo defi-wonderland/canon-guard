@@ -14,6 +14,10 @@ contract IntegrationWonderlandClaims is IntegrationOptimismBase {
   address internal _kiteVestingPlans = 0x1bb64AF7FE05fc69c740609267d2AbE3e119Ef82;
   address internal _wldVestingWallet = 0x5823c2D5cDB86547d10c312E7d3260603CdD085b;
 
+  uint256 internal _claimableOP = 1_838_470_586_676_954_568_000;
+  uint256 internal _claimableKITE = 1_026_331_380_010_145_208_370;
+  uint256 internal _claimableWLD = 25_000 ether;
+
   function setUp() public override {
     super.setUp();
 
@@ -72,8 +76,8 @@ contract IntegrationWonderlandClaims is IntegrationOptimismBase {
     safeEntrypoint.executeTransaction(_txId);
 
     // Assert the token balances
-    assertEq(KITE.balanceOf(address(SAFE_PROXY)), 1_027_331_380_010_145_208_370);
-    assertEq(WLD.balanceOf(address(SAFE_PROXY)), 25_001_000_000_000_000_000_000);
+    assertEq(KITE.balanceOf(address(SAFE_PROXY)), _claimableKITE + _safeBalance);
+    assertEq(WLD.balanceOf(address(SAFE_PROXY)), _claimableWLD + _safeBalance);
   }
 
   function test_OPxDowngrade() public {
@@ -106,6 +110,6 @@ contract IntegrationWonderlandClaims is IntegrationOptimismBase {
     safeEntrypoint.executeTransaction(_txId);
 
     // Assert the token balances
-    assertEq(OP.balanceOf(address(SAFE_PROXY)), 1_839_470_586_676_954_568_000);
+    assertEq(OP.balanceOf(address(SAFE_PROXY)), _claimableOP + _safeBalance);
   }
 }
