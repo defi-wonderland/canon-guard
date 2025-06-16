@@ -141,7 +141,9 @@ contract EverclearTokenStake is IEverclearTokenStake {
     _actions[5] = Action({
       target: address(SPOKE_BRIDGE),
       data: abi.encodeCall(ISpokeBridge.increaseLockPosition, (uint128(_amountToBeReleased), _lockTime, _gasLimit)),
-      value: _value
+      // NOTE: duplicate just in case the value changes while waiting for the transaction to be executed
+      // Leftover fee is reimbursed by the gateway
+      value: _value * 2
     });
   }
 }
