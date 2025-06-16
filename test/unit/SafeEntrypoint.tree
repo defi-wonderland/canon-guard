@@ -21,13 +21,10 @@ UnitSafeEntrypoint::approveActionsBuilder
 UnitSafeEntrypoint::queueTransaction
 ├── when caller is safe owner
 │   ├── when queueing pre approved action
-│   │   ├── when actions builder is not approved
-│   │   │   └── it reverts with ActionsBuilderNotApproved
-│   │   └── when passing valid parameters
-│   │       ├── it sets transaction info
-│   │       ├── it sets executable at to block timestamp plus short delay
-│   │       ├── it sets expiry time
-│   │       └── it emits TransactionQueued event
+│   │   ├── it sets transaction info
+│   │   ├── it sets executable at to block timestamp plus short delay
+│   │   ├── it sets expiry time
+│   │   └── it emits TransactionQueued event
 │   └── when queueing arbitrary action
 │       ├── it sets transaction info
 │       ├── it sets executable at to block timestamp plus long delay

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.29;
 
-import {SafeManageableForTest} from './SafeManageableForTest.sol';
+import {SafeManageableForTest} from './mocks/SafeManageableForTest.sol';
 import {IOwnerManager} from '@safe-smart-account/interfaces/IOwnerManager.sol';
 import {Test} from 'forge-std/Test.sol';
 import {ISafeManageable} from 'interfaces/ISafeManageable.sol';
