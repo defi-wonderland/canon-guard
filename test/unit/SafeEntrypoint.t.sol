@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.29;
 
-import {SafeEntrypointForTest} from './SafeEntrypointForTest.sol';
+import {SafeEntrypointForTest} from './mocks/SafeEntrypointForTest.sol';
 import {IOwnerManager} from '@safe-smart-account/interfaces/IOwnerManager.sol';
 import {ISafe} from '@safe-smart-account/interfaces/ISafe.sol';
 import {ISafeEntrypoint} from 'contracts/SafeEntrypoint.sol';
