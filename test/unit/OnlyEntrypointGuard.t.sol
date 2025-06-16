@@ -5,6 +5,7 @@ import {OnlyEntrypointGuardForTest} from './mocks/OnlyEntrypointGuardForTest.sol
 import {Enum} from '@safe-smart-account/libraries/Enum.sol';
 import {Test} from 'forge-std/Test.sol';
 import {IOnlyEntrypointGuard} from 'interfaces/IOnlyEntrypointGuard.sol';
+import {ISafeEntrypoint} from 'interfaces/ISafeEntrypoint.sol';
 
 contract UnitOnlyEntrypointGuard is Test {
   OnlyEntrypointGuardForTest public onlyEntrypointGuard;
@@ -18,12 +19,23 @@ contract UnitOnlyEntrypointGuard is Test {
   bytes internal _invalidSignature;
 
   function setUp() public {
-    onlyEntrypointGuard = new OnlyEntrypointGuardForTest(ENTRYPOINT, EMERGENCY_CALLER, MULTI_SEND_CALL_ONLY);
+    vm.mockCall(
+      ENTRYPOINT,
+      abi.encodeWithSelector(ISafeEntrypoint.MULTI_SEND_CALL_ONLY.selector),
+      abi.encode(MULTI_SEND_CALL_ONLY)
+    );
+
+    onlyEntrypointGuard = new OnlyEntrypointGuardForTest(ENTRYPOINT, EMERGENCY_CALLER);
 
     _validSignature = new bytes(65);
     _validSignature[64] = bytes1(uint8(1));
 
     _invalidSignature = new bytes(65);
+  }
+
+  function _mockAndExpect(address _target, bytes memory _call, bytes memory _returnData) internal {
+    vm.mockCall(_target, _call, _returnData);
+    vm.expectCall(_target, _call);
   }
 
   function _assumeFuzzable(address _address) internal pure {
@@ -57,11 +69,20 @@ contract UnitOnlyEntrypointGuard is Test {
     _assumeFuzzable(_emergencyCaller);
     _assumeFuzzable(_multiSendCallOnly);
 
-    OnlyEntrypointGuardForTest newOnlyEntrypointGuard =
-      new OnlyEntrypointGuardForTest(_entrypoint, _emergencyCaller, _multiSendCallOnly);
+    // it calls entrypoint's MULTI_SEND_CALL_ONLY()
+    _mockAndExpect(
+      _entrypoint, abi.encodeWithSelector(ISafeEntrypoint.MULTI_SEND_CALL_ONLY.selector), abi.encode(_multiSendCallOnly)
+    );
 
+    OnlyEntrypointGuardForTest newOnlyEntrypointGuard = new OnlyEntrypointGuardForTest(_entrypoint, _emergencyCaller);
+
+    // it sets entrypoint address
     assertEq(newOnlyEntrypointGuard.ENTRYPOINT(), _entrypoint);
+
+    // it sets emergency caller address
     assertEq(newOnlyEntrypointGuard.EMERGENCY_CALLER(), _emergencyCaller);
+
+    // it sets multiSendCallOnly address
     assertEq(newOnlyEntrypointGuard.MULTI_SEND_CALL_ONLY(), _multiSendCallOnly);
   }
 

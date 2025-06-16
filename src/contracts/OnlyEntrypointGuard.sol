@@ -1,17 +1,18 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.29;
 
-import {IOnlyEntrypointGuard} from 'interfaces/IOnlyEntrypointGuard.sol';
-
 import {BaseTransactionGuard} from '@safe-smart-account/base/GuardManager.sol';
 import {ITransactionGuard} from '@safe-smart-account/base/GuardManager.sol';
 import {SignatureDecoder} from '@safe-smart-account/common/SignatureDecoder.sol';
 import {Enum} from '@safe-smart-account/libraries/Enum.sol';
+import {IOnlyEntrypointGuard} from 'interfaces/IOnlyEntrypointGuard.sol';
+import {ISafeEntrypoint} from 'interfaces/ISafeEntrypoint.sol';
 
 /**
  * @title OnlyEntrypointGuard
  * @notice Guard that ensures transactions are either executed through the entrypoint or by an emergency caller
  */
+// solhint-disable-next-line payable-fallback
 contract OnlyEntrypointGuard is BaseTransactionGuard, SignatureDecoder, IOnlyEntrypointGuard {
   // ~~~ STORAGE ~~~
 
@@ -33,12 +34,11 @@ contract OnlyEntrypointGuard is BaseTransactionGuard, SignatureDecoder, IOnlyEnt
    * @notice Constructor that sets up the guard
    * @param _entrypoint The address of the SafeEntrypoint contract
    * @param _emergencyCaller The address of the emergency caller (can be contract or EOA)
-   * @param _multiSendCallOnly The address of the MultiSendCallOnly contract
    */
-  constructor(address _entrypoint, address _emergencyCaller, address _multiSendCallOnly) {
+  constructor(address _entrypoint, address _emergencyCaller) {
     ENTRYPOINT = _entrypoint;
     EMERGENCY_CALLER = _emergencyCaller;
-    MULTI_SEND_CALL_ONLY = _multiSendCallOnly;
+    MULTI_SEND_CALL_ONLY = ISafeEntrypoint(_entrypoint).MULTI_SEND_CALL_ONLY();
   }
 
   // ~~~ FALLBACK ~~~
@@ -47,7 +47,6 @@ contract OnlyEntrypointGuard is BaseTransactionGuard, SignatureDecoder, IOnlyEnt
    * @notice Fallback to avoid issues in case of a Safe upgrade
    * @dev The expected check method might change and then the Safe would be locked
    */
-  // solhint-disable-next-line payable-fallback
   fallback() external {}
 
   // ~~~ GUARD METHODS ~~~

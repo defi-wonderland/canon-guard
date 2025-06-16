@@ -77,8 +77,17 @@ contract SafeEntrypoint is SafeManageable, ISafeEntrypoint {
 
   /// @inheritdoc ISafeEntrypoint
   function queueTransaction(address _actionsBuilder, uint256 _expiryDelay) external isSafeOwner returns (uint256 _txId) {
-    if (approvalExpiries[_actionsBuilder] <= block.timestamp) {
-      revert ActionsBuilderNotApproved();
+    bool _isArbitrary;
+    uint256 _txExecutionDelay;
+
+    // If approved, tx is not arbitrary, use short execution delay
+    if (approvalExpiries[_actionsBuilder] > block.timestamp) {
+      // `_isArbitrary` is already false by default
+      _txExecutionDelay = SHORT_TX_EXECUTION_DELAY;
+    } else {
+      // Otherwise, tx is arbitrary, use long execution delay
+      _isArbitrary = true;
+      _txExecutionDelay = LONG_TX_EXECUTION_DELAY;
     }
 
     // Generate a simple transaction ID
@@ -94,40 +103,13 @@ contract SafeEntrypoint is SafeManageable, ISafeEntrypoint {
     transactions[_txId] = TransactionInfo({
       actionsBuilder: _actionsBuilder,
       actionsData: abi.encode(_actions),
-      executableAt: block.timestamp + SHORT_TX_EXECUTION_DELAY,
-      expiresAt: block.timestamp + SHORT_TX_EXECUTION_DELAY + _expiryDelay,
+      executableAt: block.timestamp + _txExecutionDelay,
+      expiresAt: block.timestamp + _txExecutionDelay + _expiryDelay,
       isExecuted: false
     });
 
     // NOTE: event picked up by off-chain monitoring service
-    emit TransactionQueued(_txId, false);
-  }
-
-  /// @inheritdoc ISafeEntrypoint
-  function queueTransaction(
-    IActionsBuilder.Action calldata _action,
-    uint256 _expiryDelay
-  ) external isSafeOwner returns (uint256 _txId) {
-    IActionsBuilder.Action[] memory _actions = new IActionsBuilder.Action[](1);
-    _actions[0] = _action;
-
-    // Use default expiry delay if duration is 0
-    _expiryDelay = _expiryDelay == 0 ? DEFAULT_TX_EXPIRY_DELAY : _expiryDelay;
-
-    // Generate a simple transaction ID
-    _txId = ++transactionNonce;
-
-    // Store the transaction information
-    transactions[_txId] = TransactionInfo({
-      actionsBuilder: address(0),
-      actionsData: abi.encode(_actions),
-      executableAt: block.timestamp + LONG_TX_EXECUTION_DELAY,
-      expiresAt: block.timestamp + LONG_TX_EXECUTION_DELAY + _expiryDelay,
-      isExecuted: false
-    });
-
-    // NOTE: event picked up by off-chain monitoring service
-    emit TransactionQueued(_txId, true);
+    emit TransactionQueued(_txId, _isArbitrary);
   }
 
   /// @inheritdoc ISafeEntrypoint
