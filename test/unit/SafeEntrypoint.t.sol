@@ -116,25 +116,11 @@ contract UnitSafeEntrypoint is Test {
     _;
   }
 
-  modifier whenQueueingPreApprovedAction() {
-    _;
-  }
-
-  function test_QueueTransactionWhenActionsBuilderIsNotApproved(
+  function test_QueueTransactionWhenQueueingPreApprovedAction(
     address _caller,
     address _actionsBuilder,
     uint256 _expiryDelay
-  ) external givenCallerIsSafeOwner(_caller) {
-    vm.expectRevert(ISafeEntrypoint.ActionsBuilderNotApproved.selector);
-    vm.prank(_caller);
-    safeEntrypoint.queueTransaction(_actionsBuilder, _expiryDelay);
-  }
-
-  function test_QueueTransactionWhenPassingValidParameters(
-    address _caller,
-    address _actionsBuilder,
-    uint256 _expiryDelay
-  ) external givenCallerIsSafeOwner(_caller) givenActionsBuilderIsApproved(_actionsBuilder) {
+  ) external whenCallerIsSafeOwner givenActionsBuilderIsApproved(_actionsBuilder) {
     _assumeFuzzable(_actionsBuilder);
     _expiryDelay = bound(_expiryDelay, 1, type(uint256).max - block.timestamp - SHORT_TX_EXECUTION_DELAY);
 
@@ -144,6 +130,7 @@ contract UnitSafeEntrypoint is Test {
       abi.encode(new IActionsBuilder.Action[](0))
     );
 
+    // it emits TransactionQueued event
     vm.expectEmit(address(safeEntrypoint));
     emit ISafeEntrypoint.TransactionQueued(1, false);
 
@@ -154,40 +141,57 @@ contract UnitSafeEntrypoint is Test {
     (address _actionsBldr, bytes memory _actionsData, uint256 _executableAt, uint256 _expiresAt, bool _isExecuted) =
       safeEntrypoint.transactions(1);
 
+    // it sets transaction info
     assertEq(_actionsBldr, _actionsBuilder);
     assertEq(_actionsData, abi.encode(new IActionsBuilder.Action[](0)));
-    assertEq(_executableAt, block.timestamp + SHORT_TX_EXECUTION_DELAY);
-    assertEq(_expiresAt, block.timestamp + SHORT_TX_EXECUTION_DELAY + _expiryDelay);
     assertEq(_isExecuted, false);
+    // it sets executable at to block timestamp plus short delay
+    assertEq(_executableAt, block.timestamp + SHORT_TX_EXECUTION_DELAY);
+    // it sets expiry time
+    assertEq(_expiresAt, block.timestamp + SHORT_TX_EXECUTION_DELAY + _expiryDelay);
   }
 
   function test_QueueTransactionWhenQueueingArbitraryAction(
     address _caller,
     address _target,
     uint256 _value,
+    address _actionsBuilder,
     bytes memory _data,
     uint256 _expiryDelay
-  ) external givenCallerIsSafeOwner(_caller) {
+  ) external whenCallerIsSafeOwner {
     _expiryDelay = bound(_expiryDelay, 1, type(uint256).max - block.timestamp - LONG_TX_EXECUTION_DELAY);
 
     IActionsBuilder.Action[] memory _actions = new IActionsBuilder.Action[](1);
     _actions[0] = IActionsBuilder.Action({target: _target, value: _value, data: _data});
 
+    _mockAndExpect(
+      address(_actionsBuilder), abi.encodeWithSelector(IActionsBuilder.getActions.selector), abi.encode(_actions)
+    );
+
+    // it emits TransactionQueued event
     vm.expectEmit(address(safeEntrypoint));
     emit ISafeEntrypoint.TransactionQueued(1, true);
 
     vm.prank(_caller);
-    uint256 _txId = safeEntrypoint.queueTransaction(_actions[0], _expiryDelay);
+    uint256 _txId = safeEntrypoint.queueTransaction(_actionsBuilder, _expiryDelay);
 
     // Verify transaction info
-    (address _actionsBuilder, bytes memory _actionsData, uint256 _executableAt, uint256 _expiresAt, bool _isExecuted) =
-      safeEntrypoint.transactions(_txId);
+    (
+      address _arbitraryActionsBuilder,
+      bytes memory _actionsData,
+      uint256 _executableAt,
+      uint256 _expiresAt,
+      bool _isExecuted
+    ) = safeEntrypoint.transactions(_txId);
 
-    assertEq(_actionsBuilder, address(0));
+    // it sets transaction info
+    assertEq(_actionsBuilder, address(_arbitraryActionsBuilder));
     assertEq(_actionsData, abi.encode(_actions));
-    assertEq(_executableAt, block.timestamp + LONG_TX_EXECUTION_DELAY);
-    assertEq(_expiresAt, block.timestamp + LONG_TX_EXECUTION_DELAY + _expiryDelay);
     assertEq(_isExecuted, false);
+    // it sets executable at to block timestamp plus long delay
+    assertEq(_executableAt, block.timestamp + LONG_TX_EXECUTION_DELAY);
+    // it sets expiry time
+    assertEq(_expiresAt, block.timestamp + LONG_TX_EXECUTION_DELAY + _expiryDelay);
   }
 
   function test_QueueTransactionWhenCallerIsNotSafeOwner(
@@ -197,6 +201,7 @@ contract UnitSafeEntrypoint is Test {
   ) external givenCallerIsNotSafeOwner(_caller) {
     _expiryDelay = bound(_expiryDelay, 0, type(uint256).max - block.timestamp - SHORT_TX_EXECUTION_DELAY);
 
+    // it reverts with NotSafeOwner
     vm.expectRevert(ISafeManageable.NotSafeOwner.selector);
     vm.prank(_caller);
     safeEntrypoint.queueTransaction(_actionsBuilder, _expiryDelay);
