@@ -48,23 +48,10 @@ UnitSafeEntrypoint::executeTransaction
     │       ├── it updates transaction state
     │       └── it emits TransactionExecuted event
     └── when executing with signers
-        ├── when transaction is valid
-        │   ├── it executes transaction
-        │   ├── it updates transaction state
-        │   └── it emits TransactionExecuted event
-        └── when signer has disapproved hash
-            └── it reverts with InvalidSigner
-
-
-UnitSafeEntrypoint::disapproveSafeTransactionHash
-├── when caller is safe owner
-│   ├── when hash is not approved
-│   │   └── it reverts with SafeTransactionHashNotApproved
-│   └── when passing valid parameters
-│       ├── it marks hash as disapproved
-│       └── it emits SafeTransactionHashDisapproved event
-└── when caller is not safe owner
-    └── it reverts with NotSafeOwner
+        └── when transaction is valid
+            ├── it executes transaction
+            ├── it updates transaction state
+            └── it emits TransactionExecuted event
 
 
 UnitSafeEntrypoint::getSafeTransactionHash

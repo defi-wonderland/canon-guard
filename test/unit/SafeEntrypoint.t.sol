@@ -373,7 +373,6 @@ contract UnitSafeEntrypoint is Test {
     _signers[0] = _signer1;
     _signers[1] = _signer2;
 
-    safeEntrypoint.mockDisapprovedHashForSigner(_signers[0], bytes32(0));
     _mockAndExpect(SAFE, abi.encodeWithSelector(ISafe.nonce.selector), abi.encode(1));
     _mockAndExpect(SAFE, abi.encodeWithSelector(ISafe.getTransactionHash.selector), abi.encode(bytes32(0)));
 
@@ -390,82 +389,6 @@ contract UnitSafeEntrypoint is Test {
     vm.expectRevert(abi.encodeWithSelector(ISafeEntrypoint.InvalidSigner.selector, _signers[0], bytes32(0)));
     vm.prank(_caller);
     safeEntrypoint.executeTransaction(_txId, _signers);
-  }
-
-  function test_ExecuteTransactionWhenSignerHasDisapprovedHash(
-    address _caller,
-    address _signer1,
-    address _signer2,
-    uint256 _txId,
-    IActionsBuilder.Action calldata _action,
-    ISafeEntrypoint.TransactionInfo memory _txInfo
-  ) external {
-    _txInfo.expiresAt = bound(_txInfo.expiresAt, block.timestamp + 1, type(uint256).max);
-    _txInfo.executableAt = bound(_txInfo.executableAt, block.timestamp - 1, block.timestamp);
-    _txInfo.isExecuted = false;
-    IActionsBuilder.Action[] memory _actions = new IActionsBuilder.Action[](1);
-    _actions[0] = _action;
-    bytes memory _actionsData = abi.encode(_actions);
-
-    vm.assume(_caller != SAFE);
-    vm.assume(_signer1 != address(0));
-    vm.assume(_signer2 != address(0));
-    address[] memory _signers = new address[](2);
-    _signers[0] = _signer1;
-    _signers[1] = _signer2;
-
-    safeEntrypoint.mockDisapprovedHashForSigner(_signers[0], bytes32(0));
-    _mockAndExpect(SAFE, abi.encodeWithSelector(ISafe.nonce.selector), abi.encode(1));
-    _mockAndExpect(SAFE, abi.encodeWithSelector(ISafe.getTransactionHash.selector), abi.encode(bytes32(0)));
-
-    // Mock a transaction that is executable now
-    safeEntrypoint.mockTransaction(
-      _txId, // txId
-      _txInfo.actionsBuilder, // actionsBuilder
-      _actionsData, // actionsData
-      _txInfo.executableAt, // executableAt
-      _txInfo.expiresAt, // expiresAt
-      _txInfo.isExecuted // isExecuted
-    );
-
-    vm.expectRevert(abi.encodeWithSelector(ISafeEntrypoint.InvalidSigner.selector, _signers[0], bytes32(0)));
-    vm.prank(_caller);
-    safeEntrypoint.executeTransaction(_txId, _signers);
-  }
-
-  function test_DisapproveSafeTransactionHashWhenHashIsNotApproved(
-    address _caller,
-    bytes32 _safeTxHash
-  ) external givenCallerIsSafeOwner(_caller) {
-    _mockAndExpect(SAFE, abi.encodeWithSelector(ISafe.approvedHashes.selector, _caller, _safeTxHash), abi.encode(0));
-
-    vm.expectRevert(ISafeEntrypoint.SafeTransactionHashNotApproved.selector);
-    vm.prank(_caller);
-    safeEntrypoint.disapproveSafeTransactionHash(_safeTxHash);
-  }
-
-  function test_DisapproveSafeTransactionHashWhenPassingValidParameters(
-    address _caller,
-    bytes32 _safeTxHash
-  ) external givenCallerIsSafeOwner(_caller) {
-    _mockAndExpect(SAFE, abi.encodeWithSelector(ISafe.approvedHashes.selector, _caller, _safeTxHash), abi.encode(1));
-
-    vm.expectEmit(address(safeEntrypoint));
-    emit ISafeEntrypoint.SafeTransactionHashDisapproved(_safeTxHash, _caller);
-
-    vm.prank(_caller);
-    safeEntrypoint.disapproveSafeTransactionHash(_safeTxHash);
-
-    assertTrue(safeEntrypoint.disapprovedHashes(_caller, _safeTxHash));
-  }
-
-  function test_DisapproveSafeTransactionHashWhenCallerIsNotSafeOwner(
-    address _caller,
-    bytes32 _safeTxHash
-  ) external givenCallerIsNotSafeOwner(_caller) {
-    vm.expectRevert(ISafeManageable.NotSafeOwner.selector);
-    vm.prank(_caller);
-    safeEntrypoint.disapproveSafeTransactionHash(_safeTxHash);
   }
 
   modifier whenTransactionExists() {

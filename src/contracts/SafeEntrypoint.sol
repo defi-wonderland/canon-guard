@@ -37,9 +37,6 @@ contract SafeEntrypoint is SafeManageable, ISafeEntrypoint {
   /// @inheritdoc ISafeEntrypoint
   mapping(uint256 _txId => TransactionInfo _txInfo) public transactions;
 
-  /// @inheritdoc ISafeEntrypoint
-  mapping(address _signer => mapping(bytes32 _safeTxHash => bool _isDisapproved)) public disapprovedHashes;
-
   // ~~~ CONSTRUCTOR ~~~
 
   /**
@@ -132,30 +129,17 @@ contract SafeEntrypoint is SafeManageable, ISafeEntrypoint {
     bytes memory _multiSendData = _buildMultiSendData(_actions);
     bytes32 _safeTxHash = _getSafeTransactionHash(_multiSendData, SAFE.nonce());
 
-    // Check if any of the provided signers has disapproved the hash or has not approved it
+    // Check if any of the provided signers has not approved it
     uint256 _signersLength = _signers.length;
     address _signer;
     for (uint256 _i; _i < _signersLength; ++_i) {
       _signer = _signers[_i];
-      if (disapprovedHashes[_signer][_safeTxHash] || SAFE.approvedHashes(_signer, _safeTxHash) != 1) {
+      if (SAFE.approvedHashes(_signer, _safeTxHash) != 1) {
         revert InvalidSigner(_signer, _safeTxHash);
       }
     }
 
     _executeTransaction(_txId, _safeTxHash, _signers, _multiSendData);
-  }
-
-  /// @inheritdoc ISafeEntrypoint
-  function disapproveSafeTransactionHash(bytes32 _safeTxHash) external isSafeOwner {
-    // Check if the hash has been approved in the Safe
-    if (SAFE.approvedHashes(msg.sender, _safeTxHash) != 1) {
-      revert SafeTransactionHashNotApproved();
-    }
-
-    // Mark the hash as disapproved for this signer
-    disapprovedHashes[msg.sender][_safeTxHash] = true;
-
-    emit SafeTransactionHashDisapproved(_safeTxHash, msg.sender);
   }
 
   // ~~~ GETTER METHODS ~~~
@@ -298,8 +282,8 @@ contract SafeEntrypoint is SafeManageable, ISafeEntrypoint {
     address _safeOwner;
     for (uint256 _i; _i < _safeOwnersLength; ++_i) {
       _safeOwner = _safeOwners[_i];
-      // Check if this owner has approved the hash and hasn't disapproved it
-      if (!disapprovedHashes[_safeOwner][_safeTxHash] && SAFE.approvedHashes(_safeOwner, _safeTxHash) == 1) {
+      // Check if this owner has approved the hash
+      if (SAFE.approvedHashes(_safeOwner, _safeTxHash) == 1) {
         _tempSigners[_approvedHashSignersCount] = _safeOwner;
         ++_approvedHashSignersCount;
       }

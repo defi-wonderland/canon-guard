@@ -57,15 +57,6 @@ interface ISafeEntrypoint is ISafeManageable {
   );
 
   /**
-   * @notice Emitted when a Safe transaction hash is disapproved
-   * @param _safeTxHash The hash of the Safe transaction that was disapproved
-   * @param _signer The address of the signer who disapproved the hash
-   */
-  event SafeTransactionHashDisapproved(bytes32 indexed _safeTxHash, address indexed _signer);
-
-  // ~~~ ERRORS ~~~
-
-  /**
    * @notice Thrown when a signer is invalid
    * @param _signer The address of the signer
    * @param _safeTxHash The hash of the Safe transaction
@@ -86,11 +77,6 @@ interface ISafeEntrypoint is ISafeManageable {
    * @notice Thrown when a transaction has expired
    */
   error TransactionExpired();
-
-  /**
-   * @notice Thrown when attempting to disapprove a Safe transaction hash that hasn't been approved
-   */
-  error SafeTransactionHashNotApproved();
 
   // ~~~ ADMIN METHODS ~~~
 
@@ -129,13 +115,6 @@ interface ISafeEntrypoint is ISafeManageable {
    * @param _signers The array of signer addresses
    */
   function executeTransaction(uint256 _txId, address[] calldata _signers) external payable;
-
-  /**
-   * @notice Disapproves a Safe transaction hash
-   * @dev Can be called by any Safe owner
-   * @param _safeTxHash The hash of the Safe transaction to disapprove
-   */
-  function disapproveSafeTransactionHash(bytes32 _safeTxHash) external;
 
   // ~~~ STORAGE METHODS ~~~
 
@@ -195,14 +174,6 @@ interface ISafeEntrypoint is ISafeManageable {
       uint256 _expiresAt,
       bool _isExecuted
     );
-
-  /**
-   * @notice Gets a signer's disapproved Safe transaction hashes
-   * @param _signer The address of the signer
-   * @param _safeTxHash The hash of the Safe transaction
-   * @return _isDisapproved Whether the Safe transaction hash has been disapproved by the signer
-   */
-  function disapprovedHashes(address _signer, bytes32 _safeTxHash) external view returns (bool _isDisapproved);
 
   // ~~~ GETTER METHODS ~~~
 
