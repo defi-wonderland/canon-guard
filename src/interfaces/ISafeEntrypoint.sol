@@ -57,13 +57,6 @@ interface ISafeEntrypoint is ISafeManageable {
   );
 
   /**
-   * @notice Thrown when a signer is invalid
-   * @param _signer The address of the signer
-   * @param _safeTxHash The hash of the Safe transaction
-   */
-  error InvalidSigner(address _signer, bytes32 _safeTxHash);
-
-  /**
    * @notice Thrown when a transaction has already been executed
    */
   error TransactionAlreadyExecuted();
@@ -106,15 +99,6 @@ interface ISafeEntrypoint is ISafeManageable {
    * @param _txId The ID of the transaction to execute
    */
   function executeTransaction(uint256 _txId) external payable;
-
-  /**
-   * @notice Executes a queued transaction using the specified signers
-   * @dev Can be called by anyone
-   * @dev The transaction must have passed its execution delay period, but not its expiry delay period
-   * @param _txId The ID of the transaction to execute
-   * @param _signers The array of signer addresses
-   */
-  function executeTransaction(uint256 _txId, address[] calldata _signers) external payable;
 
   // ~~~ STORAGE METHODS ~~~
 

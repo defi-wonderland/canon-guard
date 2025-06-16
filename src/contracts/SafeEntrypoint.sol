@@ -121,27 +121,6 @@ contract SafeEntrypoint is SafeManageable, ISafeEntrypoint {
     _executeTransaction(_txId, _safeTxHash, _signers, _multiSendData);
   }
 
-  /// @inheritdoc ISafeEntrypoint
-  function executeTransaction(uint256 _txId, address[] calldata _signers) external payable {
-    TransactionInfo storage _txInfo = transactions[_txId];
-    IActionsBuilder.Action[] memory _actions = abi.decode(_txInfo.actionsData, (IActionsBuilder.Action[]));
-
-    bytes memory _multiSendData = _buildMultiSendData(_actions);
-    bytes32 _safeTxHash = _getSafeTransactionHash(_multiSendData, SAFE.nonce());
-
-    // Check if any of the provided signers has not approved it
-    uint256 _signersLength = _signers.length;
-    address _signer;
-    for (uint256 _i; _i < _signersLength; ++_i) {
-      _signer = _signers[_i];
-      if (SAFE.approvedHashes(_signer, _safeTxHash) != 1) {
-        revert InvalidSigner(_signer, _safeTxHash);
-      }
-    }
-
-    _executeTransaction(_txId, _safeTxHash, _signers, _multiSendData);
-  }
-
   // ~~~ GETTER METHODS ~~~
 
   /// @inheritdoc ISafeEntrypoint
