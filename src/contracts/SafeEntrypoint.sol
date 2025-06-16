@@ -4,8 +4,9 @@ pragma solidity 0.8.29;
 import {SafeManageable} from 'contracts/SafeManageable.sol';
 
 import {ISafeEntrypoint} from 'interfaces/ISafeEntrypoint.sol';
+
+import {IActionHub} from 'interfaces/action-hubs/IActionHub.sol';
 import {IActionsBuilder} from 'interfaces/actions-builders/IActionsBuilder.sol';
-import {IHub} from 'interfaces/hubs/IHub.sol';
 
 import {Enum} from '@safe-smart-account/libraries/Enum.sol';
 import {MultiSendCallOnly} from '@safe-smart-account/libraries/MultiSendCallOnly.sol';
@@ -82,7 +83,7 @@ contract SafeEntrypoint is SafeManageable, ISafeEntrypoint {
     address _actionsBuilder,
     uint256 _expiryDelay
   ) external isSafeOwner returns (uint256 _txId) {
-    if (!IHub(_hub).isChild(_actionsBuilder)) revert InvalidHubOrActionsBuilder();
+    if (!IActionHub(_hub).isChild(_actionsBuilder)) revert InvalidHubOrActionsBuilder();
     bool _txIsPreApproved = _isPreApproved(_hub);
     _txId = _queueTransaction(_actionsBuilder, _expiryDelay, _txIsPreApproved);
 
@@ -277,9 +278,9 @@ contract SafeEntrypoint is SafeManageable, ISafeEntrypoint {
   // ~~~ INTERNAL VIEW METHODS ~~~
 
   /**
-   * @notice Internal function to check if the actions builder (or hub) is pre-approved
-   * @param _actionsBuilder The actions builder contract address (or hub)
-   * @return _isApproved Whether the actions builder (or hub) is pre-approved
+   * @notice Internal function to check if the actions builder (or actionHub) is pre-approved
+   * @param _actionsBuilder The actions builder contract address (or actionHub)
+   * @return _isApproved Whether the actions builder (or actionHub) is pre-approved
    */
   function _isPreApproved(address _actionsBuilder) internal view returns (bool _isApproved) {
     _isApproved = approvalExpiries[_actionsBuilder] > block.timestamp;

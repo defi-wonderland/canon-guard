@@ -1,16 +1,16 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.29;
 
-import {IHub} from 'interfaces/hubs/IHub.sol';
+import {IActionHub} from 'interfaces/action-hubs/IActionHub.sol';
 import {CREATE3} from 'solady/utils/CREATE3.sol';
 
-abstract contract Hub is IHub {
+abstract contract ActionHub is IActionHub {
   /**
-   * @notice The mapping of action builders. Returns true if the action builder is a child of the hub.
+   * @notice The mapping of action builders. Returns true if the action builder is a child of the actionHub.
    */
   mapping(address _actionBuilder => bool _exists) internal _actionBuilders;
 
-  /// @inheritdoc IHub
+  /// @inheritdoc IActionHub
   function isChild(address _actionBuilder) external view returns (bool _exists) {
     _exists = _isChild(_actionBuilder);
   }
@@ -31,9 +31,9 @@ abstract contract Hub is IHub {
   }
 
   /**
-   * @notice Returns true if the action builder is a child of the hub
+   * @notice Returns true if the action builder is a child of the actionHub
    * @param _child The address of the action builder to check
-   * @return _exists True if the action builder is a child of the hub, false otherwise
+   * @return _exists True if the action builder is a child of the actionHub, false otherwise
    */
   function _isChild(address _child) internal view returns (bool _exists) {
     _exists = _actionBuilders[_child];

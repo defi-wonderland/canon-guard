@@ -41,7 +41,7 @@ interface ISafeEntrypoint is ISafeManageable {
   /**
    * @notice Emitted when a transaction is queued
    * @param _txId The ID of the transaction
-   * @param _hub The hub contract address (0 if no hub was used)
+   * @param _hub The actionHub contract address (0 if no actionHub was used)
    * @param _actionsBuilder The actions builder contract address
    */
   event TransactionQueued(uint256 indexed _txId, address _hub, address _actionsBuilder);
@@ -94,7 +94,7 @@ interface ISafeEntrypoint is ISafeManageable {
   error SafeTransactionHashNotApproved();
 
   /**
-   * @notice Thrown when an invalid hub or actions builder is provided
+   * @notice Thrown when an invalid actionHub or actions builder is provided
    */
   error InvalidHubOrActionsBuilder();
 
@@ -111,9 +111,9 @@ interface ISafeEntrypoint is ISafeManageable {
   // ~~~ TRANSACTION METHODS ~~~
 
   /**
-   * @notice Verifies if the actions builder is a child of the hub, queues a transaction from an actions builder, for execution after a short delay if approved, or after a long delay if not approved
+   * @notice Verifies if the actions builder is a child of the actionHub, queues a transaction from an actions builder, for execution after a short delay if approved, or after a long delay if not approved
    * @dev Can only be called by the Safe owners
-   * @param _hub The hub contract address
+   * @param _hub The actionHub contract address
    * @param _actionsBuilder The actions builder contract address to queue
    * @param _expiryDelay The duration (in seconds) after which the transaction expires (after execution delay)
    * @return _txId The ID of the queued transaction

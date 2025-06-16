@@ -29,8 +29,8 @@ interface ICappedTokenTransfers is IActionsBuilder {
   function RECIPIENT() external view returns (address _recipient);
 
   /**
-   * @notice Gets the hub contract
-   * @return _hub The hub contract address
+   * @notice Gets the actionHub contract
+   * @return _hub The actionHub contract address
    */
   function HUB() external view returns (address _hub);
 }

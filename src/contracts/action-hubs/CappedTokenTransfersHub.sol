@@ -1,12 +1,13 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.29;
 
-import {ICappedTokenTransfersHub} from 'interfaces/hubs/ICappedTokenTransfersHub.sol';
+import {ICappedTokenTransfersHub} from 'interfaces/action-hubs/ICappedTokenTransfersHub.sol';
 import {SafeManageable} from 'src/contracts/SafeManageable.sol';
-import {CappedTokenTransfers} from 'src/contracts/actions-builders/CappedTokenTransfers.sol';
-import {Hub} from 'src/contracts/hubs/Hub.sol';
 
-contract CappedTokenTransfersHub is Hub, ICappedTokenTransfersHub, SafeManageable {
+import {ActionHub} from 'src/contracts/action-hubs/ActionHub.sol';
+import {CappedTokenTransfers} from 'src/contracts/actions-builders/CappedTokenTransfers.sol';
+
+contract CappedTokenTransfersHub is ActionHub, ICappedTokenTransfersHub, SafeManageable {
   /// @inheritdoc ICappedTokenTransfersHub
   address public immutable RECIPIENT;
 
@@ -26,7 +27,7 @@ contract CappedTokenTransfersHub is Hub, ICappedTokenTransfersHub, SafeManageabl
   mapping(address _token => uint256 _totalSpent) public totalSpent;
 
   /**
-   * @notice Constructor that sets up the hub
+   * @notice Constructor that sets up the actionHub
    * @param _safe The safe to use
    * @param _recipient The recipient of the tokens
    * @param _tokens The tokens to cap
