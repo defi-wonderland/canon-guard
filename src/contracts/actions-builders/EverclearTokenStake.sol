@@ -88,7 +88,7 @@ contract EverclearTokenStake is IEverclearTokenStake {
     uint256 _unclaimed = VESTING_ESCROW.unclaimed();
     // Get current balance of NEXT
     uint256 _nextBalance = NEXT.balanceOf(address(VESTING_WALLET));
-    // Get the releaseable amount (same behaviour as releaseable() on VESTING_WALLET)
+    // Get the releaseable amount at the time of enqueuing (same behaviour as releaseable() on VESTING_WALLET)
     uint256 _amountReleasable = VESTING_WALLET.vestedAmount(uint64(block.timestamp)) - VESTING_WALLET.released();
     uint256 _nextBalanceAfterRelease = _nextBalance + _unclaimed;
     uint256 _amountToBeReleased =
