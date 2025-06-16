@@ -279,11 +279,11 @@ contract SafeEntrypoint is SafeManageable, ISafeEntrypoint {
 
   /**
    * @notice Internal function to check if the actions builder (or actionHub) is pre-approved
-   * @param _actionsBuilder The actions builder contract address (or actionHub)
+   * @param _actionsBuilderOrActionHub The actions builder contract address (or actionHub)
    * @return _isApproved Whether the actions builder (or actionHub) is pre-approved
    */
-  function _isPreApproved(address _actionsBuilder) internal view returns (bool _isApproved) {
-    _isApproved = approvalExpiries[_actionsBuilder] > block.timestamp;
+  function _isPreApproved(address _actionsBuilderOrActionHub) internal view returns (bool _isApproved) {
+    _isApproved = approvalExpiries[_actionsBuilderOrActionHub] > block.timestamp;
   }
 
   /**
