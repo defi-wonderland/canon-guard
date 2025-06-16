@@ -41,9 +41,10 @@ interface ISafeEntrypoint is ISafeManageable {
   /**
    * @notice Emitted when a transaction is queued
    * @param _txId The ID of the transaction
-   * @param _isArbitrary Whether the transaction is arbitrary or pre-approved
+   * @param _hub The hub contract address (0 if no hub was used)
+   * @param _actionsBuilder The actions builder contract address
    */
-  event TransactionQueued(uint256 indexed _txId, bool indexed _isArbitrary);
+  event TransactionQueued(uint256 indexed _txId, address _hub, address _actionsBuilder);
 
   /**
    * @notice Emitted when a transaction is executed

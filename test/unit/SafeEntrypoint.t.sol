@@ -132,7 +132,7 @@ contract UnitSafeEntrypoint is Test {
 
     // it emits TransactionQueued event
     vm.expectEmit(address(safeEntrypoint));
-    emit ISafeEntrypoint.TransactionQueued(1, false);
+    emit ISafeEntrypoint.TransactionQueued(1, address(0), _actionsBuilder);
 
     vm.prank(_caller);
     safeEntrypoint.queueTransaction(_actionsBuilder, _expiryDelay);
@@ -170,7 +170,7 @@ contract UnitSafeEntrypoint is Test {
 
     // it emits TransactionQueued event
     vm.expectEmit(address(safeEntrypoint));
-    emit ISafeEntrypoint.TransactionQueued(1, true);
+    emit ISafeEntrypoint.TransactionQueued(1, address(0), _actionsBuilder);
 
     vm.prank(_caller);
     uint256 _txId = safeEntrypoint.queueTransaction(_actionsBuilder, _expiryDelay);
