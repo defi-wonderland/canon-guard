@@ -5,6 +5,7 @@ import {SafeManageable} from 'contracts/SafeManageable.sol';
 
 import {ISafeEntrypoint} from 'interfaces/ISafeEntrypoint.sol';
 import {IActionsBuilder} from 'interfaces/actions-builders/IActionsBuilder.sol';
+import {IHub} from 'interfaces/hubs/IHub.sol';
 
 import {Enum} from '@safe-smart-account/libraries/Enum.sol';
 import {MultiSendCallOnly} from '@safe-smart-account/libraries/MultiSendCallOnly.sol';
@@ -39,6 +40,18 @@ contract SafeEntrypoint is SafeManageable, ISafeEntrypoint {
 
   /// @inheritdoc ISafeEntrypoint
   mapping(address _signer => mapping(bytes32 _safeTxHash => bool _isDisapproved)) public disapprovedHashes;
+
+  /**
+   * @notice Modifier to check if the actions builder is a child of the hub
+   * @param _hub The hub contract address
+   * @param _actionsBuilder The actions builder contract address
+   */
+  modifier isChild(address _hub, address _actionsBuilder) {
+    if (!IHub(_hub).isChild(_actionsBuilder)) {
+      revert InvalidHubOrActionsBuilder();
+    }
+    _;
+  }
 
   // ~~~ CONSTRUCTOR ~~~
 
@@ -76,40 +89,17 @@ contract SafeEntrypoint is SafeManageable, ISafeEntrypoint {
   // ~~~ TRANSACTION METHODS ~~~
 
   /// @inheritdoc ISafeEntrypoint
+  function queueHubTransaction(
+    address _hub,
+    address _actionsBuilder,
+    uint256 _expiryDelay
+  ) external isSafeOwner isChild(_hub, _actionsBuilder) returns (uint256 _txId) {
+    _txId = _queueTransaction(_hub, _actionsBuilder, _expiryDelay);
+  }
+
+  /// @inheritdoc ISafeEntrypoint
   function queueTransaction(address _actionsBuilder, uint256 _expiryDelay) external isSafeOwner returns (uint256 _txId) {
-    bool _isArbitrary;
-    uint256 _txExecutionDelay;
-
-    // If approved, tx is not arbitrary, use short execution delay
-    if (approvalExpiries[_actionsBuilder] > block.timestamp) {
-      // `_isArbitrary` is already false by default
-      _txExecutionDelay = SHORT_TX_EXECUTION_DELAY;
-    } else {
-      // Otherwise, tx is arbitrary, use long execution delay
-      _isArbitrary = true;
-      _txExecutionDelay = LONG_TX_EXECUTION_DELAY;
-    }
-
-    // Generate a simple transaction ID
-    _txId = ++transactionNonce;
-
-    // Fetch actions from the builder
-    IActionsBuilder.Action[] memory _actions = IActionsBuilder(_actionsBuilder).getActions();
-
-    // Use default expiry delay if duration is 0
-    _expiryDelay = _expiryDelay == 0 ? DEFAULT_TX_EXPIRY_DELAY : _expiryDelay;
-
-    // Store the transaction information
-    transactions[_txId] = TransactionInfo({
-      actionsBuilder: _actionsBuilder,
-      actionsData: abi.encode(_actions),
-      executableAt: block.timestamp + _txExecutionDelay,
-      expiresAt: block.timestamp + _txExecutionDelay + _expiryDelay,
-      isExecuted: false
-    });
-
-    // NOTE: event picked up by off-chain monitoring service
-    emit TransactionQueued(_txId, _isArbitrary);
+    _txId = _queueTransaction(_actionsBuilder, _actionsBuilder, _expiryDelay);
   }
 
   /// @inheritdoc ISafeEntrypoint
@@ -253,6 +243,53 @@ contract SafeEntrypoint is SafeManageable, ISafeEntrypoint {
       refundReceiver: payable(address(0)),
       signatures: _signatures
     });
+  }
+
+  /**
+   * @notice Internal function to queue a transaction
+   * @param _hubOrActionsBuilder The hub or actions builder contract address
+   * @param _actionsBuilder The actions builder contract address
+   * @param _expiryDelay The duration (in seconds) after which the transaction expires (after execution delay)
+   * @return _txId The ID of the queued transaction
+   */
+  function _queueTransaction(
+    address _hubOrActionsBuilder,
+    address _actionsBuilder,
+    uint256 _expiryDelay
+  ) internal returns (uint256 _txId) {
+    bool _isArbitrary;
+    uint256 _txExecutionDelay;
+
+    // If approved, tx is not arbitrary, use short execution delay
+    if (approvalExpiries[_hubOrActionsBuilder] > block.timestamp) {
+      // `_isArbitrary` is already false by default
+      _txExecutionDelay = SHORT_TX_EXECUTION_DELAY;
+    } else {
+      // Otherwise, tx is arbitrary, use long execution delay
+      _isArbitrary = true;
+      _txExecutionDelay = LONG_TX_EXECUTION_DELAY;
+    }
+
+    // Generate a simple transaction ID
+    _txId = ++transactionNonce;
+
+    // Fetch actions from the builder
+    IActionsBuilder.Action[] memory _actions = IActionsBuilder(_actionsBuilder).getActions();
+
+    // Use default expiry delay if duration is 0
+    _expiryDelay = _expiryDelay == 0 ? DEFAULT_TX_EXPIRY_DELAY : _expiryDelay;
+
+    // Store the transaction information
+    transactions[_txId] = TransactionInfo({
+      actionsBuilder: _actionsBuilder,
+      actionsData: abi.encode(_actions),
+      executableAt: block.timestamp + _txExecutionDelay,
+      expiresAt: block.timestamp + _txExecutionDelay + _expiryDelay,
+      isExecuted: false
+    });
+
+    // NOTE: event picked up by off-chain monitoring service
+    emit TransactionQueued(_txId, _isArbitrary);
   }
 
   // ~~~ INTERNAL VIEW METHODS ~~~

@@ -92,6 +92,11 @@ interface ISafeEntrypoint is ISafeManageable {
    */
   error SafeTransactionHashNotApproved();
 
+  /**
+   * @notice Thrown when an invalid hub or actions builder is provided
+   */
+  error InvalidHubOrActionsBuilder();
+
   // ~~~ ADMIN METHODS ~~~
 
   /**
@@ -103,6 +108,20 @@ interface ISafeEntrypoint is ISafeManageable {
   function approveActionsBuilder(address _actionsBuilder, uint256 _approvalDuration) external;
 
   // ~~~ TRANSACTION METHODS ~~~
+
+  /**
+   * @notice Verifies if the actions builder is a child of the hub, queues a transaction from an actions builder, for execution after a short delay if approved, or after a long delay if not approved
+   * @dev Can only be called by the Safe owners
+   * @param _hub The hub contract address
+   * @param _actionsBuilder The actions builder contract address to queue
+   * @param _expiryDelay The duration (in seconds) after which the transaction expires (after execution delay)
+   * @return _txId The ID of the queued transaction
+   */
+  function queueHubTransaction(
+    address _hub,
+    address _actionsBuilder,
+    uint256 _expiryDelay
+  ) external returns (uint256 _txId);
 
   /**
    * @notice Queues a transaction from an actions builder for execution after a short delay if approved, or after a long delay if not approved
