@@ -9,8 +9,14 @@ import {IActionsBuilder} from 'interfaces/actions-builders/IActionsBuilder.sol';
  */
 interface IOPxAction is IActionsBuilder {
   /**
-   * @notice Returns the OPx contract address
-   * @return _opx The OPx contract address
+   * @notice Returns the OPX contract address
+   * @return _opx The OPX contract address
    */
-  function OPx() external view returns (address _opx);
+  function OPX() external view returns (address _opx);
+
+  /**
+   * @notice Returns the SAFE contract address
+   * @return _safe The SAFE contract address
+   */
+  function SAFE() external view returns (address _safe);
 }

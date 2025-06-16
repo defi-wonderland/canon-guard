@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.29;
 
-import {IERC20} from 'forge-std/interfaces/IERC20.sol';
 import {OPxAction} from 'src/contracts/actions-builders/OPxAction.sol';
 import {ISimpleActions} from 'src/interfaces/actions-builders/ISimpleActions.sol';
 import {IntegrationOptimismBase} from 'test/integration/optimism/IntegrationOptimismBase.sol';
@@ -42,7 +41,7 @@ contract IntegrationWonderlandClaims is IntegrationOptimismBase {
     _simpleActions[1] = _claimWLD;
 
     _actionsBuilder = simpleActionsFactory.createSimpleActions(_simpleActions);
-    _opxAction = address(new OPxAction(_opx));
+    _opxAction = address(new OPxAction(_opx, address(SAFE_PROXY)));
   }
 
   function test_ExecuteTransaction() public {
