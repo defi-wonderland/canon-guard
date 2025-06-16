@@ -1,132 +1,58 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.29;
 
-import {SafeManageable} from 'contracts/SafeManageable.sol';
-
+import {IERC20} from 'forge-std/interfaces/IERC20.sol';
 import {IActionsBuilder} from 'interfaces/actions-builders/IActionsBuilder.sol';
 import {ICappedTokenTransfers} from 'interfaces/actions-builders/ICappedTokenTransfers.sol';
-
-import {IERC20} from 'forge-std/interfaces/IERC20.sol';
+import {ICappedTokenTransfersHub} from 'interfaces/hubs/ICappedTokenTransfersHub.sol';
 
 /**
  * @title CappedTokenTransfers
  * @notice Contract that builds actions from capped token transfers
  */
-contract CappedTokenTransfers is SafeManageable, ICappedTokenTransfers {
+contract CappedTokenTransfers is ICappedTokenTransfers {
   // ~~~ STORAGE ~~~
 
-  // Token configuration
   /// @inheritdoc ICappedTokenTransfers
   address public immutable TOKEN;
-  /// @inheritdoc ICappedTokenTransfers
-  uint256 public immutable CAP;
-  /// @inheritdoc ICappedTokenTransfers
-  uint256 public immutable EPOCH_LENGTH;
-
-  // State tracking
-  /// @inheritdoc ICappedTokenTransfers
-  uint256 public totalSpent;
-  /// @inheritdoc ICappedTokenTransfers
-  uint256 public currentEpoch;
-  /// @inheritdoc ICappedTokenTransfers
-  uint256 public startingTimestamp;
 
   /// @inheritdoc ICappedTokenTransfers
-  TokenTransfer[] public tokenTransfers;
+  uint256 public immutable AMOUNT;
+
+  /// @inheritdoc ICappedTokenTransfers
+  address public immutable RECIPIENT;
+
+  /// @inheritdoc ICappedTokenTransfers
+  address public immutable HUB;
 
   // ~~~ CONSTRUCTOR ~~~
 
   /**
-   * @notice Constructor that sets up the Safe, token, cap, epoch length and starting timestamp
-   * @param _safe The Gnosis Safe contract address
+   * @notice Constructor that sets up the token, amount and recipient
    * @param _token The token contract address
-   * @param _cap The cap for the token transfers
-   * @param _epochLength The epoch length for the token transfers
+   * @param _amount The amount of tokens to transfer
+   * @param _recipient The recipient of the tokens
    */
-  constructor(address _safe, address _token, uint256 _cap, uint256 _epochLength) SafeManageable(_safe) {
+  constructor(address _token, uint256 _amount, address _recipient) {
     TOKEN = _token;
-    CAP = _cap;
-    EPOCH_LENGTH = _epochLength;
-    startingTimestamp = block.timestamp;
-  }
-
-  // ~~~ ADMIN METHODS ~~~
-
-  /// @inheritdoc ICappedTokenTransfers
-  function addTokenTransfer(address _recipient, uint256 _amount) external isSafeOwner {
-    if (_amount == 0) revert InvalidAmount();
-    tokenTransfers.push(TokenTransfer({recipient: _recipient, amount: _amount}));
-  }
-
-  /// @inheritdoc ICappedTokenTransfers
-  function removeTokenTransfer(uint256 _index) external isSafeOwner {
-    if (_index >= tokenTransfers.length) revert InvalidIndex();
-
-    delete tokenTransfers[_index];
-  }
-
-  // ~~~ STATE MANAGEMENT ~~~
-
-  /// @inheritdoc ICappedTokenTransfers
-  function updateState(bytes memory _data) external isSafe {
-    uint256 _currentEpoch = (block.timestamp - startingTimestamp) / EPOCH_LENGTH;
-
-    // If we're in a new epoch, reset the spending
-    if (_currentEpoch > currentEpoch) {
-      totalSpent = 0;
-      currentEpoch = _currentEpoch;
-    }
-
-    uint256 _amount = abi.decode(_data, (uint256));
-    uint256 _totalSpent = totalSpent + _amount;
-
-    if (_totalSpent > CAP) {
-      revert CapExceeded();
-    }
-
-    totalSpent = _totalSpent;
-
-    // Clean up
-    delete tokenTransfers;
+    AMOUNT = _amount;
+    RECIPIENT = _recipient;
+    HUB = msg.sender;
   }
 
   // ~~~ ACTIONS METHODS ~~~
 
   /// @inheritdoc IActionsBuilder
   function getActions() external view returns (Action[] memory _actions) {
-    // Count valid transfers
-    uint256 _validCount = 0;
-    uint256 _totalAmount = 0;
-    for (uint256 i = 0; i < tokenTransfers.length; i++) {
-      if (tokenTransfers[i].amount != 0) {
-        _validCount++;
-        _totalAmount += tokenTransfers[i].amount;
-      }
-    }
-
-    // Create actions array: one for updateState + one for each valid transfer
-    uint256 _numActions = _validCount + 1;
-    _actions = new Action[](_numActions);
-
     // First action: update state
     _actions[0] = Action({
-      target: address(this),
-      data: abi.encodeCall(ICappedTokenTransfers.updateState, (abi.encode(_totalAmount))),
+      target: HUB,
+      data: abi.encodeCall(ICappedTokenTransfersHub.updateState, (abi.encode(AMOUNT, TOKEN))),
       value: 0
     });
 
-    // Remaining actions: valid token transfers
-    uint256 _actionIndex = 1;
-    for (uint256 i = 0; i < tokenTransfers.length; i++) {
-      if (tokenTransfers[i].amount != 0) {
-        _actions[_actionIndex] = Action({
-          target: TOKEN,
-          data: abi.encodeCall(IERC20.transfer, (tokenTransfers[i].recipient, tokenTransfers[i].amount)),
-          value: 0
-        });
-        _actionIndex++;
-      }
-    }
+    // Second action: transfer
+    _actions[1] = Action({target: TOKEN, data: abi.encodeCall(IERC20.transfer, (RECIPIENT, AMOUNT)), value: 0});
 
     return _actions;
   }
