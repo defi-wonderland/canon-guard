@@ -2,7 +2,6 @@
 pragma solidity 0.8.29;
 
 import {CappedTokenTransfersHub} from 'contracts/hubs/CappedTokenTransfersHub.sol';
-
 import {ICappedTokenTransfersHubFactory} from 'interfaces/factories/ICappedTokenTransfersHubFactory.sol';
 
 /**

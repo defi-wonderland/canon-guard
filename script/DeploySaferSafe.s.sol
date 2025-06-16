@@ -34,7 +34,7 @@ contract DeploySaferSafe is Constants, Script {
     // Deploy the AllowanceClaimorFactory contract
     allowanceClaimorFactory = new AllowanceClaimorFactory();
     // Deploy the CappedTokenTransfersFactory contract
-    // cappedTokenTransfersFactory = new CappedTokenTransfersFactory();
+    cappedTokenTransfersHubFactory = new CappedTokenTransfersHubFactory();
     // Deploy the SimpleActionsFactory contract
     simpleActionsFactory = new SimpleActionsFactory();
     // Deploy the SimpleTransfersFactory contract

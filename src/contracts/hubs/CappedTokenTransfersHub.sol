@@ -2,19 +2,37 @@
 pragma solidity 0.8.29;
 
 import {ICappedTokenTransfersHub} from 'interfaces/hubs/ICappedTokenTransfersHub.sol';
-import {CREATE3} from 'solady/utils/CREATE3.sol';
 import {SafeManageable} from 'src/contracts/SafeManageable.sol';
 import {CappedTokenTransfers} from 'src/contracts/actions-builders/CappedTokenTransfers.sol';
+import {Hub} from 'src/contracts/hubs/Hub.sol';
 
-contract CappedTokenTransfersHub is ICappedTokenTransfersHub, SafeManageable {
-  address public immutable recipient;
+contract CappedTokenTransfersHub is Hub, ICappedTokenTransfersHub, SafeManageable {
+  /// @inheritdoc ICappedTokenTransfersHub
+  address public immutable RECIPIENT;
+
+  /// @inheritdoc ICappedTokenTransfersHub
   uint256 public immutable EPOCH_LENGTH;
-  uint256 public immutable startingTimestamp;
+
+  /// @inheritdoc ICappedTokenTransfersHub
+  uint256 public immutable STARTING_TIMESTAMP;
+
+  /// @inheritdoc ICappedTokenTransfersHub
   uint256 public currentEpoch;
 
+  /// @inheritdoc ICappedTokenTransfersHub
   mapping(address _token => uint256 _cap) public cap;
+
+  /// @inheritdoc ICappedTokenTransfersHub
   mapping(address _token => uint256 _totalSpent) public totalSpent;
 
+  /**
+   * @notice Constructor that sets up the hub
+   * @param _safe The safe to use
+   * @param _recipient The recipient of the tokens
+   * @param _tokens The tokens to cap
+   * @param _caps The caps for the tokens
+   * @param _epochLength The length of the epoch
+   */
   constructor(
     address _safe,
     address _recipient,
@@ -22,33 +40,29 @@ contract CappedTokenTransfersHub is ICappedTokenTransfersHub, SafeManageable {
     uint256[] memory _caps,
     uint256 _epochLength
   ) SafeManageable(_safe) {
-    recipient = _recipient;
+    RECIPIENT = _recipient;
     EPOCH_LENGTH = _epochLength;
-    startingTimestamp = block.timestamp;
+    STARTING_TIMESTAMP = block.timestamp;
 
     for (uint256 i = 0; i < _tokens.length; i++) {
       cap[_tokens[i]] = _caps[i];
     }
   }
 
-  function createNewChild(address _token, uint256 _amount) external isSafe returns (address _child) {
-    // Deploy with create2 to have deterministic addresses, if the child already exists, it will revert
-
+  /// @inheritdoc ICappedTokenTransfersHub
+  function createNewActionBuilder(address _token, uint256 _amount) external isSafe returns (address _actionBuilder) {
     bytes memory _initCode =
-      abi.encodePacked(type(CappedTokenTransfers).creationCode, abi.encode(SAFE, _token, _amount, recipient));
-    bytes32 _salt = keccak256(abi.encode(recipient, _token, _amount));
+      abi.encodePacked(type(CappedTokenTransfers).creationCode, abi.encode(SAFE, _token, _amount, RECIPIENT));
+    bytes32 _salt = keccak256(abi.encode(RECIPIENT, _token, _amount));
 
-    _child = CREATE3.deployDeterministic(_initCode, _salt);
-
-    emit NewChildCreated(_child);
+    _actionBuilder = _createNewActionBuilder(_initCode, _salt);
   }
 
-  function _isChild(address _child) internal view returns (bool _exists) {}
-
+  /// @inheritdoc ICappedTokenTransfersHub
   function updateState(bytes memory _data) external isSafe {
     (uint256 _amount, address _token) = abi.decode(_data, (uint256, address));
 
-    uint256 _currentEpoch = (block.timestamp - startingTimestamp) / EPOCH_LENGTH;
+    uint256 _currentEpoch = (block.timestamp - STARTING_TIMESTAMP) / EPOCH_LENGTH;
 
     // If we're in a new epoch, reset the spending
     if (_currentEpoch > currentEpoch) {
