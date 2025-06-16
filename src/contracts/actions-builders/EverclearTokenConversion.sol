@@ -20,38 +20,33 @@ contract EverclearTokenConversion is IEverclearTokenConversion {
   /// @inheritdoc IEverclearTokenConversion
   IERC20 public immutable NEXT;
 
+  /// @inheritdoc IEverclearTokenConversion
+  address public immutable SAFE;
+
   // ~~~ CONSTRUCTOR ~~~
 
   /**
    * @notice Constructor that sets up the xERC20Lockbox and NEXT
    * @param _lockbox The xERC20Lockbox contract address
    * @param _next The NEXT contract address
+   * @param _safe The SAFE contract address
    */
-  constructor(address _lockbox, address _next) {
+  constructor(address _lockbox, address _next, address _safe) {
     CLEAR_LOCKBOX = IxERC20Lockbox(_lockbox);
     NEXT = IERC20(_next);
+    SAFE = _safe;
   }
 
   // ~~~ ACTIONS METHODS ~~~
 
   /// @inheritdoc IActionsBuilder
   function getActions() external view returns (Action[] memory _actions) {
-    uint256 _amount = NEXT.balanceOf(_getSenderFromEntrypoint());
+    uint256 _amount = NEXT.balanceOf(SAFE);
 
     _actions = new Action[](2);
     _actions[0] =
       Action({target: address(NEXT), data: abi.encodeCall(IERC20.approve, (address(CLEAR_LOCKBOX), _amount)), value: 0});
     _actions[1] =
       Action({target: address(CLEAR_LOCKBOX), data: abi.encodeCall(IxERC20Lockbox.deposit, (_amount)), value: 0});
-  }
-
-  /**
-   * @notice Get the sender from the entrypoint.
-   * @dev Assuming msg.sender is a SafeEntrypoint (because getActions() will be called when calling queueTransaction()),
-   * we can get the sender from the Safe contract.
-   * @return _sender The sender address
-   */
-  function _getSenderFromEntrypoint() internal view returns (address _sender) {
-    _sender = address(ISafeManageable(msg.sender).SAFE());
   }
 }

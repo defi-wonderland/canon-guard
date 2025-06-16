@@ -37,6 +37,9 @@ contract EverclearTokenStake is IEverclearTokenStake {
   IERC20 public immutable CLEAR;
 
   /// @inheritdoc IEverclearTokenStake
+  address public immutable SAFE;
+
+  /// @inheritdoc IEverclearTokenStake
   uint256 public immutable LOCK_TIME;
 
   // ~~~ CONSTRUCTOR ~~~
@@ -49,6 +52,7 @@ contract EverclearTokenStake is IEverclearTokenStake {
    * @param _clearLockbox The clear lockbox contract address
    * @param _next The NEXT contract address
    * @param _clear The CLEAR contract address
+   * @param _safe The SAFE contract address
    * @param _lockTime The lock time
    */
   constructor(
@@ -58,6 +62,7 @@ contract EverclearTokenStake is IEverclearTokenStake {
     address _clearLockbox,
     address _next,
     address _clear,
+    address _safe,
     uint256 _lockTime
   ) {
     VESTING_ESCROW = IVestingEscrow(_vestingEscrow);
@@ -66,6 +71,7 @@ contract EverclearTokenStake is IEverclearTokenStake {
     CLEAR_LOCKBOX = IxERC20Lockbox(_clearLockbox);
     NEXT = IERC20(_next);
     CLEAR = IERC20(_clear);
+    SAFE = _safe;
     LOCK_TIME = _lockTime;
   }
 
@@ -129,7 +135,7 @@ contract EverclearTokenStake is IEverclearTokenStake {
 
     // NOTE: get the fee from the gateway
     uint256 _value = IGateway(SPOKE_BRIDGE.gateway()).quoteMessage(
-      SPOKE_BRIDGE.EVERCLEAR_ID(), abi.encode(2, _getSenderFromEntrypoint(), _amountToBeReleased, _lockTime), _gasLimit
+      SPOKE_BRIDGE.EVERCLEAR_ID(), abi.encode(2, SAFE, _amountToBeReleased, _lockTime), _gasLimit
     );
 
     _actions[5] = Action({
@@ -137,15 +143,5 @@ contract EverclearTokenStake is IEverclearTokenStake {
       data: abi.encodeCall(ISpokeBridge.increaseLockPosition, (uint128(_amountToBeReleased), _lockTime, _gasLimit)),
       value: _value
     });
-  }
-
-  /**
-   * @notice Get the sender from the entrypoint.
-   * @dev Assuming msg.sender is a SafeEntrypoint (because getActions() will be called when calling queueTransaction()),
-   * we can get the sender from the Safe contract.
-   * @return _sender The sender address
-   */
-  function _getSenderFromEntrypoint() internal view returns (address _sender) {
-    _sender = address(ISafeManageable(msg.sender).SAFE());
   }
 }
