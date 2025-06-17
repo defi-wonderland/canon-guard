@@ -3,17 +3,15 @@ pragma solidity 0.8.29;
 
 import {BaseTransactionGuard} from '@safe-smart-account/base/GuardManager.sol';
 import {ITransactionGuard} from '@safe-smart-account/base/GuardManager.sol';
-import {SignatureDecoder} from '@safe-smart-account/common/SignatureDecoder.sol';
 import {Enum} from '@safe-smart-account/libraries/Enum.sol';
 import {IOnlyEntrypointGuard} from 'interfaces/IOnlyEntrypointGuard.sol';
-import {ISafeEntrypoint} from 'interfaces/ISafeEntrypoint.sol';
 
 /**
  * @title OnlyEntrypointGuard
  * @notice Guard that ensures transactions are either executed through the entrypoint or by an emergency caller
  */
 // solhint-disable-next-line payable-fallback
-abstract contract OnlyEntrypointGuard is BaseTransactionGuard, SignatureDecoder, IOnlyEntrypointGuard {
+abstract contract OnlyEntrypointGuard is BaseTransactionGuard, IOnlyEntrypointGuard {
   // ~~~ FALLBACK ~~~
 
   /**
@@ -37,7 +35,7 @@ abstract contract OnlyEntrypointGuard is BaseTransactionGuard, SignatureDecoder,
     address payable, /*  _refundReceiver */
     bytes memory, /* _signatures */
     address _msgSender
-  ) external view override {
+  ) external virtual view override {
     // Allow transactions from the entrypoint or emergency caller
     if (_msgSender != address(this)) {
       revert UnauthorizedSender(_msgSender);
