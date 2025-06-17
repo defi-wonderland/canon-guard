@@ -7,6 +7,7 @@ import {ISafe} from '@safe-smart-account/interfaces/ISafe.sol';
 import {ISafeEntrypoint} from 'contracts/SafeEntrypoint.sol';
 import {ISafeManageable} from 'contracts/SafeManageable.sol';
 import {Test} from 'forge-std/Test.sol';
+import {IActionHub} from 'interfaces/action-hubs/IActionHub.sol';
 import {IActionsBuilder} from 'interfaces/actions-builders/IActionsBuilder.sol';
 
 contract UnitSafeEntrypoint is Test {
@@ -42,6 +43,10 @@ contract UnitSafeEntrypoint is Test {
     assumeNotForgeAddress(_address);
     assumeNotZeroAddress(_address);
     assumeNotPrecompile(_address);
+  }
+
+  function _modifyIsChildReturnValue(address _hub, address _actionBuilder, bool _isChild) internal {
+    vm.mockCall(_hub, abi.encodeWithSelector(IActionHub.isChild.selector, _actionBuilder), abi.encode(_isChild));
   }
 
   function test_ConstructorWhenPassingValidParameters(
@@ -159,6 +164,7 @@ contract UnitSafeEntrypoint is Test {
     bytes memory _data,
     uint256 _expiryDelay
   ) external whenCallerIsSafeOwner {
+    _assumeFuzzable(_actionsBuilder);
     _expiryDelay = bound(_expiryDelay, 1, type(uint256).max - block.timestamp - LONG_TX_EXECUTION_DELAY);
 
     IActionsBuilder.Action[] memory _actions = new IActionsBuilder.Action[](1);
@@ -205,6 +211,122 @@ contract UnitSafeEntrypoint is Test {
     vm.expectRevert(ISafeManageable.NotSafeOwner.selector);
     vm.prank(_caller);
     safeEntrypoint.queueTransaction(_actionsBuilder, _expiryDelay);
+  }
+
+  function test_QueueHubTransactionWhenHubIsNotAChild(
+    address _actionHub,
+    address _actionsBuilder,
+    uint256 _expiryDelay
+  ) external whenCallerIsSafeOwner {
+    _modifyIsChildReturnValue(_actionHub, _actionsBuilder, false);
+
+    // it reverts with InvalidHubOrActionsBuilder
+    vm.expectRevert(ISafeEntrypoint.InvalidHubOrActionsBuilder.selector);
+    safeEntrypoint.queueHubTransaction(_actionHub, _actionsBuilder, _expiryDelay);
+  }
+
+  function test_QueueHubTransactionWhenQueueingPreApprovedAction(
+    address _caller,
+    address _actionHub,
+    address _actionsBuilder,
+    uint256 _expiryDelay
+  ) external whenCallerIsSafeOwner givenActionsBuilderIsApproved(_actionHub) {
+    _assumeFuzzable(_actionHub);
+    _assumeFuzzable(_actionsBuilder);
+    _modifyIsChildReturnValue(_actionHub, _actionsBuilder, true);
+    _expiryDelay = bound(_expiryDelay, 1, type(uint256).max - block.timestamp - SHORT_TX_EXECUTION_DELAY);
+
+    _mockAndExpect(
+      address(_actionsBuilder),
+      abi.encodeWithSelector(IActionsBuilder.getActions.selector),
+      abi.encode(new IActionsBuilder.Action[](0))
+    );
+
+    // it emits TransactionQueued event
+    vm.expectEmit(address(safeEntrypoint));
+    emit ISafeEntrypoint.TransactionQueued(1, _actionHub, _actionsBuilder);
+
+    vm.prank(_caller);
+    safeEntrypoint.queueHubTransaction(_actionHub, _actionsBuilder, _expiryDelay);
+
+    // Verify transaction info
+    (address _actionsBldr, bytes memory _actionsData, uint256 _executableAt, uint256 _expiresAt, bool _isExecuted) =
+      safeEntrypoint.transactions(1);
+
+    // it sets transaction info
+    assertEq(_actionsBldr, _actionsBuilder);
+    assertEq(_actionsData, abi.encode(new IActionsBuilder.Action[](0)));
+    assertEq(_isExecuted, false);
+    // it sets executable at to block timestamp plus short delay
+    assertEq(_executableAt, block.timestamp + SHORT_TX_EXECUTION_DELAY);
+    // it sets expiry time
+    assertEq(_expiresAt, block.timestamp + SHORT_TX_EXECUTION_DELAY + _expiryDelay);
+  }
+
+  function test_QueueHubTransactionWhenQueueingArbitraryAction(
+    address _caller,
+    address _target,
+    uint256 _value,
+    address _actionHub,
+    address _actionsBuilder,
+    bytes memory _data,
+    uint256 _expiryDelay
+  ) external whenCallerIsSafeOwner {
+    _modifyIsChildReturnValue(_actionHub, _actionsBuilder, true);
+    _assumeFuzzable(_actionHub);
+    _assumeFuzzable(_actionsBuilder);
+    _expiryDelay = bound(_expiryDelay, 1, type(uint256).max - block.timestamp - LONG_TX_EXECUTION_DELAY);
+
+    IActionsBuilder.Action[] memory _actions = new IActionsBuilder.Action[](1);
+    _actions[0] = IActionsBuilder.Action({target: _target, value: _value, data: _data});
+
+    _mockAndExpect(
+      address(_actionsBuilder), abi.encodeWithSelector(IActionsBuilder.getActions.selector), abi.encode(_actions)
+    );
+
+    // it emits TransactionQueued event
+    vm.expectEmit(address(safeEntrypoint));
+    emit ISafeEntrypoint.TransactionQueued(1, _actionHub, _actionsBuilder);
+
+    vm.prank(_caller);
+    uint256 _txId = safeEntrypoint.queueHubTransaction(_actionHub, _actionsBuilder, _expiryDelay);
+
+    // Verify transaction info
+    (
+      address _arbitraryActionsBuilder,
+      bytes memory _actionsData,
+      uint256 _executableAt,
+      uint256 _expiresAt,
+      bool _isExecuted
+    ) = safeEntrypoint.transactions(_txId);
+
+    // it sets transaction info
+    assertEq(_actionsBuilder, address(_arbitraryActionsBuilder));
+    assertEq(_actionsData, abi.encode(_actions));
+    assertEq(_isExecuted, false);
+    // it sets executable at to block timestamp plus long delay
+    assertEq(_executableAt, block.timestamp + LONG_TX_EXECUTION_DELAY);
+    // it sets expiry time
+    assertEq(_expiresAt, block.timestamp + LONG_TX_EXECUTION_DELAY + _expiryDelay);
+  }
+
+  function test_QueueHubTransactionWhenCallerIsNotSafeOwner(
+    address _caller,
+    address _actionHub,
+    address _actionsBuilder,
+    uint256 _expiryDelay
+  ) external givenCallerIsNotSafeOwner(_caller) {
+    _assumeFuzzable(_caller);
+    _assumeFuzzable(_actionHub);
+    _assumeFuzzable(_actionsBuilder);
+    _modifyIsChildReturnValue(_actionHub, _actionsBuilder, true);
+
+    _expiryDelay = bound(_expiryDelay, 0, type(uint256).max - block.timestamp - SHORT_TX_EXECUTION_DELAY);
+
+    // it reverts with NotSafeOwner
+    vm.expectRevert(ISafeManageable.NotSafeOwner.selector);
+    vm.prank(_caller);
+    safeEntrypoint.queueHubTransaction(_actionHub, _actionsBuilder, _expiryDelay);
   }
 
   function test_ExecuteTransactionWhenTransactionIsExpired(
