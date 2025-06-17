@@ -133,9 +133,6 @@ contract SafeEntrypoint is SafeManageable, ISafeEntrypoint {
     address[] memory _signers = _getApprovedHashSigners(_safeTxHash);
 
     _executeTransaction(_txId, _safeTxHash, _signers, _multiSendData);
-
-    // Remove the transaction from the queue
-    queuedTransactions[_txInfo.actionsBuilder] = 0;
   }
 
   // ~~~ GETTER METHODS ~~~
@@ -206,6 +203,9 @@ contract SafeEntrypoint is SafeManageable, ISafeEntrypoint {
 
     // Mark the transaction as executed
     _txInfo.isExecuted = true;
+
+    // Remove the transaction from the queue
+    queuedTransactions[_txInfo.actionsBuilder] = 0;
 
     // NOTE: only for event logging
     bool _isArbitrary = _txInfo.actionsBuilder == address(0);
