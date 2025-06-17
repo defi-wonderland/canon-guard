@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.29;
 
+import {OnlyEntrypointGuard} from 'contracts/OnlyEntrypointGuard.sol';
 import {SafeManageable} from 'contracts/SafeManageable.sol';
 
 import {ISafeEntrypoint} from 'interfaces/ISafeEntrypoint.sol';
@@ -13,7 +14,7 @@ import {MultiSendCallOnly} from '@safe-smart-account/libraries/MultiSendCallOnly
  * @title SafeEntrypoint
  * @notice Contract that allows for the execution of transactions on a Safe
  */
-contract SafeEntrypoint is SafeManageable, ISafeEntrypoint {
+contract SafeEntrypoint is SafeManageable, OnlyEntrypointGuard, ISafeEntrypoint {
   // ~~~ STORAGE ~~~
 
   /// @inheritdoc ISafeEntrypoint

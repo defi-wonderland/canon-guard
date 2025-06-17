@@ -40,12 +40,6 @@ contract UnitDeployEntrypoint is Constants, Test {
 
     // Get the deployed contracts
     ISafeEntrypoint _safeEntrypoint = deployEntrypoint.safeEntrypoint();
-    IOnlyEntrypointGuard _onlyEntrypointGuard = deployEntrypoint.onlyEntrypointGuard();
-
-    // Deploy the OnlyEntrypointGuard contract
-    _ghost_onlyEntrypointGuard = IOnlyEntrypointGuard(
-      deployCode('OnlyEntrypointGuard', abi.encode(_safeEntrypoint, EMERGENCY_CALLER, MULTI_SEND_CALL_ONLY))
-    );
 
     // It should deploy the SafeEntrypoint contract with correct args
     assertEq(address(_safeEntrypoint).code, address(_ghost_safeEntrypoint).code);
@@ -54,11 +48,5 @@ contract UnitDeployEntrypoint is Constants, Test {
     assertEq(_safeEntrypoint.SHORT_TX_EXECUTION_DELAY(), SHORT_TX_EXECUTION_DELAY);
     assertEq(_safeEntrypoint.LONG_TX_EXECUTION_DELAY(), LONG_TX_EXECUTION_DELAY);
     assertEq(_safeEntrypoint.DEFAULT_TX_EXPIRY_DELAY(), DEFAULT_TX_EXPIRY_DELAY);
-
-    // It should deploy the OnlyEntrypointGuard contract with correct args
-    assertEq(address(_onlyEntrypointGuard).code, address(_ghost_onlyEntrypointGuard).code);
-    assertEq(_onlyEntrypointGuard.ENTRYPOINT(), address(_safeEntrypoint));
-    assertEq(_onlyEntrypointGuard.EMERGENCY_CALLER(), EMERGENCY_CALLER);
-    assertEq(_onlyEntrypointGuard.MULTI_SEND_CALL_ONLY(), address(MULTI_SEND_CALL_ONLY));
   }
 }

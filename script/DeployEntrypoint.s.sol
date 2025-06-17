@@ -14,9 +14,6 @@ contract DeployEntrypoint is Constants, Script {
   // ~~~ ENTRYPOINT ~~~
   ISafeEntrypoint public safeEntrypoint;
 
-  // ~~~ GUARD ~~~
-  IOnlyEntrypointGuard public onlyEntrypointGuard;
-
   function deployEntrypoint() public {
     vm.startBroadcast();
 
@@ -26,9 +23,6 @@ contract DeployEntrypoint is Constants, Script {
         address(SAFE_PROXY), SHORT_TX_EXECUTION_DELAY, LONG_TX_EXECUTION_DELAY, DEFAULT_TX_EXPIRY_DELAY
       )
     );
-
-    // Deploy the OnlyEntrypointGuard contract
-    onlyEntrypointGuard = new OnlyEntrypointGuard(address(safeEntrypoint), EMERGENCY_CALLER);
 
     vm.stopBroadcast();
   }

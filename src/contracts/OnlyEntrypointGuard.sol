@@ -13,34 +13,7 @@ import {ISafeEntrypoint} from 'interfaces/ISafeEntrypoint.sol';
  * @notice Guard that ensures transactions are either executed through the entrypoint or by an emergency caller
  */
 // solhint-disable-next-line payable-fallback
-contract OnlyEntrypointGuard is BaseTransactionGuard, SignatureDecoder, IOnlyEntrypointGuard {
-  // ~~~ STORAGE ~~~
-
-  /// @inheritdoc IOnlyEntrypointGuard
-  uint8 public constant APPROVED_HASH_SIGNATURE_TYPE = 1;
-
-  /// @inheritdoc IOnlyEntrypointGuard
-  address public immutable ENTRYPOINT;
-
-  /// @inheritdoc IOnlyEntrypointGuard
-  address public immutable EMERGENCY_CALLER;
-
-  /// @inheritdoc IOnlyEntrypointGuard
-  address public immutable MULTI_SEND_CALL_ONLY;
-
-  // ~~~ CONSTRUCTOR ~~~
-
-  /**
-   * @notice Constructor that sets up the guard
-   * @param _entrypoint The address of the SafeEntrypoint contract
-   * @param _emergencyCaller The address of the emergency caller (can be contract or EOA)
-   */
-  constructor(address _entrypoint, address _emergencyCaller) {
-    ENTRYPOINT = _entrypoint;
-    EMERGENCY_CALLER = _emergencyCaller;
-    MULTI_SEND_CALL_ONLY = ISafeEntrypoint(_entrypoint).MULTI_SEND_CALL_ONLY();
-  }
-
+abstract contract OnlyEntrypointGuard is BaseTransactionGuard, SignatureDecoder, IOnlyEntrypointGuard {
   // ~~~ FALLBACK ~~~
 
   /**
@@ -53,62 +26,26 @@ contract OnlyEntrypointGuard is BaseTransactionGuard, SignatureDecoder, IOnlyEnt
 
   /// @inheritdoc ITransactionGuard
   function checkTransaction(
-    address _to,
+    address, /* _to */
     uint256, /* _value */
     bytes memory, /* _data */
-    Enum.Operation _operation,
+    Enum.Operation, /* _operation */
     uint256, /* _safeTxGas */
     uint256, /* _baseGas */
     uint256, /* _gasPrice */
     address, /* _gasToken */
     address payable, /*  _refundReceiver */
-    bytes memory _signatures,
+    bytes memory, /* _signatures */
     address _msgSender
   ) external view override {
     // Allow transactions from the entrypoint or emergency caller
-    if (_msgSender != ENTRYPOINT && _msgSender != EMERGENCY_CALLER) {
+    if (_msgSender != address(this)) {
       revert UnauthorizedSender(_msgSender);
-    }
-
-    // If operation is delegateCall, to must be MULTI_SEND_CALL_ONLY
-    if (_operation == Enum.Operation.DelegateCall) {
-      if (_to != MULTI_SEND_CALL_ONLY) {
-        revert UnauthorizedDelegateCall(_to);
-      }
-    }
-
-    // Validate signature type – only allow approved hash signatures
-    if (!_isValidSignatureType(_signatures)) {
-      revert InvalidSignatureType();
     }
   }
 
   /// @inheritdoc ITransactionGuard
-  function checkAfterExecution(bytes32, /* _hash */ bool /* _success */ ) external pure override {
+  function checkAfterExecution(bytes32, /* _hash */ bool /* _success */ ) external virtual pure override {
     // No post-execution checks needed
-  }
-
-  // ~~~ INTERNAL PURE METHODS ~~~
-
-  /**
-   * @notice Validates that all signatures are approved hash signatures
-   * @param _signatures The signatures to validate
-   * @return _isValid Whether all signatures are approved hash signatures
-   */
-  function _isValidSignatureType(bytes memory _signatures) internal pure returns (bool _isValid) {
-    // Check each 65-byte signature
-    uint256 _signaturesAmount = _signatures.length / 65;
-    uint8 _signatureType;
-    for (uint256 _i; _i < _signaturesAmount; ++_i) {
-      // Get the signature type (last byte of each 65-byte signature)
-      (_signatureType,,) = signatureSplit(_signatures, _i);
-
-      // Only allow approved hash signatures (type 1)
-      if (_signatureType != APPROVED_HASH_SIGNATURE_TYPE) {
-        return _isValid = false;
-      }
-    }
-
-    _isValid = true;
   }
 }

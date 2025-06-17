@@ -66,11 +66,8 @@ contract IntegrationBasicTest is DeploySaferSafe, EthereumConstants, Test {
       )
     );
 
-    // Deploy the OnlyEntrypointGuard contract
-    _onlyEntrypointGuard = new OnlyEntrypointGuard(address(_safeEntrypoint), EMERGENCY_CALLER);
-
     vm.prank(address(_safeProxy));
-    _safeProxy.setGuard(address(_onlyEntrypointGuard));
+    _safeProxy.setGuard(address(_safeEntrypoint));
 
     // Deploy the SimpleActions contract
     ISimpleActions.SimpleAction memory _depositAction =

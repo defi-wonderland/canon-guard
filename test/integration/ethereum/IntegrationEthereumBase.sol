@@ -48,6 +48,6 @@ abstract contract IntegrationEthereumBase is DeploySaferSafe, DeployEntrypoint, 
 
     // Set the OnlyEntrypointGuard as the Safe guard
     vm.prank(address(SAFE_PROXY));
-    SAFE_PROXY.setGuard(address(onlyEntrypointGuard));
+    SAFE_PROXY.setGuard(address(safeEntrypoint));
   }
 }
