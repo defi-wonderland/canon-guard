@@ -77,7 +77,7 @@ interface ISafeEntrypoint is ISafeManageable {
    * @param _txId The ID of the already queued transaction
    */
   error TransactionAlreadyQueued(address _actionsBuilder, uint256 _txId);
-  
+
   // ~~~ ADMIN METHODS ~~~
 
   /**
