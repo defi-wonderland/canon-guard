@@ -5,7 +5,6 @@ import {Test} from 'forge-std/Test.sol';
 
 import {DeployEntrypoint} from 'script/DeployEntrypoint.s.sol';
 
-import {IOnlyEntrypointGuard} from 'interfaces/IOnlyEntrypointGuard.sol';
 import {ISafeEntrypoint} from 'interfaces/ISafeEntrypoint.sol';
 
 import {Constants} from 'script/Constants.sol';
@@ -14,7 +13,6 @@ contract UnitDeployEntrypoint is Constants, Test {
   DeployEntrypoint public deployEntrypoint;
 
   ISafeEntrypoint internal _ghost_safeEntrypoint;
-  IOnlyEntrypointGuard internal _ghost_onlyEntrypointGuard;
 
   function setUp() public {
     // Deploy the DeployEntrypoint contract

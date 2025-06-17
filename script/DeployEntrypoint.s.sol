@@ -3,9 +3,6 @@ pragma solidity 0.8.29;
 
 import {Script} from 'forge-std/Script.sol';
 
-import {OnlyEntrypointGuard} from 'contracts/OnlyEntrypointGuard.sol';
-
-import {IOnlyEntrypointGuard} from 'interfaces/IOnlyEntrypointGuard.sol';
 import {ISafeEntrypoint} from 'interfaces/ISafeEntrypoint.sol';
 
 import {Constants} from 'script/Constants.sol';

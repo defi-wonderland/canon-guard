@@ -45,7 +45,7 @@ abstract contract OnlyEntrypointGuard is BaseTransactionGuard, SignatureDecoder,
   }
 
   /// @inheritdoc ITransactionGuard
-  function checkAfterExecution(bytes32, /* _hash */ bool /* _success */ ) external virtual pure override {
+  function checkAfterExecution(bytes32, /* _hash */ bool /* _success */ ) external pure virtual override {
     // No post-execution checks needed
   }
 }

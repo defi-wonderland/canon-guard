@@ -3,9 +3,6 @@ pragma solidity 0.8.29;
 
 import {Test} from 'forge-std/Test.sol';
 
-import {OnlyEntrypointGuard} from 'contracts/OnlyEntrypointGuard.sol';
-
-import {IOnlyEntrypointGuard} from 'interfaces/IOnlyEntrypointGuard.sol';
 import {ISafeEntrypoint} from 'interfaces/ISafeEntrypoint.sol';
 import {ISimpleActions} from 'interfaces/actions-builders/ISimpleActions.sol';
 
@@ -25,9 +22,6 @@ contract IntegrationBasicTest is DeploySaferSafe, EthereumConstants, Test {
 
   // ~~~ ENTRYPOINT ~~~
   ISafeEntrypoint internal _safeEntrypoint;
-
-  // ~~~ GUARD ~~~
-  IOnlyEntrypointGuard internal _onlyEntrypointGuard;
 
   // ~~~ ACTIONS ~~~
   address internal _actionsBuilder;
