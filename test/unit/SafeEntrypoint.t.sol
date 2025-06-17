@@ -218,6 +218,8 @@ contract UnitSafeEntrypoint is Test {
     address _actionsBuilder,
     uint256 _expiryDelay
   ) external whenCallerIsSafeOwner {
+    _assumeFuzzable(_actionHub);
+    _assumeFuzzable(_actionsBuilder);
     _modifyIsChildReturnValue(_actionHub, _actionsBuilder, false);
 
     // it reverts with InvalidHubOrActionsBuilder
