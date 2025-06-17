@@ -33,18 +33,21 @@ contract CappedTokenTransfers is ICappedTokenTransfers {
    * @param _token The token contract address
    * @param _amount The amount of tokens to transfer
    * @param _recipient The recipient of the tokens
+   * @param _hub The hub of the action
    */
-  constructor(address _token, uint256 _amount, address _recipient) {
+  constructor(address _token, uint256 _amount, address _recipient, address _hub) {
     TOKEN = _token;
     AMOUNT = _amount;
     RECIPIENT = _recipient;
-    HUB = msg.sender;
+    HUB = _hub;
   }
 
   // ~~~ ACTIONS METHODS ~~~
 
   /// @inheritdoc IActionsBuilder
   function getActions() external view returns (Action[] memory _actions) {
+    _actions = new Action[](2);
+
     // First action: update state
     _actions[0] = Action({
       target: HUB,

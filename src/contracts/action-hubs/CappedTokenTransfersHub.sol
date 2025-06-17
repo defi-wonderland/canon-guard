@@ -53,8 +53,8 @@ contract CappedTokenTransfersHub is ActionHub, ICappedTokenTransfersHub, SafeMan
   /// @inheritdoc ICappedTokenTransfersHub
   function createNewActionBuilder(address _token, uint256 _amount) external isSafe returns (address _actionBuilder) {
     bytes memory _initCode =
-      abi.encodePacked(type(CappedTokenTransfers).creationCode, abi.encode(SAFE, _token, _amount, RECIPIENT));
-    bytes32 _salt = keccak256(abi.encode(RECIPIENT, _token, _amount));
+      abi.encodePacked(type(CappedTokenTransfers).creationCode, abi.encode(_token, _amount, RECIPIENT, address(this)));
+    bytes32 _salt = keccak256(abi.encode(_token, _amount, RECIPIENT));
 
     _actionBuilder = _createNewActionBuilder(_initCode, _salt);
   }
