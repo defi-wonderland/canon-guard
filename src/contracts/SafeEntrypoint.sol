@@ -37,7 +37,9 @@ contract SafeEntrypoint is SafeManageable, ISafeEntrypoint {
   /// @inheritdoc ISafeEntrypoint
   mapping(uint256 _txId => TransactionInfo _txInfo) public transactions;
 
+  /// @inheritdoc ISafeEntrypoint
   mapping(address _actionsBuilder => uint256 _txId) public queuedTransactions;
+
   // ~~~ CONSTRUCTOR ~~~
 
   /**

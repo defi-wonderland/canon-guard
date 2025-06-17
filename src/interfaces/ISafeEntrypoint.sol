@@ -166,6 +166,13 @@ interface ISafeEntrypoint is ISafeManageable {
       bool _isExecuted
     );
 
+  /**
+   * @notice Gets the ID of the queued transaction for an actions builder
+   * @param _actionsBuilder The address of the actions builder contract
+   * @return _txId The ID of the queued transaction
+   */
+  function queuedTransactions(address _actionsBuilder) external view returns (uint256 _txId);
+
   // ~~~ GETTER METHODS ~~~
 
   /**
