@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.29;
 
+import {EmergencyModeHook} from 'contracts/EmergencyModeHook.sol';
 import {SafeManageable} from 'contracts/SafeManageable.sol';
 
 import {ISafeEntrypoint} from 'interfaces/ISafeEntrypoint.sol';
@@ -13,7 +14,7 @@ import {MultiSendCallOnly} from '@safe-smart-account/libraries/MultiSendCallOnly
  * @title SafeEntrypoint
  * @notice Contract that allows for the execution of transactions on a Safe
  */
-contract SafeEntrypoint is SafeManageable, ISafeEntrypoint {
+contract SafeEntrypoint is SafeManageable, EmergencyModeHook, ISafeEntrypoint {
   // ~~~ STORAGE ~~~
 
   /// @inheritdoc ISafeEntrypoint
@@ -118,6 +119,7 @@ contract SafeEntrypoint is SafeManageable, ISafeEntrypoint {
     bytes32 _safeTxHash = _getSafeTransactionHash(_multiSendData, SAFE.nonce());
     address[] memory _signers = _getApprovedHashSigners(_safeTxHash);
 
+    _onBeforeExecution();
     _executeTransaction(_txId, _safeTxHash, _signers, _multiSendData);
   }
 
