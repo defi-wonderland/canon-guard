@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.29;
 
+import {IOwnerManager} from '@safe-smart-account/interfaces/IOwnerManager.sol';
 import {Test} from 'forge-std/Test.sol';
 import {CappedTokenTransfersHub} from 'src/contracts/action-hubs/CappedTokenTransfersHub.sol';
 import {ISafeManageable} from 'src/interfaces/ISafeManageable.sol';
@@ -46,17 +47,19 @@ contract UnitCappedTokenTransfersHub is Test {
     }
   }
 
-  function test_CreateNewActionBuilderWhenCalledByTheSafe() external {
+  function test_CreateNewActionBuilderWhenCalledByTheSafeOwner() external {
+    vm.mockCall(address(safe), abi.encodeWithSelector(IOwnerManager.isOwner.selector), abi.encode(true));
+
     // it creates a new CappedTokenTransfers action builder
-    vm.prank(safe);
     address actionBuilder = cappedTokenTransfersHub.createNewActionBuilder(tokens[0], 100);
     assertNotEq(actionBuilder, address(0));
   }
 
-  function test_CreateNewActionBuilderWhenNotCalledByTheSafe() external {
+  function test_CreateNewActionBuilderWhenNotCalledByTheSafeOwner() external {
+    vm.mockCall(address(safe), abi.encodeWithSelector(IOwnerManager.isOwner.selector), abi.encode(false));
+
     // It reverts
-    vm.prank(makeAddr('notSafe'));
-    vm.expectRevert(ISafeManageable.NotSafe.selector);
+    vm.expectRevert(ISafeManageable.NotSafeOwner.selector);
     cappedTokenTransfersHub.createNewActionBuilder(tokens[0], 100);
   }
 

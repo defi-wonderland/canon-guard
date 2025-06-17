@@ -30,7 +30,7 @@ contract IntegrationCappedTokenTransfers is IntegrationEthereumBase {
 
   function test_CreateNewActionBuilder() public {
     // Create the new action builder
-    vm.prank(address(SAFE_PROXY));
+    vm.prank(_safeOwners[0]);
     address _actionsBuilder = _cappedTokenTransfersHub.createNewActionBuilder(address(WETH), 10 ether);
 
     // Check that the action builder was created correctly
@@ -43,7 +43,7 @@ contract IntegrationCappedTokenTransfers is IntegrationEthereumBase {
 
   function test_TransferSuccessfully() public {
     // Create the new action builder
-    vm.prank(address(SAFE_PROXY));
+    vm.prank(_safeOwners[0]);
     address _actionsBuilder = _cappedTokenTransfersHub.createNewActionBuilder(address(WETH), _safeBalance);
 
     // Allow the SafeEntrypoint to call the contract
@@ -80,7 +80,7 @@ contract IntegrationCappedTokenTransfers is IntegrationEthereumBase {
 
   function test_TransferUnsuccessfully() public {
     // Create the new action builder
-    vm.prank(address(SAFE_PROXY));
+    vm.prank(_safeOwners[0]);
     address _actionsBuilder = _cappedTokenTransfersHub.createNewActionBuilder(address(WETH), 1000 ether);
 
     // Allow the SafeEntrypoint to call the contract

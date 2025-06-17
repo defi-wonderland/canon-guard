@@ -8,9 +8,9 @@ UnitCappedTokenTransfersHub::constructor
     └── it sets the caps
 
 UnitCappedTokenTransfersHub::createNewActionBuilder
-├── When called by the safe
+├── When called by the safe owner
 │   └── it creates a new CappedTokenTransfers action builder
-└── When not called by the safe
+└── When not called by the safe owner
     └── It reverts
 
 UnitCappedTokenTransfersHub::updateState
