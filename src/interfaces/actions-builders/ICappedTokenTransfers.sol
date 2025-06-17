@@ -30,7 +30,7 @@ interface ICappedTokenTransfers is IActionsBuilder {
 
   /**
    * @notice Gets the actionHub contract
-   * @return _hub The actionHub contract address
+   * @return _actionHub The actionHub contract address
    */
-  function HUB() external view returns (address _hub);
+  function HUB() external view returns (address _actionHub);
 }

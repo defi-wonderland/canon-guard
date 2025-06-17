@@ -24,8 +24,8 @@ contract UnitCappedTokenTransfers is Test {
     cappedTokenTransfers = new CappedTokenTransfers(token, amount, recipient, hub);
   }
 
-  function test_ConstructorWhenCalled(address _token, uint256 _amount, address _recipient, address _hub) external {
-    cappedTokenTransfers = new CappedTokenTransfers(_token, _amount, _recipient, _hub);
+  function test_ConstructorWhenCalled(address _token, uint256 _amount, address _recipient, address _actionHub) external {
+    cappedTokenTransfers = new CappedTokenTransfers(_token, _amount, _recipient, _actionHub);
 
     // it sets the token
     assertEq(cappedTokenTransfers.TOKEN(), _token);
@@ -34,7 +34,7 @@ contract UnitCappedTokenTransfers is Test {
     // it sets the recipient
     assertEq(cappedTokenTransfers.RECIPIENT(), _recipient);
     // it sets the hub
-    assertEq(cappedTokenTransfers.HUB(), _hub);
+    assertEq(cappedTokenTransfers.HUB(), _actionHub);
   }
 
   function test_GetActionsWhenCalled() external {

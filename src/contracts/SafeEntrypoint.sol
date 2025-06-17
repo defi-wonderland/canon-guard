@@ -76,15 +76,15 @@ contract SafeEntrypoint is SafeManageable, ISafeEntrypoint {
 
   /// @inheritdoc ISafeEntrypoint
   function queueHubTransaction(
-    address _hub,
+    address _actionHub,
     address _actionsBuilder,
     uint256 _expiryDelay
   ) external isSafeOwner returns (uint256 _txId) {
-    if (!IActionHub(_hub).isChild(_actionsBuilder)) revert InvalidHubOrActionsBuilder();
-    bool _txIsPreApproved = _isPreApproved(_hub);
+    if (!IActionHub(_actionHub).isChild(_actionsBuilder)) revert InvalidHubOrActionsBuilder();
+    bool _txIsPreApproved = _isPreApproved(_actionHub);
     _txId = _queueTransaction(_actionsBuilder, _expiryDelay, _txIsPreApproved);
 
-    emit TransactionQueued(_txId, _hub, _actionsBuilder);
+    emit TransactionQueued(_txId, _actionHub, _actionsBuilder);
   }
 
   /// @inheritdoc ISafeEntrypoint

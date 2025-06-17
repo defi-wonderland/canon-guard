@@ -45,8 +45,8 @@ contract UnitSafeEntrypoint is Test {
     assumeNotPrecompile(_address);
   }
 
-  function _modifyIsChildReturnValue(address _hub, address _actionBuilder, bool _isChild) internal {
-    vm.mockCall(_hub, abi.encodeWithSelector(IActionHub.isChild.selector, _actionBuilder), abi.encode(_isChild));
+  function _modifyIsChildReturnValue(address _actionHub, address _actionBuilder, bool _isChild) internal {
+    vm.mockCall(_actionHub, abi.encodeWithSelector(IActionHub.isChild.selector, _actionBuilder), abi.encode(_isChild));
   }
 
   function test_ConstructorWhenPassingValidParameters(
