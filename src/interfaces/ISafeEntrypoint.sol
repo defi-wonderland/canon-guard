@@ -92,6 +92,13 @@ interface ISafeEntrypoint is ISafeManageable {
    */
   error SafeTransactionHashNotApproved();
 
+  /**
+   * @notice Thrown when attempting to queue a transaction that has already been queued
+   * @param _actionsBuilder The address of the actions builder contract
+   * @param _txId The ID of the already queued transaction
+   */
+  error TransactionAlreadyQueued(address _actionsBuilder, uint256 _txId);
+
   // ~~~ ADMIN METHODS ~~~
 
   /**

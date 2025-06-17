@@ -37,6 +37,8 @@ contract SafeEntrypoint is SafeManageable, ISafeEntrypoint {
   /// @inheritdoc ISafeEntrypoint
   mapping(uint256 _txId => TransactionInfo _txInfo) public transactions;
 
+  mapping(address _actionsBuilder => uint256 _txId) public queuedTransactions;
+
   /// @inheritdoc ISafeEntrypoint
   mapping(address _signer => mapping(bytes32 _safeTxHash => bool _isDisapproved)) public disapprovedHashes;
 
@@ -90,8 +92,19 @@ contract SafeEntrypoint is SafeManageable, ISafeEntrypoint {
       _txExecutionDelay = LONG_TX_EXECUTION_DELAY;
     }
 
+    // Revert if the transaction is already queued and unexpired
+    if (
+      queuedTransactions[_actionsBuilder] != 0
+        && transactions[queuedTransactions[_actionsBuilder]].expiresAt <= block.timestamp
+    ) {
+      revert TransactionAlreadyQueued(_actionsBuilder, queuedTransactions[_actionsBuilder]);
+    }
+
     // Generate a simple transaction ID
     _txId = ++transactionNonce;
+
+    // Store the transaction in the queue
+    queuedTransactions[_actionsBuilder] = _txId;
 
     // Fetch actions from the builder
     IActionsBuilder.Action[] memory _actions = IActionsBuilder(_actionsBuilder).getActions();
@@ -122,6 +135,9 @@ contract SafeEntrypoint is SafeManageable, ISafeEntrypoint {
     address[] memory _signers = _getApprovedHashSigners(_safeTxHash);
 
     _executeTransaction(_txId, _safeTxHash, _signers, _multiSendData);
+
+    // Remove the transaction from the queue
+    queuedTransactions[_txInfo.actionsBuilder] = 0;
   }
 
   /// @inheritdoc ISafeEntrypoint
