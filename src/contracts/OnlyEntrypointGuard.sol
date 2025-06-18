@@ -35,7 +35,7 @@ abstract contract OnlyEntrypointGuard is BaseTransactionGuard, IOnlyEntrypointGu
     address payable, /*  _refundReceiver */
     bytes memory, /* _signatures */
     address _msgSender
-  ) external virtual view override {
+  ) external view virtual override {
     // Allow transactions from the entrypoint or emergency caller
     if (_msgSender != address(this)) {
       revert UnauthorizedSender(_msgSender);
