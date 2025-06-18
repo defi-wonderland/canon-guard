@@ -8,14 +8,6 @@ import {IOnlyEntrypointGuard} from 'interfaces/IOnlyEntrypointGuard.sol';
 import {ISafeEntrypoint} from 'interfaces/ISafeEntrypoint.sol';
 
 contract UnitOnlyEntrypointGuardcheckTransaction is Test {
-  function test_WhenCallerIsEntrypoint() external {
-    // it allows transaction
-  }
-
-  function test_WhenCallerIsNotEntrypoint() external {
-    // it reverts with UnauthorizedSender
-  }
-
   OnlyEntrypointGuardForTest public onlyEntrypointGuard;
 
   address public immutable MULTI_SEND_CALL_ONLY = makeAddr('MULTI_SEND_CALL_ONLY');
@@ -41,7 +33,6 @@ contract UnitOnlyEntrypointGuardcheckTransaction is Test {
 
   function test_WhenCallerIsEntrypoint() external {
     // it allows transaction
-    vm.expectRevert(abi.encodeWithSelector(IOnlyEntrypointGuard.UnauthorizedSender.selector, _randomSender));
     onlyEntrypointGuard.checkTransaction(
       MULTI_SEND_CALL_ONLY,
       0,
@@ -53,7 +44,7 @@ contract UnitOnlyEntrypointGuardcheckTransaction is Test {
       address(0),
       payable(address(0)),
       '',
-      onlyEntrypointGuard // msg.sender is entrypoint
+      address(onlyEntrypointGuard) // msg.sender is entrypoint
     );
   }
 
