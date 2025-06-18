@@ -41,9 +41,10 @@ interface ISafeEntrypoint is ISafeManageable {
   /**
    * @notice Emitted when a transaction is queued
    * @param _txId The ID of the transaction
-   * @param _isArbitrary Whether the transaction is arbitrary or pre-approved
+   * @param _actionHub The actionHub contract address (0 if no actionHub was used)
+   * @param _actionsBuilder The actions builder contract address
    */
-  event TransactionQueued(uint256 indexed _txId, bool indexed _isArbitrary);
+  event TransactionQueued(uint256 indexed _txId, address _actionHub, address _actionsBuilder);
 
   /**
    * @notice Emitted when a transaction is executed
@@ -71,6 +72,11 @@ interface ISafeEntrypoint is ISafeManageable {
    */
   error TransactionExpired();
 
+  /**
+   * @notice Thrown when an invalid actionHub or actions builder is provided
+   */
+  error InvalidHubOrActionsBuilder();
+
   // ~~~ ADMIN METHODS ~~~
 
   /**
@@ -82,6 +88,20 @@ interface ISafeEntrypoint is ISafeManageable {
   function approveActionsBuilder(address _actionsBuilder, uint256 _approvalDuration) external;
 
   // ~~~ TRANSACTION METHODS ~~~
+
+  /**
+   * @notice Verifies if the actions builder is a child of the actionHub, queues a transaction from an actions builder, for execution after a short delay if approved, or after a long delay if not approved
+   * @dev Can only be called by the Safe owners
+   * @param _actionHub The actionHub contract address
+   * @param _actionsBuilder The actions builder contract address to queue
+   * @param _expiryDelay The duration (in seconds) after which the transaction expires (after execution delay)
+   * @return _txId The ID of the queued transaction
+   */
+  function queueHubTransaction(
+    address _actionHub,
+    address _actionsBuilder,
+    uint256 _expiryDelay
+  ) external returns (uint256 _txId);
 
   /**
    * @notice Queues a transaction from an actions builder for execution after a short delay if approved, or after a long delay if not approved
