@@ -7,7 +7,15 @@ import {Test} from 'forge-std/Test.sol';
 import {IOnlyEntrypointGuard} from 'interfaces/IOnlyEntrypointGuard.sol';
 import {ISafeEntrypoint} from 'interfaces/ISafeEntrypoint.sol';
 
-contract UnitOnlyEntrypointGuard is Test {
+contract UnitOnlyEntrypointGuardcheckTransaction is Test {
+  function test_WhenCallerIsEntrypoint() external {
+    // it allows transaction
+  }
+
+  function test_WhenCallerIsNotEntrypoint() external {
+    // it reverts with UnauthorizedSender
+  }
+
   OnlyEntrypointGuardForTest public onlyEntrypointGuard;
 
   address public immutable MULTI_SEND_CALL_ONLY = makeAddr('MULTI_SEND_CALL_ONLY');
@@ -31,12 +39,25 @@ contract UnitOnlyEntrypointGuard is Test {
     assumeNotPrecompile(_address);
   }
 
-  modifier whenCallerIsEntrypoint(uint256 _seed) {
-    _sender = address(onlyEntrypointGuard);
-    _;
+  function test_WhenCallerIsEntrypoint() external {
+    // it allows transaction
+    vm.expectRevert(abi.encodeWithSelector(IOnlyEntrypointGuard.UnauthorizedSender.selector, _randomSender));
+    onlyEntrypointGuard.checkTransaction(
+      MULTI_SEND_CALL_ONLY,
+      0,
+      '',
+      Enum.Operation.DelegateCall,
+      0,
+      0,
+      0,
+      address(0),
+      payable(address(0)),
+      '',
+      onlyEntrypointGuard // msg.sender is entrypoint
+    );
   }
 
-  function test_CheckTransactionWhenCallerIsNotEntrypoint(address _randomSender) external {
+  function test_WhenCallerIsNotEntrypoint(address _randomSender) external {
     vm.assume(_randomSender != address(onlyEntrypointGuard));
 
     // it reverts with UnauthorizedSender
