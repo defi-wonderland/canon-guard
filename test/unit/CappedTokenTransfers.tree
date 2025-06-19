@@ -1,0 +1,11 @@
+UnitCappedTokenTransfers::constructor
+└── When called
+    ├── it sets the token
+    ├── it sets the amount
+    ├── it sets the recipient
+    └── it sets the hub
+
+UnitCappedTokenTransfers::getActions
+└── When called
+    ├── it returns an action to update the state
+    └── it returns an action to transfer the tokens
