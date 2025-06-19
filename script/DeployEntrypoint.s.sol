@@ -28,8 +28,7 @@ contract DeployEntrypoint is Constants, Script {
     );
 
     // Deploy the OnlyEntrypointGuard contract
-    onlyEntrypointGuard =
-      new OnlyEntrypointGuard(address(safeEntrypoint), EMERGENCY_CALLER, address(MULTI_SEND_CALL_ONLY));
+    onlyEntrypointGuard = new OnlyEntrypointGuard(address(safeEntrypoint), EMERGENCY_CALLER);
 
     vm.stopBroadcast();
   }
