@@ -17,13 +17,17 @@ abstract contract EmergencyModeHook is SafeManageable {
 
   // ~~~ ERRORS ~~~
 
-  error EmergencyModeHook__Unauthorized(address _sender);
+  error EmergencyModeHook__Unauthorized(address _sender, address _authorized);
 
   // ~~~ ADMIN METHODS ~~~
 
-  function setEmergencyMode(bool _emergencyMode) external {
-    if (msg.sender != emergencyTrigger) revert EmergencyModeHook__Unauthorized(msg.sender);
-    emergencyMode = _emergencyMode;
+  function setEmergencyMode() external {
+    if (msg.sender != emergencyTrigger) revert EmergencyModeHook__Unauthorized(msg.sender, emergencyTrigger);
+    emergencyMode = true;
+  }
+
+  function unsetEmergencyMode() external isSafe {
+    emergencyMode = false;
   }
 
   function setEmergencyCaller(address _emergencyCaller) external isSafe {
@@ -37,6 +41,8 @@ abstract contract EmergencyModeHook is SafeManageable {
   // ~~~ GETTER METHODS ~~~
 
   function _onBeforeExecution() internal virtual {
-    if (emergencyMode && msg.sender != emergencyCaller) revert EmergencyModeHook__Unauthorized(msg.sender);
+    if (emergencyMode && msg.sender != emergencyCaller) {
+      revert EmergencyModeHook__Unauthorized(msg.sender, emergencyCaller);
+    }
   }
 }
