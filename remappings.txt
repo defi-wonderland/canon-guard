@@ -5,3 +5,4 @@ contracts/=src/contracts
 interfaces/=src/interfaces
 
 @safe-smart-account/=node_modules/@safe-global/safe-contracts/contracts
+solady/=node_modules/solady/src

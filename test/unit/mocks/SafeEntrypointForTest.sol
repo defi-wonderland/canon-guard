@@ -33,12 +33,4 @@ contract SafeEntrypointForTest is SafeEntrypoint {
   function mockApprovalExpiry(address _actionsBuilder, uint256 _expiry) external {
     approvalExpiries[_actionsBuilder] = _expiry;
   }
-
-  function mockDisapprovedHash(address _owner, bytes32 _safeTxHash) external {
-    disapprovedHashes[_owner][_safeTxHash] = true;
-  }
-
-  function mockDisapprovedHashForSigner(address _signer, bytes32 _safeTxHash) external {
-    disapprovedHashes[_signer][_safeTxHash] = true;
-  }
 }

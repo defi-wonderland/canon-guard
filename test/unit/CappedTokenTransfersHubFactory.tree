@@ -1,0 +1,3 @@
+UnitCappedTokenTransfersHubFactory::createCappedTokenTransfersHub
+└── When called
+    └── it creates a new CappedTokenTransfersHub

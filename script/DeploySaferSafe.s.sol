@@ -4,13 +4,13 @@ pragma solidity 0.8.29;
 import {Script} from 'forge-std/Script.sol';
 
 import {AllowanceClaimorFactory} from 'contracts/factories/AllowanceClaimorFactory.sol';
-import {CappedTokenTransfersFactory} from 'contracts/factories/CappedTokenTransfersFactory.sol';
+import {CappedTokenTransfersHubFactory} from 'contracts/factories/CappedTokenTransfersHubFactory.sol';
 import {SafeEntrypointFactory} from 'contracts/factories/SafeEntrypointFactory.sol';
 import {SimpleActionsFactory} from 'contracts/factories/SimpleActionsFactory.sol';
 import {SimpleTransfersFactory} from 'contracts/factories/SimpleTransfersFactory.sol';
 
 import {IAllowanceClaimorFactory} from 'interfaces/factories/IAllowanceClaimorFactory.sol';
-import {ICappedTokenTransfersFactory} from 'interfaces/factories/ICappedTokenTransfersFactory.sol';
+import {ICappedTokenTransfersHubFactory} from 'interfaces/factories/ICappedTokenTransfersHubFactory.sol';
 import {ISafeEntrypointFactory} from 'interfaces/factories/ISafeEntrypointFactory.sol';
 import {ISimpleActionsFactory} from 'interfaces/factories/ISimpleActionsFactory.sol';
 import {ISimpleTransfersFactory} from 'interfaces/factories/ISimpleTransfersFactory.sol';
@@ -21,7 +21,7 @@ contract DeploySaferSafe is Constants, Script {
   // ~~~ FACTORIES ~~~
   ISafeEntrypointFactory public safeEntrypointFactory;
   IAllowanceClaimorFactory public allowanceClaimorFactory;
-  ICappedTokenTransfersFactory public cappedTokenTransfersFactory;
+  ICappedTokenTransfersHubFactory public cappedTokenTransfersHubFactory;
   ISimpleActionsFactory public simpleActionsFactory;
   ISimpleTransfersFactory public simpleTransfersFactory;
 
@@ -34,7 +34,7 @@ contract DeploySaferSafe is Constants, Script {
     // Deploy the AllowanceClaimorFactory contract
     allowanceClaimorFactory = new AllowanceClaimorFactory();
     // Deploy the CappedTokenTransfersFactory contract
-    cappedTokenTransfersFactory = new CappedTokenTransfersFactory();
+    cappedTokenTransfersHubFactory = new CappedTokenTransfersHubFactory();
     // Deploy the SimpleActionsFactory contract
     simpleActionsFactory = new SimpleActionsFactory();
     // Deploy the SimpleTransfersFactory contract

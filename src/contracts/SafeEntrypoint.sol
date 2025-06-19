@@ -4,6 +4,8 @@ pragma solidity 0.8.29;
 import {SafeManageable} from 'contracts/SafeManageable.sol';
 
 import {ISafeEntrypoint} from 'interfaces/ISafeEntrypoint.sol';
+
+import {IActionHub} from 'interfaces/action-hubs/IActionHub.sol';
 import {IActionsBuilder} from 'interfaces/actions-builders/IActionsBuilder.sol';
 
 import {Enum} from '@safe-smart-account/libraries/Enum.sol';
@@ -36,9 +38,6 @@ contract SafeEntrypoint is SafeManageable, ISafeEntrypoint {
 
   /// @inheritdoc ISafeEntrypoint
   mapping(uint256 _txId => TransactionInfo _txInfo) public transactions;
-
-  /// @inheritdoc ISafeEntrypoint
-  mapping(address _signer => mapping(bytes32 _safeTxHash => bool _isDisapproved)) public disapprovedHashes;
 
   // ~~~ CONSTRUCTOR ~~~
 
@@ -76,40 +75,24 @@ contract SafeEntrypoint is SafeManageable, ISafeEntrypoint {
   // ~~~ TRANSACTION METHODS ~~~
 
   /// @inheritdoc ISafeEntrypoint
+  function queueHubTransaction(
+    address _actionHub,
+    address _actionsBuilder,
+    uint256 _expiryDelay
+  ) external isSafeOwner returns (uint256 _txId) {
+    if (!IActionHub(_actionHub).isChild(_actionsBuilder)) revert InvalidHubOrActionsBuilder();
+    bool _txIsPreApproved = _isPreApproved(_actionHub);
+    _txId = _queueTransaction(_actionsBuilder, _expiryDelay, _txIsPreApproved);
+
+    emit TransactionQueued(_txId, _actionHub, _actionsBuilder);
+  }
+
+  /// @inheritdoc ISafeEntrypoint
   function queueTransaction(address _actionsBuilder, uint256 _expiryDelay) external isSafeOwner returns (uint256 _txId) {
-    bool _isArbitrary;
-    uint256 _txExecutionDelay;
+    bool _txIsPreApproved = _isPreApproved(_actionsBuilder);
+    _txId = _queueTransaction(_actionsBuilder, _expiryDelay, _txIsPreApproved);
 
-    // If approved, tx is not arbitrary, use short execution delay
-    if (approvalExpiries[_actionsBuilder] > block.timestamp) {
-      // `_isArbitrary` is already false by default
-      _txExecutionDelay = SHORT_TX_EXECUTION_DELAY;
-    } else {
-      // Otherwise, tx is arbitrary, use long execution delay
-      _isArbitrary = true;
-      _txExecutionDelay = LONG_TX_EXECUTION_DELAY;
-    }
-
-    // Generate a simple transaction ID
-    _txId = ++transactionNonce;
-
-    // Fetch actions from the builder
-    IActionsBuilder.Action[] memory _actions = IActionsBuilder(_actionsBuilder).getActions();
-
-    // Use default expiry delay if duration is 0
-    _expiryDelay = _expiryDelay == 0 ? DEFAULT_TX_EXPIRY_DELAY : _expiryDelay;
-
-    // Store the transaction information
-    transactions[_txId] = TransactionInfo({
-      actionsBuilder: _actionsBuilder,
-      actionsData: abi.encode(_actions),
-      executableAt: block.timestamp + _txExecutionDelay,
-      expiresAt: block.timestamp + _txExecutionDelay + _expiryDelay,
-      isExecuted: false
-    });
-
-    // NOTE: event picked up by off-chain monitoring service
-    emit TransactionQueued(_txId, _isArbitrary);
+    emit TransactionQueued(_txId, address(0), _actionsBuilder);
   }
 
   /// @inheritdoc ISafeEntrypoint
@@ -122,40 +105,6 @@ contract SafeEntrypoint is SafeManageable, ISafeEntrypoint {
     address[] memory _signers = _getApprovedHashSigners(_safeTxHash);
 
     _executeTransaction(_txId, _safeTxHash, _signers, _multiSendData);
-  }
-
-  /// @inheritdoc ISafeEntrypoint
-  function executeTransaction(uint256 _txId, address[] calldata _signers) external payable {
-    TransactionInfo storage _txInfo = transactions[_txId];
-    IActionsBuilder.Action[] memory _actions = abi.decode(_txInfo.actionsData, (IActionsBuilder.Action[]));
-
-    bytes memory _multiSendData = _buildMultiSendData(_actions);
-    bytes32 _safeTxHash = _getSafeTransactionHash(_multiSendData, SAFE.nonce());
-
-    // Check if any of the provided signers has disapproved the hash or has not approved it
-    uint256 _signersLength = _signers.length;
-    address _signer;
-    for (uint256 _i; _i < _signersLength; ++_i) {
-      _signer = _signers[_i];
-      if (disapprovedHashes[_signer][_safeTxHash] || SAFE.approvedHashes(_signer, _safeTxHash) != 1) {
-        revert InvalidSigner(_signer, _safeTxHash);
-      }
-    }
-
-    _executeTransaction(_txId, _safeTxHash, _signers, _multiSendData);
-  }
-
-  /// @inheritdoc ISafeEntrypoint
-  function disapproveSafeTransactionHash(bytes32 _safeTxHash) external isSafeOwner {
-    // Check if the hash has been approved in the Safe
-    if (SAFE.approvedHashes(msg.sender, _safeTxHash) != 1) {
-      revert SafeTransactionHashNotApproved();
-    }
-
-    // Mark the hash as disapproved for this signer
-    disapprovedHashes[msg.sender][_safeTxHash] = true;
-
-    emit SafeTransactionHashDisapproved(_safeTxHash, msg.sender);
   }
 
   // ~~~ GETTER METHODS ~~~
@@ -255,7 +204,50 @@ contract SafeEntrypoint is SafeManageable, ISafeEntrypoint {
     });
   }
 
+  /**
+   * @notice Internal function to queue a transaction
+   * @param _actionsBuilder The actions builder contract address
+   * @param _expiryDelay The duration (in seconds) after which the transaction expires (after execution delay)
+   * @param _txIsPreApproved Whether the actions builder is pre-approved
+   * @return _txId The ID of the queued transaction
+   */
+  function _queueTransaction(
+    address _actionsBuilder,
+    uint256 _expiryDelay,
+    bool _txIsPreApproved
+  ) internal returns (uint256 _txId) {
+    // If approved, tx is not arbitrary, use short execution delay. Otherwise, tx is arbitrary, use long execution delay
+    uint256 _txExecutionDelay = _txIsPreApproved ? SHORT_TX_EXECUTION_DELAY : LONG_TX_EXECUTION_DELAY;
+
+    // Generate a simple transaction ID
+    _txId = ++transactionNonce;
+
+    // Fetch actions from the builder
+    IActionsBuilder.Action[] memory _actions = IActionsBuilder(_actionsBuilder).getActions();
+
+    // Use default expiry delay if duration is 0
+    _expiryDelay = _expiryDelay == 0 ? DEFAULT_TX_EXPIRY_DELAY : _expiryDelay;
+
+    // Store the transaction information
+    transactions[_txId] = TransactionInfo({
+      actionsBuilder: _actionsBuilder,
+      actionsData: abi.encode(_actions),
+      executableAt: block.timestamp + _txExecutionDelay,
+      expiresAt: block.timestamp + _txExecutionDelay + _expiryDelay,
+      isExecuted: false
+    });
+  }
+
   // ~~~ INTERNAL VIEW METHODS ~~~
+
+  /**
+   * @notice Internal function to check if the actions builder (or actionHub) is pre-approved
+   * @param _actionsBuilderOrActionHub The actions builder contract address (or actionHub)
+   * @return _isApproved Whether the actions builder (or actionHub) is pre-approved
+   */
+  function _isPreApproved(address _actionsBuilderOrActionHub) internal view returns (bool _isApproved) {
+    _isApproved = approvalExpiries[_actionsBuilderOrActionHub] > block.timestamp;
+  }
 
   /**
    * @notice Internal function to get the Safe transaction hash
@@ -298,8 +290,8 @@ contract SafeEntrypoint is SafeManageable, ISafeEntrypoint {
     address _safeOwner;
     for (uint256 _i; _i < _safeOwnersLength; ++_i) {
       _safeOwner = _safeOwners[_i];
-      // Check if this owner has approved the hash and hasn't disapproved it
-      if (!disapprovedHashes[_safeOwner][_safeTxHash] && SAFE.approvedHashes(_safeOwner, _safeTxHash) == 1) {
+      // Check if this owner has approved the hash
+      if (SAFE.approvedHashes(_safeOwner, _safeTxHash) == 1) {
         _tempSigners[_approvedHashSignersCount] = _safeOwner;
         ++_approvedHashSignersCount;
       }
