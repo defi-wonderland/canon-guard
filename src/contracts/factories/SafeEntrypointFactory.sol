@@ -32,12 +32,10 @@ contract SafeEntrypointFactory is ISafeEntrypointFactory {
     address _safe,
     uint256 _shortTxExecutionDelay,
     uint256 _longTxExecutionDelay,
-    uint256 _defaultTxExpiryDelay
+    uint256 _txExpiryDelay
   ) external returns (address _safeEntrypoint) {
     _safeEntrypoint = address(
-      new SafeEntrypoint(
-        _safe, MULTI_SEND_CALL_ONLY, _shortTxExecutionDelay, _longTxExecutionDelay, _defaultTxExpiryDelay
-      )
+      new SafeEntrypoint(_safe, MULTI_SEND_CALL_ONLY, _shortTxExecutionDelay, _longTxExecutionDelay, _txExpiryDelay)
     );
   }
 }

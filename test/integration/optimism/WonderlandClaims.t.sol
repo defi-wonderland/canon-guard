@@ -57,7 +57,7 @@ contract IntegrationWonderlandClaims is IntegrationOptimismBase {
 
     // Queue the transaction
     vm.prank(_safeOwners[0]);
-    uint256 _txId = safeEntrypoint.queueTransaction(_actionsBuilder, DEFAULT_TX_EXPIRY_DELAY);
+    uint256 _txId = safeEntrypoint.queueTransaction(_actionsBuilder);
 
     // Wait for the timelock period
     vm.warp(block.timestamp + SHORT_TX_EXECUTION_DELAY);
