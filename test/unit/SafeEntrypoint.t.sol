@@ -68,8 +68,7 @@ contract UnitSafeEntrypoint is Test {
     assertEq(safeEntrypoint.TX_EXPIRY_DELAY(), _txExpiryDelay);
   }
 
-  modifier whenCallerIsSafeOwner() {
-    _mockAndExpect(SAFE, abi.encodeWithSelector(IOwnerManager.isOwner.selector), abi.encode(true));
+  modifier whenCallerIsSafe() {
     _;
   }
 
@@ -116,6 +115,11 @@ contract UnitSafeEntrypoint is Test {
     vm.expectRevert(ISafeManageable.NotSafe.selector);
     vm.prank(_caller);
     safeEntrypoint.approveActionsBuilder(_actionsBuilder, _approvalDuration);
+  }
+
+  modifier whenCallerIsSafeOwner() {
+    _mockAndExpect(SAFE, abi.encodeWithSelector(IOwnerManager.isOwner.selector), abi.encode(true));
+    _;
   }
 
   function test_QueueTransactionWhenQueueingPreApprovedAction(
@@ -483,6 +487,30 @@ contract UnitSafeEntrypoint is Test {
     assertEq(_safeTxHash, _expectedHash);
   }
 
+  function test_GetApprovedHashSignersWhenGettingSignersWithTxId() external whenTransactionExists {
+    // it returns approved signers
+  }
+
+  function test_GetApprovedHashSignersWhenGettingSignersWithTxIdAndNonce() external whenTransactionExists {
+    // it returns approved signers
+  }
+
+  function test_GetApprovedHashSignersWhenGettingSignersWithHash(
+    address _signer1,
+    address _signer2,
+    bytes32 _safeHash
+  ) external {
+    address[] memory _signers = new address[](2);
+    _signers[0] = _signer1;
+    _signers[1] = _signer2;
+    _mockApprovedHashesForSigners(_signers, 1);
+
+    _mockAndExpect(SAFE, abi.encodeWithSelector(IOwnerManager.getOwners.selector), abi.encode(_signers));
+
+    address[] memory _approvedSigners = safeEntrypoint.getApprovedHashSigners(_safeHash);
+    assertEq(_approvedSigners, _signers);
+  }
+
   function test_GetApprovedHashSignersWhenGettingSignersWithActionsBuilder(
     address _actionsBuilder,
     IActionsBuilder.Action memory _action,
@@ -540,22 +568,6 @@ contract UnitSafeEntrypoint is Test {
     _mockAndExpect(SAFE, abi.encodeWithSelector(ISafe.getTransactionHash.selector), abi.encode(bytes32(0)));
 
     address[] memory _approvedSigners = safeEntrypoint.getApprovedHashSigners(_actionsBuilder, _safeNonce);
-    assertEq(_approvedSigners, _signers);
-  }
-
-  function test_GetApprovedHashSignersWhenGettingSignersWithHash(
-    address _signer1,
-    address _signer2,
-    bytes32 _safeHash
-  ) external {
-    address[] memory _signers = new address[](2);
-    _signers[0] = _signer1;
-    _signers[1] = _signer2;
-    _mockApprovedHashesForSigners(_signers, 1);
-
-    _mockAndExpect(SAFE, abi.encodeWithSelector(IOwnerManager.getOwners.selector), abi.encode(_signers));
-
-    address[] memory _approvedSigners = safeEntrypoint.getApprovedHashSigners(_safeHash);
     assertEq(_approvedSigners, _signers);
   }
 
