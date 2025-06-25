@@ -305,12 +305,19 @@ contract UnitSafeEntrypoint is Test {
     IActionsBuilder.Action calldata _action,
     ISafeEntrypoint.TransactionInfo memory _txInfo
   ) external {
-    vm.assume(_txInfo.expiresAt < type(uint64).max - 1);
+    // Ensure expiresAt is valid and not 0, and that it's less than type(uint64).max - 1
+    _txInfo.expiresAt = bound(_txInfo.expiresAt, 1, type(uint64).max - 1);
     _txInfo.executableAt = bound(_txInfo.executableAt, 0, block.timestamp);
     _txInfo.isExecuted = false;
     IActionsBuilder.Action[] memory _actions = new IActionsBuilder.Action[](1);
     _actions[0] = _action;
     bytes memory _actionsData = abi.encode(_actions);
+
+    // Mock SAFE contract calls
+    _mockAndExpect(SAFE, abi.encodeWithSelector(ISafe.nonce.selector), abi.encode(1));
+    _mockAndExpect(SAFE, abi.encodeWithSelector(ISafe.getTransactionHash.selector), abi.encode(bytes32(0)));
+    _mockAndExpect(SAFE, abi.encodeWithSelector(IOwnerManager.getOwners.selector), abi.encode(new address[](0)));
+
     safeEntrypoint.mockTransaction(
       _actionsBuilder, _actionsData, _txInfo.executableAt, _txInfo.expiresAt, _txInfo.isExecuted
     );
@@ -335,6 +342,11 @@ contract UnitSafeEntrypoint is Test {
     IActionsBuilder.Action[] memory _actions = new IActionsBuilder.Action[](1);
     _actions[0] = _action;
     bytes memory _actionsData = abi.encode(_actions);
+
+    // Mock SAFE contract calls
+    _mockAndExpect(SAFE, abi.encodeWithSelector(ISafe.nonce.selector), abi.encode(1));
+    _mockAndExpect(SAFE, abi.encodeWithSelector(ISafe.getTransactionHash.selector), abi.encode(bytes32(0)));
+    _mockAndExpect(SAFE, abi.encodeWithSelector(IOwnerManager.getOwners.selector), abi.encode(new address[](0)));
 
     // Mock an already executed transaction
     safeEntrypoint.mockTransaction(
@@ -362,6 +374,11 @@ contract UnitSafeEntrypoint is Test {
     IActionsBuilder.Action[] memory _actions = new IActionsBuilder.Action[](1);
     _actions[0] = _action;
     bytes memory _actionsData = abi.encode(_actions);
+
+    // Mock SAFE contract calls
+    _mockAndExpect(SAFE, abi.encodeWithSelector(ISafe.nonce.selector), abi.encode(1));
+    _mockAndExpect(SAFE, abi.encodeWithSelector(ISafe.getTransactionHash.selector), abi.encode(bytes32(0)));
+    _mockAndExpect(SAFE, abi.encodeWithSelector(IOwnerManager.getOwners.selector), abi.encode(new address[](0)));
 
     // Mock a transaction that is not yet executable
     safeEntrypoint.mockTransaction(
@@ -426,6 +443,9 @@ contract UnitSafeEntrypoint is Test {
     uint256 _safeNonce,
     bytes32 _expectedHash
   ) external {
+    // Ensure expiresAt is not 0 to avoid NoTransactionQueued error
+    _txInfo.expiresAt = bound(_txInfo.expiresAt, 1, type(uint256).max);
+
     IActionsBuilder.Action[] memory _actions = new IActionsBuilder.Action[](1);
     _actions[0] = _action;
     bytes memory _actionsData = abi.encode(_actions);
@@ -447,6 +467,9 @@ contract UnitSafeEntrypoint is Test {
     uint256 _safeNonce,
     bytes32 _expectedHash
   ) external {
+    // Ensure expiresAt is not 0 to avoid NoTransactionQueued error
+    _txInfo.expiresAt = bound(_txInfo.expiresAt, 1, type(uint256).max);
+
     IActionsBuilder.Action[] memory _actions = new IActionsBuilder.Action[](1);
     _actions[0] = _action;
     bytes memory _actionsData = abi.encode(_actions);
@@ -467,6 +490,9 @@ contract UnitSafeEntrypoint is Test {
     address _signer1,
     address _signer2
   ) external {
+    // Ensure expiresAt is not 0 to avoid NoTransactionQueued error
+    _txInfo.expiresAt = bound(_txInfo.expiresAt, 1, type(uint256).max);
+
     IActionsBuilder.Action[] memory _actions = new IActionsBuilder.Action[](1);
     _actions[0] = _action;
     bytes memory _actionsData = abi.encode(_actions);
@@ -495,6 +521,9 @@ contract UnitSafeEntrypoint is Test {
     ISafeEntrypoint.TransactionInfo memory _txInfo,
     uint256 _safeNonce
   ) external {
+    // Ensure expiresAt is not 0 to avoid NoTransactionQueued error
+    _txInfo.expiresAt = bound(_txInfo.expiresAt, 1, type(uint256).max);
+
     IActionsBuilder.Action[] memory _actions = new IActionsBuilder.Action[](1);
     _actions[0] = _action;
     bytes memory _actionsData = abi.encode(_actions);
@@ -559,6 +588,11 @@ contract UnitSafeEntrypoint is Test {
     _actions[0] = _action;
     bytes memory _actionsData = abi.encode(_actions);
 
+    // Mock SAFE contract calls
+    _mockAndExpect(SAFE, abi.encodeWithSelector(ISafe.nonce.selector), abi.encode(1));
+    _mockAndExpect(SAFE, abi.encodeWithSelector(ISafe.getTransactionHash.selector), abi.encode(bytes32(0)));
+    _mockAndExpect(SAFE, abi.encodeWithSelector(IOwnerManager.getOwners.selector), abi.encode(new address[](0)));
+
     // Mock an already executed transaction
     safeEntrypoint.mockTransaction(
       _actionsBuilder, // actionsBuilder
@@ -580,6 +614,9 @@ contract UnitSafeEntrypoint is Test {
     address _signer1,
     address _signer2
   ) external {
+    // Ensure expiresAt is not 0 to avoid NoTransactionQueued error
+    _txInfo.expiresAt = bound(_txInfo.expiresAt, 1, type(uint256).max);
+
     IActionsBuilder.Action[] memory _actions = new IActionsBuilder.Action[](1);
     _actions[0] = _action;
     bytes memory _actionsData = abi.encode(_actions);
