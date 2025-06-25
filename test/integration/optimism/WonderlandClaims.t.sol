@@ -65,13 +65,13 @@ contract IntegrationWonderlandClaims is IntegrationOptimismBase {
 
     // Queue the transaction
     vm.prank(_safeOwners[0]);
-    uint256 _txId = safeEntrypoint.queueTransaction(_actionsBuilder, DEFAULT_TX_EXPIRY_DELAY);
+    safeEntrypoint.queueTransaction(_actionsBuilder, DEFAULT_TX_EXPIRY_DELAY);
 
     // Wait for the timelock period
     vm.warp(block.timestamp + SHORT_TX_EXECUTION_DELAY);
 
     // Get the Safe transaction hash
-    bytes32 _safeTxHash = safeEntrypoint.getSafeTransactionHash(_txId);
+    bytes32 _safeTxHash = safeEntrypoint.getSafeTransactionHash(_actionsBuilder);
 
     // Approve the Safe transaction hash
     for (uint256 _i; _i < _safeThreshold; ++_i) {
@@ -81,7 +81,7 @@ contract IntegrationWonderlandClaims is IntegrationOptimismBase {
     vm.stopPrank();
 
     // Execute the transaction
-    safeEntrypoint.executeTransaction(_txId);
+    safeEntrypoint.executeTransaction(_actionsBuilder);
 
     // Assert the token balances
     assertEq(OP.balanceOf(address(SAFE_PROXY)), _claimableOP + _safeBalance);

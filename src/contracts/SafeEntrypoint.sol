@@ -31,16 +31,10 @@ contract SafeEntrypoint is SafeManageable, ISafeEntrypoint {
   uint256 public immutable DEFAULT_TX_EXPIRY_DELAY;
 
   /// @inheritdoc ISafeEntrypoint
-  uint256 public transactionNonce;
-
-  /// @inheritdoc ISafeEntrypoint
   mapping(address _actionsBuilder => uint256 _approvalExpiresAt) public approvalExpiries;
 
   /// @inheritdoc ISafeEntrypoint
-  mapping(uint256 _txId => TransactionInfo _txInfo) public transactions;
-
-  /// @inheritdoc ISafeEntrypoint
-  mapping(address _actionsBuilder => uint256 _txId) public queuedTransactions;
+  mapping(address _actionsBuilder => TransactionInfo _txInfo) public queuedTransactions;
 
   // ~~~ CONSTRUCTOR ~~~
 
@@ -78,48 +72,52 @@ contract SafeEntrypoint is SafeManageable, ISafeEntrypoint {
   // ~~~ TRANSACTION METHODS ~~~
 
   /// @inheritdoc ISafeEntrypoint
-  function queueHubTransaction(
-    address _actionHub,
-    address _actionsBuilder,
-    uint256 _expiryDelay
-  ) external isSafeOwner returns (uint256 _txId) {
+  function queueHubTransaction(address _actionHub, address _actionsBuilder, uint256 _expiryDelay) external isSafeOwner {
     if (!IActionHub(_actionHub).isChild(_actionsBuilder)) revert InvalidHubOrActionsBuilder();
     bool _txIsPreApproved = _isPreApproved(_actionHub);
-    _txId = _queueTransaction(_actionsBuilder, _expiryDelay, _txIsPreApproved);
+    _queueTransaction(_actionsBuilder, _expiryDelay, _txIsPreApproved);
 
-    emit TransactionQueued(_txId, _actionHub, _actionsBuilder);
+    emit TransactionQueued(_actionHub, _actionsBuilder);
   }
 
   /// @inheritdoc ISafeEntrypoint
-  function queueTransaction(address _actionsBuilder, uint256 _expiryDelay) external isSafeOwner returns (uint256 _txId) {
+  function queueTransaction(address _actionsBuilder, uint256 _expiryDelay) external isSafeOwner {
     bool _txIsPreApproved = _isPreApproved(_actionsBuilder);
-    _txId = _queueTransaction(_actionsBuilder, _expiryDelay, _txIsPreApproved);
+    _queueTransaction(_actionsBuilder, _expiryDelay, _txIsPreApproved);
 
-    emit TransactionQueued(_txId, address(0), _actionsBuilder);
+    emit TransactionQueued(address(0), _actionsBuilder);
   }
 
   /// @inheritdoc ISafeEntrypoint
-  function executeTransaction(uint256 _txId) external payable {
-    TransactionInfo storage _txInfo = transactions[_txId];
+  function executeTransaction(address _actionsBuilder) external payable {
+    TransactionInfo storage _txInfo = queuedTransactions[_actionsBuilder];
+
+    // Check if there's a transaction queued
+    if (_txInfo.expiresAt == 0) revert NoTransactionQueued(); // TODO: add test for this
+
     IActionsBuilder.Action[] memory _actions = abi.decode(_txInfo.actionsData, (IActionsBuilder.Action[]));
 
     bytes memory _multiSendData = _buildMultiSendData(_actions);
     bytes32 _safeTxHash = _getSafeTransactionHash(_multiSendData, SAFE.nonce());
     address[] memory _signers = _getApprovedHashSigners(_safeTxHash);
 
-    _executeTransaction(_txId, _safeTxHash, _signers, _multiSendData);
+    _executeTransaction(_actionsBuilder, _safeTxHash, _signers, _multiSendData);
   }
 
   // ~~~ GETTER METHODS ~~~
 
   /// @inheritdoc ISafeEntrypoint
-  function getSafeTransactionHash(uint256 _txId) external view returns (bytes32 _safeTxHash) {
-    _safeTxHash = getSafeTransactionHash(_txId, SAFE.nonce());
+  function getSafeTransactionHash(address _actionsBuilder) external view returns (bytes32 _safeTxHash) {
+    _safeTxHash = getSafeTransactionHash(_actionsBuilder, SAFE.nonce());
   }
 
   /// @inheritdoc ISafeEntrypoint
-  function getApprovedHashSigners(uint256 _txId) external view returns (address[] memory _approvedHashSigners) {
-    _approvedHashSigners = getApprovedHashSigners(_txId, SAFE.nonce());
+  function getApprovedHashSigners(address _actionsBuilder)
+    external
+    view
+    returns (address[] memory _approvedHashSigners)
+  {
+    _approvedHashSigners = getApprovedHashSigners(_actionsBuilder, SAFE.nonce());
   }
 
   /// @inheritdoc ISafeEntrypoint
@@ -128,8 +126,13 @@ contract SafeEntrypoint is SafeManageable, ISafeEntrypoint {
   }
 
   /// @inheritdoc ISafeEntrypoint
-  function getSafeTransactionHash(uint256 _txId, uint256 _safeNonce) public view returns (bytes32 _safeTxHash) {
-    TransactionInfo storage _txInfo = transactions[_txId];
+  function getSafeTransactionHash(
+    address _actionsBuilder,
+    uint256 _safeNonce
+  ) public view returns (bytes32 _safeTxHash) {
+    TransactionInfo storage _txInfo = queuedTransactions[_actionsBuilder];
+    if (_txInfo.expiresAt == 0) return bytes32(0); // TODO: add test for this
+
     IActionsBuilder.Action[] memory _actions = abi.decode(_txInfo.actionsData, (IActionsBuilder.Action[]));
 
     bytes memory _multiSendData = _buildMultiSendData(_actions);
@@ -138,10 +141,12 @@ contract SafeEntrypoint is SafeManageable, ISafeEntrypoint {
 
   /// @inheritdoc ISafeEntrypoint
   function getApprovedHashSigners(
-    uint256 _txId,
+    address _actionsBuilder,
     uint256 _safeNonce
   ) public view returns (address[] memory _approvedHashSigners) {
-    TransactionInfo storage _txInfo = transactions[_txId];
+    TransactionInfo storage _txInfo = queuedTransactions[_actionsBuilder];
+    if (_txInfo.expiresAt == 0) revert NoTransactionQueued(); // TODO: add test for this
+
     IActionsBuilder.Action[] memory _actions = abi.decode(_txInfo.actionsData, (IActionsBuilder.Action[]));
 
     bytes memory _multiSendData = _buildMultiSendData(_actions);
@@ -154,18 +159,18 @@ contract SafeEntrypoint is SafeManageable, ISafeEntrypoint {
   /**
    * @notice Internal function to execute a transaction
    * @dev Checks if the transaction is executable and builds the necessary data
-   * @param _txId The ID of the transaction to execute
+   * @param _actionsBuilder The actions builder address of the transaction to execute
    * @param _safeTxHash The hash of the Safe transaction
    * @param _signers The addresses of the signers to use
    * @param _multiSendData The encoded MultiSend data
    */
   function _executeTransaction(
-    uint256 _txId,
+    address _actionsBuilder,
     bytes32 _safeTxHash,
     address[] memory _signers,
     bytes memory _multiSendData
   ) internal {
-    TransactionInfo storage _txInfo = transactions[_txId];
+    TransactionInfo storage _txInfo = queuedTransactions[_actionsBuilder];
 
     if (_txInfo.isExecuted) revert TransactionAlreadyExecuted();
     if (_txInfo.executableAt > block.timestamp) revert TransactionNotYetExecutable();
@@ -180,13 +185,13 @@ contract SafeEntrypoint is SafeManageable, ISafeEntrypoint {
     _txInfo.isExecuted = true;
 
     // Remove the transaction from the queue
-    queuedTransactions[_txInfo.actionsBuilder] = 0;
+    delete queuedTransactions[_actionsBuilder];
 
     // NOTE: only for event logging
-    bool _isArbitrary = _txInfo.actionsBuilder == address(0);
+    bool _isArbitrary = _actionsBuilder == address(0); // TODO: deprecate this
 
     // NOTE: event emitted to log successful execution
-    emit TransactionExecuted(_txId, _isArbitrary, _safeTxHash, _signers);
+    emit TransactionExecuted(_actionsBuilder, _isArbitrary, _safeTxHash, _signers);
   }
 
   /**
@@ -215,25 +220,15 @@ contract SafeEntrypoint is SafeManageable, ISafeEntrypoint {
    * @param _actionsBuilder The actions builder contract address
    * @param _expiryDelay The duration (in seconds) after which the transaction expires (after execution delay)
    * @param _txIsPreApproved Whether the actions builder is pre-approved
-   * @return _txId The ID of the queued transaction
    */
-  function _queueTransaction(
-    address _actionsBuilder,
-    uint256 _expiryDelay,
-    bool _txIsPreApproved
-  ) internal returns (uint256 _txId) {
+  function _queueTransaction(address _actionsBuilder, uint256 _expiryDelay, bool _txIsPreApproved) internal {
     // If approved, tx is not arbitrary, use short execution delay. Otherwise, tx is arbitrary, use long execution delay
     uint256 _txExecutionDelay = _txIsPreApproved ? SHORT_TX_EXECUTION_DELAY : LONG_TX_EXECUTION_DELAY;
 
-    // Generate a simple transaction ID
-    _txId = ++transactionNonce;
-
     // Revert if the transaction is already queued and unexpired
-    if (
-      queuedTransactions[_actionsBuilder] != 0
-        && transactions[queuedTransactions[_actionsBuilder]].expiresAt <= block.timestamp
-    ) {
-      revert TransactionAlreadyQueued(_actionsBuilder, queuedTransactions[_actionsBuilder]);
+    TransactionInfo memory _queuedTransactionInfo = queuedTransactions[_actionsBuilder];
+    if (_queuedTransactionInfo.expiresAt > block.timestamp && !_queuedTransactionInfo.isExecuted) {
+      revert TransactionAlreadyQueued(_actionsBuilder);
     }
 
     // Fetch actions from the builder
@@ -243,16 +238,12 @@ contract SafeEntrypoint is SafeManageable, ISafeEntrypoint {
     _expiryDelay = _expiryDelay == 0 ? DEFAULT_TX_EXPIRY_DELAY : _expiryDelay;
 
     // Store the transaction information
-    transactions[_txId] = TransactionInfo({
-      actionsBuilder: _actionsBuilder,
+    queuedTransactions[_actionsBuilder] = TransactionInfo({
       actionsData: abi.encode(_actions),
       executableAt: block.timestamp + _txExecutionDelay,
       expiresAt: block.timestamp + _txExecutionDelay + _expiryDelay,
       isExecuted: false
     });
-
-    // Store the transaction in queue
-    queuedTransactions[_actionsBuilder] = _txId;
   }
 
   // ~~~ INTERNAL VIEW METHODS ~~~
