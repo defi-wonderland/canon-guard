@@ -24,7 +24,7 @@ abstract contract Constants {
   address public constant EMERGENCY_CALLER = address(0); // TODO: Replace with the address of the emergency caller (can be contract or EOA)
   uint256 public constant SHORT_TX_EXECUTION_DELAY = 1 hours;
   uint256 public constant LONG_TX_EXECUTION_DELAY = 7 days;
-  uint256 public constant DEFAULT_TX_EXPIRY_DELAY = 7 days;
+  uint256 public constant TX_EXPIRY_DELAY = 7 days;
 }
 
 abstract contract EthereumConstants is Constants {

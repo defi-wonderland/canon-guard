@@ -101,23 +101,17 @@ interface ISafeEntrypoint is ISafeManageable {
    * @dev Can only be called by the Safe owners
    * @param _actionHub The actionHub contract address
    * @param _actionsBuilder The actions builder contract address to queue
-   * @param _expiryDelay The duration (in seconds) after which the transaction expires (after execution delay)
    * @return _txId The ID of the queued transaction
    */
-  function queueHubTransaction(
-    address _actionHub,
-    address _actionsBuilder,
-    uint256 _expiryDelay
-  ) external returns (uint256 _txId);
+  function queueHubTransaction(address _actionHub, address _actionsBuilder) external returns (uint256 _txId);
 
   /**
    * @notice Queues a transaction from an actions builder for execution after a short delay if approved, or after a long delay if not approved
    * @dev Can only be called by the Safe owners
    * @param _actionsBuilder The actions builder contract address to queue
-   * @param _expiryDelay The duration (in seconds) after which the transaction expires (after execution delay)
    * @return _txId The ID of the queued transaction
    */
-  function queueTransaction(address _actionsBuilder, uint256 _expiryDelay) external returns (uint256 _txId);
+  function queueTransaction(address _actionsBuilder) external returns (uint256 _txId);
 
   /**
    * @notice Executes a queued transaction using the approved hash signers
@@ -149,9 +143,9 @@ interface ISafeEntrypoint is ISafeManageable {
 
   /**
    * @notice Gets the default expiry delay for transactions
-   * @return _defaultTxExpiryDelay The default transaction expiry delay (in seconds)
+   * @return _txExpiryDelay The default transaction expiry delay (in seconds)
    */
-  function DEFAULT_TX_EXPIRY_DELAY() external view returns (uint256 _defaultTxExpiryDelay);
+  function TX_EXPIRY_DELAY() external view returns (uint256 _txExpiryDelay);
 
   /**
    * @notice Gets the global nonce
