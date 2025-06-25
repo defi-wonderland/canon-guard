@@ -65,7 +65,6 @@ UnitSafeEntrypoint::executeTransaction
 │   └── it reverts with TransactionNotQueued
 └── when approved transaction is valid
     ├── it executes transaction
-    ├── it updates transaction state
     ├── it deletes transaction from queue
     └── it emits TransactionExecuted event
 

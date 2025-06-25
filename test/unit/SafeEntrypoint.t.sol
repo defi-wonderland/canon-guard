@@ -421,6 +421,8 @@ contract UnitSafeEntrypoint is Test {
     _mockAndExpect(SAFE, abi.encodeWithSelector(ISafe.nonce.selector), abi.encode(1));
     _mockAndExpect(SAFE, abi.encodeWithSelector(ISafe.getTransactionHash.selector), abi.encode(bytes32(0)));
     _mockAndExpect(SAFE, abi.encodeWithSelector(IOwnerManager.getOwners.selector), abi.encode(new address[](0)));
+
+    // it executes transaction
     _mockAndExpect(SAFE, abi.encodeWithSelector(ISafe.execTransaction.selector), abi.encode(true));
 
     safeEntrypoint.mockTransaction(
@@ -432,14 +434,19 @@ contract UnitSafeEntrypoint is Test {
 
     bool _isArbitrary = _actionsBuilder == address(0);
 
+    // it emits TransactionExecuted event
     vm.expectEmit(address(safeEntrypoint));
     emit ISafeEntrypoint.TransactionExecuted(_actionsBuilder, _isArbitrary, bytes32(0), new address[](0));
 
     vm.prank(_caller);
     safeEntrypoint.executeTransaction(_actionsBuilder);
 
-    // Note: After execution, the transaction is cleared from the queue, so queuedTransaction returns empty values
-    // The execution should be verified through the emitted event instead
+    // it deletes transaction from queue
+    (bytes memory __actionsData, uint256 _executableAt, uint256 _expiresAt) =
+      safeEntrypoint.queuedTransactions(_actionsBuilder);
+    assertEq(__actionsData, bytes(''));
+    assertEq(_executableAt, 0);
+    assertEq(_expiresAt, 0);
   }
 
   modifier whenTransactionExists() {
