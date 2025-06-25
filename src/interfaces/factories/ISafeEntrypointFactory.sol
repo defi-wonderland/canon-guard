@@ -13,14 +13,14 @@ interface ISafeEntrypointFactory {
    * @param _safe The Gnosis Safe contract address
    * @param _shortTxExecutionDelay The short transaction execution delay (in seconds)
    * @param _longTxExecutionDelay The long transaction execution delay (in seconds)
-   * @param _defaultTxExpiryDelay The default transaction expiry delay (in seconds)
+   * @param _txExpiryDelay The transaction expiry delay (in seconds after executable)
    * @return _safeEntrypoint The SafeEntrypoint contract address
    */
   function createSafeEntrypoint(
     address _safe,
     uint256 _shortTxExecutionDelay,
     uint256 _longTxExecutionDelay,
-    uint256 _defaultTxExpiryDelay
+    uint256 _txExpiryDelay
   ) external returns (address _safeEntrypoint);
 
   // ~~~ STORAGE METHODS ~~~

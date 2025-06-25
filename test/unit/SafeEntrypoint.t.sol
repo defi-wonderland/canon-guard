@@ -15,14 +15,14 @@ contract UnitSafeEntrypoint is Test {
 
   uint256 public constant SHORT_TX_EXECUTION_DELAY = 1 hours;
   uint256 public constant LONG_TX_EXECUTION_DELAY = 7 days;
-  uint256 public constant DEFAULT_TX_EXPIRY_DELAY = 2 hours;
+  uint256 public constant TX_EXPIRY_DELAY = 2 hours;
   uint256 public constant ACTIONS_BUILDER_APPROVAL_DURATION = 7 days;
   address public immutable SAFE = makeAddr('SAFE');
   address public immutable MULTI_SEND_CALL_ONLY = makeAddr('MULTI_SEND_CALL_ONLY');
 
   function setUp() public {
     safeEntrypoint = new SafeEntrypointForTest(
-      SAFE, MULTI_SEND_CALL_ONLY, SHORT_TX_EXECUTION_DELAY, LONG_TX_EXECUTION_DELAY, DEFAULT_TX_EXPIRY_DELAY
+      SAFE, MULTI_SEND_CALL_ONLY, SHORT_TX_EXECUTION_DELAY, LONG_TX_EXECUTION_DELAY, TX_EXPIRY_DELAY
     );
   }
 
@@ -56,16 +56,16 @@ contract UnitSafeEntrypoint is Test {
     address _multiSendCallOnly,
     uint256 _shortTxExecutionDelay,
     uint256 _longTxExecutionDelay,
-    uint256 _defaultTxExpiryDelay
+    uint256 _txExpiryDelay
   ) external {
     safeEntrypoint = new SafeEntrypointForTest(
-      _safe, _multiSendCallOnly, _shortTxExecutionDelay, _longTxExecutionDelay, _defaultTxExpiryDelay
+      _safe, _multiSendCallOnly, _shortTxExecutionDelay, _longTxExecutionDelay, _txExpiryDelay
     );
     assertEq(address(ISafeManageable(address(safeEntrypoint)).SAFE()), _safe);
     assertEq(safeEntrypoint.MULTI_SEND_CALL_ONLY(), _multiSendCallOnly);
     assertEq(safeEntrypoint.SHORT_TX_EXECUTION_DELAY(), _shortTxExecutionDelay);
     assertEq(safeEntrypoint.LONG_TX_EXECUTION_DELAY(), _longTxExecutionDelay);
-    assertEq(safeEntrypoint.DEFAULT_TX_EXPIRY_DELAY(), _defaultTxExpiryDelay);
+    assertEq(safeEntrypoint.TX_EXPIRY_DELAY(), _txExpiryDelay);
   }
 
   modifier whenCallerIsSafeOwner() {
@@ -120,11 +120,9 @@ contract UnitSafeEntrypoint is Test {
 
   function test_QueueTransactionWhenQueueingPreApprovedAction(
     address _caller,
-    address _actionsBuilder,
-    uint256 _expiryDelay
+    address _actionsBuilder
   ) external whenCallerIsSafeOwner givenActionsBuilderIsApproved(_actionsBuilder) {
     _assumeFuzzable(_actionsBuilder);
-    _expiryDelay = bound(_expiryDelay, 1, type(uint256).max - block.timestamp - SHORT_TX_EXECUTION_DELAY);
 
     _mockAndExpect(
       address(_actionsBuilder),
@@ -137,7 +135,7 @@ contract UnitSafeEntrypoint is Test {
     emit ISafeEntrypoint.TransactionQueued(address(0), _actionsBuilder);
 
     vm.prank(_caller);
-    safeEntrypoint.queueTransaction(_actionsBuilder, _expiryDelay);
+    safeEntrypoint.queueTransaction(_actionsBuilder);
 
     // Verify transaction info using the new interface
     (bytes memory _actionsData, uint256 _executableAt, uint256 _expiresAt, bool _isExecuted) =
@@ -146,10 +144,10 @@ contract UnitSafeEntrypoint is Test {
     // it sets transaction info
     assertEq(_actionsData, abi.encode(new IActionsBuilder.Action[](0)));
     assertEq(_isExecuted, false);
-    // it sets executable at to block timestamp plus short delay
+    // it sets executable time at block timestamp plus short delay
     assertEq(_executableAt, block.timestamp + SHORT_TX_EXECUTION_DELAY);
-    // it sets expiry time
-    assertEq(_expiresAt, block.timestamp + SHORT_TX_EXECUTION_DELAY + _expiryDelay);
+    // it sets expiry time at executable time plus expiry delay
+    assertEq(_expiresAt, block.timestamp + SHORT_TX_EXECUTION_DELAY + TX_EXPIRY_DELAY);
   }
 
   function test_QueueTransactionWhenQueueingArbitraryAction(
@@ -157,11 +155,9 @@ contract UnitSafeEntrypoint is Test {
     address _target,
     uint256 _value,
     address _actionsBuilder,
-    bytes memory _data,
-    uint256 _expiryDelay
+    bytes memory _data
   ) external whenCallerIsSafeOwner {
     _assumeFuzzable(_actionsBuilder);
-    _expiryDelay = bound(_expiryDelay, 1, type(uint256).max - block.timestamp - LONG_TX_EXECUTION_DELAY);
 
     IActionsBuilder.Action[] memory _actions = new IActionsBuilder.Action[](1);
     _actions[0] = IActionsBuilder.Action({target: _target, value: _value, data: _data});
@@ -175,7 +171,7 @@ contract UnitSafeEntrypoint is Test {
     emit ISafeEntrypoint.TransactionQueued(address(0), _actionsBuilder);
 
     vm.prank(_caller);
-    safeEntrypoint.queueTransaction(_actionsBuilder, _expiryDelay);
+    safeEntrypoint.queueTransaction(_actionsBuilder);
 
     // Verify transaction info using the new interface
     (bytes memory _actionsData, uint256 _executableAt, uint256 _expiresAt, bool _isExecuted) =
@@ -184,29 +180,25 @@ contract UnitSafeEntrypoint is Test {
     // it sets transaction info
     assertEq(_actionsData, abi.encode(_actions));
     assertEq(_isExecuted, false);
-    // it sets executable at to block timestamp plus long delay
+    // it sets executable time at block timestamp plus long delay
     assertEq(_executableAt, block.timestamp + LONG_TX_EXECUTION_DELAY);
-    // it sets expiry time
-    assertEq(_expiresAt, block.timestamp + LONG_TX_EXECUTION_DELAY + _expiryDelay);
+    // it sets expiry time at executable time plus expiry delay
+    assertEq(_expiresAt, block.timestamp + LONG_TX_EXECUTION_DELAY + TX_EXPIRY_DELAY);
   }
 
   function test_QueueTransactionWhenCallerIsNotSafeOwner(
     address _caller,
-    address _actionsBuilder,
-    uint256 _expiryDelay
+    address _actionsBuilder
   ) external givenCallerIsNotSafeOwner(_caller) {
-    _expiryDelay = bound(_expiryDelay, 0, type(uint256).max - block.timestamp - SHORT_TX_EXECUTION_DELAY);
-
     // it reverts with NotSafeOwner
     vm.expectRevert(ISafeManageable.NotSafeOwner.selector);
     vm.prank(_caller);
-    safeEntrypoint.queueTransaction(_actionsBuilder, _expiryDelay);
+    safeEntrypoint.queueTransaction(_actionsBuilder);
   }
 
   function test_QueueHubTransactionWhenHubIsNotAChild(
     address _actionHub,
-    address _actionsBuilder,
-    uint256 _expiryDelay
+    address _actionsBuilder
   ) external whenCallerIsSafeOwner {
     _assumeFuzzable(_actionHub);
     _assumeFuzzable(_actionsBuilder);
@@ -214,19 +206,17 @@ contract UnitSafeEntrypoint is Test {
 
     // it reverts with InvalidHubOrActionsBuilder
     vm.expectRevert(ISafeEntrypoint.InvalidHubOrActionsBuilder.selector);
-    safeEntrypoint.queueHubTransaction(_actionHub, _actionsBuilder, _expiryDelay);
+    safeEntrypoint.queueHubTransaction(_actionHub, _actionsBuilder);
   }
 
   function test_QueueHubTransactionWhenQueueingPreApprovedAction(
     address _caller,
     address _actionHub,
-    address _actionsBuilder,
-    uint256 _expiryDelay
+    address _actionsBuilder
   ) external whenCallerIsSafeOwner givenActionsBuilderIsApproved(_actionHub) {
     _assumeFuzzable(_actionHub);
     _assumeFuzzable(_actionsBuilder);
     _modifyIsChildReturnValue(_actionHub, _actionsBuilder, true);
-    _expiryDelay = bound(_expiryDelay, 1, type(uint256).max - block.timestamp - SHORT_TX_EXECUTION_DELAY);
 
     _mockAndExpect(
       address(_actionsBuilder),
@@ -239,7 +229,7 @@ contract UnitSafeEntrypoint is Test {
     emit ISafeEntrypoint.TransactionQueued(_actionHub, _actionsBuilder);
 
     vm.prank(_caller);
-    safeEntrypoint.queueHubTransaction(_actionHub, _actionsBuilder, _expiryDelay);
+    safeEntrypoint.queueHubTransaction(_actionHub, _actionsBuilder);
 
     // Verify transaction info using the new interface
     (bytes memory _actionsData, uint256 _executableAt, uint256 _expiresAt, bool _isExecuted) =
@@ -251,7 +241,7 @@ contract UnitSafeEntrypoint is Test {
     // it sets executable at to block timestamp plus short delay
     assertEq(_executableAt, block.timestamp + SHORT_TX_EXECUTION_DELAY);
     // it sets expiry time
-    assertEq(_expiresAt, block.timestamp + SHORT_TX_EXECUTION_DELAY + _expiryDelay);
+    assertEq(_expiresAt, block.timestamp + SHORT_TX_EXECUTION_DELAY + TX_EXPIRY_DELAY);
   }
 
   function test_QueueHubTransactionWhenQueueingArbitraryAction(
@@ -260,13 +250,11 @@ contract UnitSafeEntrypoint is Test {
     uint256 _value,
     address _actionHub,
     address _actionsBuilder,
-    bytes memory _data,
-    uint256 _expiryDelay
+    bytes memory _data
   ) external whenCallerIsSafeOwner {
     _modifyIsChildReturnValue(_actionHub, _actionsBuilder, true);
     _assumeFuzzable(_actionHub);
     _assumeFuzzable(_actionsBuilder);
-    _expiryDelay = bound(_expiryDelay, 1, type(uint256).max - block.timestamp - LONG_TX_EXECUTION_DELAY);
 
     IActionsBuilder.Action[] memory _actions = new IActionsBuilder.Action[](1);
     _actions[0] = IActionsBuilder.Action({target: _target, value: _value, data: _data});
@@ -280,7 +268,7 @@ contract UnitSafeEntrypoint is Test {
     emit ISafeEntrypoint.TransactionQueued(_actionHub, _actionsBuilder);
 
     vm.prank(_caller);
-    safeEntrypoint.queueHubTransaction(_actionHub, _actionsBuilder, _expiryDelay);
+    safeEntrypoint.queueHubTransaction(_actionHub, _actionsBuilder);
 
     // Verify transaction info using the new interface
     (bytes memory _actionsData, uint256 _executableAt, uint256 _expiresAt, bool _isExecuted) =
@@ -292,26 +280,23 @@ contract UnitSafeEntrypoint is Test {
     // it sets executable at to block timestamp plus long delay
     assertEq(_executableAt, block.timestamp + LONG_TX_EXECUTION_DELAY);
     // it sets expiry time
-    assertEq(_expiresAt, block.timestamp + LONG_TX_EXECUTION_DELAY + _expiryDelay);
+    assertEq(_expiresAt, block.timestamp + LONG_TX_EXECUTION_DELAY + TX_EXPIRY_DELAY);
   }
 
   function test_QueueHubTransactionWhenCallerIsNotSafeOwner(
     address _caller,
     address _actionHub,
-    address _actionsBuilder,
-    uint256 _expiryDelay
+    address _actionsBuilder
   ) external givenCallerIsNotSafeOwner(_caller) {
     _assumeFuzzable(_caller);
     _assumeFuzzable(_actionHub);
     _assumeFuzzable(_actionsBuilder);
     _modifyIsChildReturnValue(_actionHub, _actionsBuilder, true);
 
-    _expiryDelay = bound(_expiryDelay, 0, type(uint256).max - block.timestamp - SHORT_TX_EXECUTION_DELAY);
-
     // it reverts with NotSafeOwner
     vm.expectRevert(ISafeManageable.NotSafeOwner.selector);
     vm.prank(_caller);
-    safeEntrypoint.queueHubTransaction(_actionHub, _actionsBuilder, _expiryDelay);
+    safeEntrypoint.queueHubTransaction(_actionHub, _actionsBuilder);
   }
 
   function test_ExecuteTransactionWhenTransactionIsExpired(

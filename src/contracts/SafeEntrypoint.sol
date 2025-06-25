@@ -28,7 +28,7 @@ contract SafeEntrypoint is SafeManageable, ISafeEntrypoint {
   uint256 public immutable LONG_TX_EXECUTION_DELAY;
 
   /// @inheritdoc ISafeEntrypoint
-  uint256 public immutable DEFAULT_TX_EXPIRY_DELAY;
+  uint256 public immutable TX_EXPIRY_DELAY;
 
   /// @inheritdoc ISafeEntrypoint
   mapping(address _actionsBuilder => uint256 _approvalExpiresAt) public approvalExpiries;
@@ -44,20 +44,20 @@ contract SafeEntrypoint is SafeManageable, ISafeEntrypoint {
    * @param _multiSendCallOnly The MultiSendCallOnly contract address
    * @param _shortTxExecutionDelay The short transaction execution delay (in seconds)
    * @param _longTxExecutionDelay The long transaction execution delay (in seconds)
-   * @param _defaultTxExpiryDelay The default transaction expiry delay (in seconds)
+   * @param _txExpiryDelay The transaction expiry delay (in seconds after executable)
    */
   constructor(
     address _safe,
     address _multiSendCallOnly,
     uint256 _shortTxExecutionDelay,
     uint256 _longTxExecutionDelay,
-    uint256 _defaultTxExpiryDelay
+    uint256 _txExpiryDelay
   ) SafeManageable(_safe) {
     MULTI_SEND_CALL_ONLY = _multiSendCallOnly;
 
     SHORT_TX_EXECUTION_DELAY = _shortTxExecutionDelay;
     LONG_TX_EXECUTION_DELAY = _longTxExecutionDelay;
-    DEFAULT_TX_EXPIRY_DELAY = _defaultTxExpiryDelay;
+    TX_EXPIRY_DELAY = _txExpiryDelay;
   }
 
   // ~~~ ADMIN METHODS ~~~
@@ -72,18 +72,18 @@ contract SafeEntrypoint is SafeManageable, ISafeEntrypoint {
   // ~~~ TRANSACTION METHODS ~~~
 
   /// @inheritdoc ISafeEntrypoint
-  function queueHubTransaction(address _actionHub, address _actionsBuilder, uint256 _expiryDelay) external isSafeOwner {
+  function queueHubTransaction(address _actionHub, address _actionsBuilder) external isSafeOwner {
     if (!IActionHub(_actionHub).isChild(_actionsBuilder)) revert InvalidHubOrActionsBuilder();
     bool _txIsPreApproved = _isPreApproved(_actionHub);
-    _queueTransaction(_actionsBuilder, _expiryDelay, _txIsPreApproved);
+    _queueTransaction(_actionsBuilder, _txIsPreApproved);
 
     emit TransactionQueued(_actionHub, _actionsBuilder);
   }
 
   /// @inheritdoc ISafeEntrypoint
-  function queueTransaction(address _actionsBuilder, uint256 _expiryDelay) external isSafeOwner {
+  function queueTransaction(address _actionsBuilder) external isSafeOwner {
     bool _txIsPreApproved = _isPreApproved(_actionsBuilder);
-    _queueTransaction(_actionsBuilder, _expiryDelay, _txIsPreApproved);
+    _queueTransaction(_actionsBuilder, _txIsPreApproved);
 
     emit TransactionQueued(address(0), _actionsBuilder);
   }
@@ -218,10 +218,9 @@ contract SafeEntrypoint is SafeManageable, ISafeEntrypoint {
   /**
    * @notice Internal function to queue a transaction
    * @param _actionsBuilder The actions builder contract address
-   * @param _expiryDelay The duration (in seconds) after which the transaction expires (after execution delay)
    * @param _txIsPreApproved Whether the actions builder is pre-approved
    */
-  function _queueTransaction(address _actionsBuilder, uint256 _expiryDelay, bool _txIsPreApproved) internal {
+  function _queueTransaction(address _actionsBuilder, bool _txIsPreApproved) internal {
     // If approved, tx is not arbitrary, use short execution delay. Otherwise, tx is arbitrary, use long execution delay
     uint256 _txExecutionDelay = _txIsPreApproved ? SHORT_TX_EXECUTION_DELAY : LONG_TX_EXECUTION_DELAY;
 
@@ -234,14 +233,11 @@ contract SafeEntrypoint is SafeManageable, ISafeEntrypoint {
     // Fetch actions from the builder
     IActionsBuilder.Action[] memory _actions = IActionsBuilder(_actionsBuilder).getActions();
 
-    // Use default expiry delay if duration is 0
-    _expiryDelay = _expiryDelay == 0 ? DEFAULT_TX_EXPIRY_DELAY : _expiryDelay;
-
     // Store the transaction information
     queuedTransactions[_actionsBuilder] = TransactionInfo({
       actionsData: abi.encode(_actions),
       executableAt: block.timestamp + _txExecutionDelay,
-      expiresAt: block.timestamp + _txExecutionDelay + _expiryDelay,
+      expiresAt: block.timestamp + _txExecutionDelay + TX_EXPIRY_DELAY,
       isExecuted: false
     });
   }
