@@ -131,7 +131,7 @@ contract SafeEntrypoint is SafeManageable, ISafeEntrypoint {
     uint256 _safeNonce
   ) public view returns (bytes32 _safeTxHash) {
     TransactionInfo storage _txInfo = queuedTransactions[_actionsBuilder];
-    if (_txInfo.expiresAt == 0) return bytes32(0); // TODO: add test for this
+    if (_txInfo.expiresAt == 0) revert NoTransactionQueued(); // TODO: add test for this
 
     IActionsBuilder.Action[] memory _actions = abi.decode(_txInfo.actionsData, (IActionsBuilder.Action[]));
 
