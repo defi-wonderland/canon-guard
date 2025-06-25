@@ -17,15 +17,10 @@ contract SafeEntrypointForTest is SafeEntrypoint {
     address _actionsBuilder,
     bytes memory _actionsData,
     uint256 _executableAt,
-    uint256 _expiresAt,
-    bool _isExecuted
+    uint256 _expiresAt
   ) external {
-    queuedTransactions[_actionsBuilder] = ISafeEntrypoint.TransactionInfo({
-      actionsData: _actionsData,
-      executableAt: _executableAt,
-      expiresAt: _expiresAt,
-      isExecuted: _isExecuted
-    });
+    queuedTransactions[_actionsBuilder] =
+      ISafeEntrypoint.TransactionInfo({actionsData: _actionsData, executableAt: _executableAt, expiresAt: _expiresAt});
   }
 
   function mockApprovalExpiry(address _actionsBuilder, uint256 _expiry) external {

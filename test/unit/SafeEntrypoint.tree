@@ -30,8 +30,11 @@ UnitSafeEntrypoint::queueTransaction
 │       ├── it sets executable time at block timestamp plus long delay
 │       ├── it sets expiry time at executable time plus expiry delay
 │       └── it emits TransactionQueued event
-└── when caller is not safe owner
-    └── it reverts with NotSafeOwner
+├── when caller is not safe owner
+│   └── it reverts with NotSafeOwner
+└── when transaction is already queued
+    └── it reverts with TransactionAlreadyQueued
+
 
 UnitSafeEntrypoint::queueHubTransaction
 ├── when hub is not a child
@@ -47,34 +50,42 @@ UnitSafeEntrypoint::queueHubTransaction
 │       ├── it sets executable at to block timestamp plus long delay
 │       ├── it sets expiry time
 │       └── it emits TransactionQueued event
-└── when caller is not safe owner
-    └── it reverts with NotSafeOwner
+├── when caller is not safe owner
+│   └── it reverts with NotSafeOwner
+└── when transaction is already queued
+    └── it reverts with TransactionAlreadyQueued
+
 
 UnitSafeEntrypoint::executeTransaction
 ├── when transaction is expired
 │   └── it reverts with TransactionExpired
-├── when approved transaction is already executed
-│   └── it reverts with TransactionAlreadyExecuted
 ├── when approved transaction is not yet executable
 │   └── it reverts with TransactionNotYetExecutable
+├── when transaction is not queued
+│   └── it reverts with TransactionNotQueued
 └── when approved transaction is valid
     ├── it executes transaction
     ├── it updates transaction state
+    ├── it deletes transaction from queue
     └── it emits TransactionExecuted event
 
 
 UnitSafeEntrypoint::getSafeTransactionHash
-└── when transaction exists
-    ├── it returns correct hash
-    └── when getting hash with nonce
-        └── it returns correct hash
+├── when transaction exists
+│   ├── it returns correct hash
+│   └── when getting hash with nonce
+│       └── it returns correct hash
+└── when transaction does not exist
+    └── it reverts with NoTransactionQueued
 
 
 UnitSafeEntrypoint::getApprovedHashSigners
-└── when transaction exists
-    ├── when getting signers with txId
-    │   └── it returns approved signers
-    ├── when getting signers with txId and nonce
-    │   └── it returns approved signers
-    └── when getting signers with hash
-        └── it returns approved signers 
+├── when transaction exists
+│   ├── when getting signers with actionsBuilder
+│   │   └── it returns approved signers
+│   ├── when getting signers with actionsBuilder and nonce
+│   │   └── it returns approved signers
+│   └── when getting signers with hash
+│       └── it returns approved signers
+└── when transaction does not exist
+    └── it reverts with NoTransactionQueued

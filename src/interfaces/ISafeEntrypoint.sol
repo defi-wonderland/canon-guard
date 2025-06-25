@@ -12,17 +12,14 @@ interface ISafeEntrypoint is ISafeManageable {
 
   /**
    * @notice Information about a transaction
-   * @param actionsBuilder The actions builder contract address associated
    * @param actionsData The encoded actions data
    * @param executableAt The timestamp from which the transaction can be executed
    * @param expiresAt The timestamp from which the transaction expires
-   * @param isExecuted Whether the transaction has been executed
    */
   struct TransactionInfo {
     bytes actionsData;
     uint256 executableAt;
     uint256 expiresAt;
-    bool isExecuted;
   }
 
   // ~~~ EVENTS ~~~
@@ -54,11 +51,6 @@ interface ISafeEntrypoint is ISafeManageable {
   event TransactionExecuted(
     address indexed _actionsBuilder, bool indexed _isArbitrary, bytes32 indexed _safeTxHash, address[] _signers
   );
-
-  /**
-   * @notice Thrown when a transaction has already been executed
-   */
-  error TransactionAlreadyExecuted();
 
   /**
    * @notice Thrown when no transaction is queued for the actions builder
@@ -160,12 +152,11 @@ interface ISafeEntrypoint is ISafeManageable {
    * @return _actionsData The encoded actions data
    * @return _executableAt The timestamp from which the transaction can be executed
    * @return _expiresAt The timestamp from which the transaction expires
-   * @return _isExecuted Whether the transaction has been executed
    */
   function queuedTransactions(address _actionsBuilder)
     external
     view
-    returns (bytes memory _actionsData, uint256 _executableAt, uint256 _expiresAt, bool _isExecuted);
+    returns (bytes memory _actionsData, uint256 _executableAt, uint256 _expiresAt);
 
   // ~~~ GETTER METHODS ~~~
 

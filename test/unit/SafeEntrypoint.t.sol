@@ -142,12 +142,11 @@ contract UnitSafeEntrypoint is Test {
     safeEntrypoint.queueTransaction(_actionsBuilder);
 
     // Verify transaction info using the new interface
-    (bytes memory _actionsData, uint256 _executableAt, uint256 _expiresAt, bool _isExecuted) =
+    (bytes memory _actionsData, uint256 _executableAt, uint256 _expiresAt) =
       safeEntrypoint.queuedTransactions(_actionsBuilder);
 
     // it sets transaction info
     assertEq(_actionsData, abi.encode(new IActionsBuilder.Action[](0)));
-    assertEq(_isExecuted, false);
     // it sets executable time at block timestamp plus short delay
     assertEq(_executableAt, block.timestamp + SHORT_TX_EXECUTION_DELAY);
     // it sets expiry time at executable time plus expiry delay
@@ -178,12 +177,11 @@ contract UnitSafeEntrypoint is Test {
     safeEntrypoint.queueTransaction(_actionsBuilder);
 
     // Verify transaction info using the new interface
-    (bytes memory _actionsData, uint256 _executableAt, uint256 _expiresAt, bool _isExecuted) =
+    (bytes memory _actionsData, uint256 _executableAt, uint256 _expiresAt) =
       safeEntrypoint.queuedTransactions(_actionsBuilder);
 
     // it sets transaction info
     assertEq(_actionsData, abi.encode(_actions));
-    assertEq(_isExecuted, false);
     // it sets executable time at block timestamp plus long delay
     assertEq(_executableAt, block.timestamp + LONG_TX_EXECUTION_DELAY);
     // it sets expiry time at executable time plus expiry delay
@@ -197,6 +195,22 @@ contract UnitSafeEntrypoint is Test {
     // it reverts with NotSafeOwner
     vm.expectRevert(ISafeManageable.NotSafeOwner.selector);
     vm.prank(_caller);
+    safeEntrypoint.queueTransaction(_actionsBuilder);
+  }
+
+  function test_QueueTransactionWhenTransactionIsAlreadyQueued(
+    address _caller,
+    address _actionsBuilder
+  ) external givenCallerIsSafeOwner(_caller) {
+    safeEntrypoint.mockTransaction(
+      _actionsBuilder,
+      abi.encode(new IActionsBuilder.Action[](0)),
+      block.timestamp,
+      block.timestamp + SHORT_TX_EXECUTION_DELAY
+    );
+
+    // it reverts with TransactionAlreadyQueued
+    vm.expectRevert(abi.encodeWithSelector(ISafeEntrypoint.TransactionAlreadyQueued.selector, _actionsBuilder));
     safeEntrypoint.queueTransaction(_actionsBuilder);
   }
 
@@ -236,12 +250,11 @@ contract UnitSafeEntrypoint is Test {
     safeEntrypoint.queueHubTransaction(_actionHub, _actionsBuilder);
 
     // Verify transaction info using the new interface
-    (bytes memory _actionsData, uint256 _executableAt, uint256 _expiresAt, bool _isExecuted) =
+    (bytes memory _actionsData, uint256 _executableAt, uint256 _expiresAt) =
       safeEntrypoint.queuedTransactions(_actionsBuilder);
 
     // it sets transaction info
     assertEq(_actionsData, abi.encode(new IActionsBuilder.Action[](0)));
-    assertEq(_isExecuted, false);
     // it sets executable at to block timestamp plus short delay
     assertEq(_executableAt, block.timestamp + SHORT_TX_EXECUTION_DELAY);
     // it sets expiry time
@@ -275,12 +288,11 @@ contract UnitSafeEntrypoint is Test {
     safeEntrypoint.queueHubTransaction(_actionHub, _actionsBuilder);
 
     // Verify transaction info using the new interface
-    (bytes memory _actionsData, uint256 _executableAt, uint256 _expiresAt, bool _isExecuted) =
+    (bytes memory _actionsData, uint256 _executableAt, uint256 _expiresAt) =
       safeEntrypoint.queuedTransactions(_actionsBuilder);
 
     // it sets transaction info
     assertEq(_actionsData, abi.encode(_actions));
-    assertEq(_isExecuted, false);
     // it sets executable at to block timestamp plus long delay
     assertEq(_executableAt, block.timestamp + LONG_TX_EXECUTION_DELAY);
     // it sets expiry time
@@ -303,6 +315,30 @@ contract UnitSafeEntrypoint is Test {
     safeEntrypoint.queueHubTransaction(_actionHub, _actionsBuilder);
   }
 
+  function test_QueueHubTransactionWhenTransactionIsAlreadyQueued(
+    address _caller,
+    address _actionHub,
+    address _actionsBuilder
+  ) external givenCallerIsSafeOwner(_caller) givenActionsBuilderIsApproved(_actionHub) {
+    _assumeFuzzable(_actionHub);
+    _assumeFuzzable(_actionsBuilder);
+    _assumeFuzzable(_caller);
+
+    _modifyIsChildReturnValue(_actionHub, _actionsBuilder, true);
+
+    safeEntrypoint.mockTransaction(
+      _actionsBuilder,
+      abi.encode(new IActionsBuilder.Action[](0)),
+      block.timestamp,
+      block.timestamp + SHORT_TX_EXECUTION_DELAY
+    );
+
+    // it reverts with TransactionAlreadyQueued
+    vm.expectRevert(abi.encodeWithSelector(ISafeEntrypoint.TransactionAlreadyQueued.selector, _actionsBuilder));
+    vm.prank(_caller);
+    safeEntrypoint.queueHubTransaction(_actionHub, _actionsBuilder);
+  }
+
   function test_ExecuteTransactionWhenTransactionIsExpired(
     address _caller,
     address _actionsBuilder,
@@ -312,7 +348,6 @@ contract UnitSafeEntrypoint is Test {
     // Ensure expiresAt is valid and not 0, and that it's less than type(uint64).max - 1
     _txInfo.expiresAt = bound(_txInfo.expiresAt, 1, type(uint64).max - 1);
     _txInfo.executableAt = bound(_txInfo.executableAt, 0, block.timestamp);
-    _txInfo.isExecuted = false;
     IActionsBuilder.Action[] memory _actions = new IActionsBuilder.Action[](1);
     _actions[0] = _action;
     bytes memory _actionsData = abi.encode(_actions);
@@ -322,46 +357,12 @@ contract UnitSafeEntrypoint is Test {
     _mockAndExpect(SAFE, abi.encodeWithSelector(ISafe.getTransactionHash.selector), abi.encode(bytes32(0)));
     _mockAndExpect(SAFE, abi.encodeWithSelector(IOwnerManager.getOwners.selector), abi.encode(new address[](0)));
 
-    safeEntrypoint.mockTransaction(
-      _actionsBuilder, _actionsData, _txInfo.executableAt, _txInfo.expiresAt, _txInfo.isExecuted
-    );
+    safeEntrypoint.mockTransaction(_actionsBuilder, _actionsData, _txInfo.executableAt, _txInfo.expiresAt);
 
     // Move time forward past expiry
     vm.warp(_txInfo.expiresAt + 1);
 
     vm.expectRevert(ISafeEntrypoint.TransactionExpired.selector);
-    vm.prank(_caller);
-    safeEntrypoint.executeTransaction(_actionsBuilder);
-  }
-
-  function test_ExecuteTransactionWhenApprovedTransactionIsAlreadyExecuted(
-    address _caller,
-    address _actionsBuilder,
-    IActionsBuilder.Action calldata _action,
-    ISafeEntrypoint.TransactionInfo memory _txInfo
-  ) external {
-    _txInfo.expiresAt = bound(_txInfo.expiresAt, block.timestamp + 1, type(uint256).max);
-    _txInfo.executableAt = bound(_txInfo.executableAt, block.timestamp + 1, type(uint256).max);
-    _txInfo.isExecuted = true;
-    IActionsBuilder.Action[] memory _actions = new IActionsBuilder.Action[](1);
-    _actions[0] = _action;
-    bytes memory _actionsData = abi.encode(_actions);
-
-    // Mock SAFE contract calls
-    _mockAndExpect(SAFE, abi.encodeWithSelector(ISafe.nonce.selector), abi.encode(1));
-    _mockAndExpect(SAFE, abi.encodeWithSelector(ISafe.getTransactionHash.selector), abi.encode(bytes32(0)));
-    _mockAndExpect(SAFE, abi.encodeWithSelector(IOwnerManager.getOwners.selector), abi.encode(new address[](0)));
-
-    // Mock an already executed transaction
-    safeEntrypoint.mockTransaction(
-      _actionsBuilder, // actionsBuilder
-      _actionsData, // actionsData
-      _txInfo.executableAt, // executableAt
-      _txInfo.expiresAt, // expiresAt
-      _txInfo.isExecuted // isExecuted
-    );
-
-    vm.expectRevert(ISafeEntrypoint.TransactionAlreadyExecuted.selector);
     vm.prank(_caller);
     safeEntrypoint.executeTransaction(_actionsBuilder);
   }
@@ -374,7 +375,7 @@ contract UnitSafeEntrypoint is Test {
   ) external {
     _txInfo.expiresAt = bound(_txInfo.expiresAt, block.timestamp + 1, type(uint256).max);
     _txInfo.executableAt = bound(_txInfo.executableAt, block.timestamp + 1, type(uint256).max);
-    _txInfo.isExecuted = false;
+
     IActionsBuilder.Action[] memory _actions = new IActionsBuilder.Action[](1);
     _actions[0] = _action;
     bytes memory _actionsData = abi.encode(_actions);
@@ -389,12 +390,19 @@ contract UnitSafeEntrypoint is Test {
       _actionsBuilder, // actionsBuilder
       _actionsData, // actionsData
       _txInfo.executableAt, // executableAt
-      _txInfo.expiresAt, // expiresAt
-      _txInfo.isExecuted // isExecuted
+      _txInfo.expiresAt // expiresAt
     );
 
     vm.expectRevert(ISafeEntrypoint.TransactionNotYetExecutable.selector);
     vm.prank(_caller);
+    safeEntrypoint.executeTransaction(_actionsBuilder);
+  }
+
+  function test_ExecuteTransactionWhenTransactionIsNotQueued(address _actionsBuilder) external {
+    _assumeFuzzable(_actionsBuilder);
+
+    // it reverts with TransactionNotQueued
+    vm.expectRevert(ISafeEntrypoint.NoTransactionQueued.selector);
     safeEntrypoint.executeTransaction(_actionsBuilder);
   }
 
@@ -406,7 +414,6 @@ contract UnitSafeEntrypoint is Test {
   ) external {
     _txInfo.expiresAt = bound(_txInfo.expiresAt, block.timestamp + 1, type(uint256).max);
     _txInfo.executableAt = bound(_txInfo.executableAt, block.timestamp - 1, block.timestamp);
-    _txInfo.isExecuted = false;
     IActionsBuilder.Action[] memory _actions = new IActionsBuilder.Action[](1);
     _actions[0] = _action;
     bytes memory _actionsData = abi.encode(_actions);
@@ -420,8 +427,7 @@ contract UnitSafeEntrypoint is Test {
       _actionsBuilder, // actionsBuilder
       _actionsData, // actionsData
       _txInfo.executableAt, // executableAt
-      _txInfo.expiresAt, // expiresAt
-      _txInfo.isExecuted // isExecuted
+      _txInfo.expiresAt // expiresAt
     );
 
     bool _isArbitrary = _actionsBuilder == address(0);
@@ -453,9 +459,7 @@ contract UnitSafeEntrypoint is Test {
     IActionsBuilder.Action[] memory _actions = new IActionsBuilder.Action[](1);
     _actions[0] = _action;
     bytes memory _actionsData = abi.encode(_actions);
-    safeEntrypoint.mockTransaction(
-      _actionsBuilder, _actionsData, _txInfo.executableAt, _txInfo.expiresAt, _txInfo.isExecuted
-    );
+    safeEntrypoint.mockTransaction(_actionsBuilder, _actionsData, _txInfo.executableAt, _txInfo.expiresAt);
 
     _mockAndExpect(SAFE, abi.encodeWithSelector(ISafe.nonce.selector), abi.encode(_safeNonce));
     _mockAndExpect(SAFE, abi.encodeWithSelector(ISafe.getTransactionHash.selector), abi.encode(_expectedHash));
@@ -477,9 +481,7 @@ contract UnitSafeEntrypoint is Test {
     IActionsBuilder.Action[] memory _actions = new IActionsBuilder.Action[](1);
     _actions[0] = _action;
     bytes memory _actionsData = abi.encode(_actions);
-    safeEntrypoint.mockTransaction(
-      _actionsBuilder, _actionsData, _txInfo.executableAt, _txInfo.expiresAt, _txInfo.isExecuted
-    );
+    safeEntrypoint.mockTransaction(_actionsBuilder, _actionsData, _txInfo.executableAt, _txInfo.expiresAt);
 
     _mockAndExpect(SAFE, abi.encodeWithSelector(ISafe.getTransactionHash.selector), abi.encode(_expectedHash));
 
@@ -487,28 +489,14 @@ contract UnitSafeEntrypoint is Test {
     assertEq(_safeTxHash, _expectedHash);
   }
 
-  function test_GetApprovedHashSignersWhenGettingSignersWithTxId() external whenTransactionExists {
-    // it returns approved signers
-  }
+  function test_GetSafeTransactionHashWhenTransactionDoesNotExist(address _actionsBuilder) external {
+    _assumeFuzzable(_actionsBuilder);
 
-  function test_GetApprovedHashSignersWhenGettingSignersWithTxIdAndNonce() external whenTransactionExists {
-    // it returns approved signers
-  }
+    _mockAndExpect(SAFE, abi.encodeWithSelector(ISafe.nonce.selector), abi.encode(1));
 
-  function test_GetApprovedHashSignersWhenGettingSignersWithHash(
-    address _signer1,
-    address _signer2,
-    bytes32 _safeHash
-  ) external {
-    address[] memory _signers = new address[](2);
-    _signers[0] = _signer1;
-    _signers[1] = _signer2;
-    _mockApprovedHashesForSigners(_signers, 1);
-
-    _mockAndExpect(SAFE, abi.encodeWithSelector(IOwnerManager.getOwners.selector), abi.encode(_signers));
-
-    address[] memory _approvedSigners = safeEntrypoint.getApprovedHashSigners(_safeHash);
-    assertEq(_approvedSigners, _signers);
+    // it reverts with NoTransactionQueued
+    vm.expectRevert(ISafeEntrypoint.NoTransactionQueued.selector);
+    safeEntrypoint.getSafeTransactionHash(_actionsBuilder);
   }
 
   function test_GetApprovedHashSignersWhenGettingSignersWithActionsBuilder(
@@ -524,9 +512,7 @@ contract UnitSafeEntrypoint is Test {
     IActionsBuilder.Action[] memory _actions = new IActionsBuilder.Action[](1);
     _actions[0] = _action;
     bytes memory _actionsData = abi.encode(_actions);
-    safeEntrypoint.mockTransaction(
-      _actionsBuilder, _actionsData, _txInfo.executableAt, _txInfo.expiresAt, _txInfo.isExecuted
-    );
+    safeEntrypoint.mockTransaction(_actionsBuilder, _actionsData, _txInfo.executableAt, _txInfo.expiresAt);
 
     address[] memory _signers = new address[](2);
     _signers[0] = _signer1;
@@ -555,9 +541,7 @@ contract UnitSafeEntrypoint is Test {
     IActionsBuilder.Action[] memory _actions = new IActionsBuilder.Action[](1);
     _actions[0] = _action;
     bytes memory _actionsData = abi.encode(_actions);
-    safeEntrypoint.mockTransaction(
-      _actionsBuilder, _actionsData, _txInfo.executableAt, _txInfo.expiresAt, _txInfo.isExecuted
-    );
+    safeEntrypoint.mockTransaction(_actionsBuilder, _actionsData, _txInfo.executableAt, _txInfo.expiresAt);
 
     address[] memory _signers = new address[](2);
     _signers[0] = _signer1;
@@ -569,6 +553,32 @@ contract UnitSafeEntrypoint is Test {
 
     address[] memory _approvedSigners = safeEntrypoint.getApprovedHashSigners(_actionsBuilder, _safeNonce);
     assertEq(_approvedSigners, _signers);
+  }
+
+  function test_GetApprovedHashSignersWhenGettingSignersWithHash(
+    address _signer1,
+    address _signer2,
+    bytes32 _safeHash
+  ) external {
+    address[] memory _signers = new address[](2);
+    _signers[0] = _signer1;
+    _signers[1] = _signer2;
+    _mockApprovedHashesForSigners(_signers, 1);
+
+    _mockAndExpect(SAFE, abi.encodeWithSelector(IOwnerManager.getOwners.selector), abi.encode(_signers));
+
+    address[] memory _approvedSigners = safeEntrypoint.getApprovedHashSigners(_safeHash);
+    assertEq(_approvedSigners, _signers);
+  }
+
+  function test_GetApprovedHashSignersWhenTransactionDoesNotExist(address _actionsBuilder) external {
+    _assumeFuzzable(_actionsBuilder);
+
+    _mockAndExpect(SAFE, abi.encodeWithSelector(ISafe.nonce.selector), abi.encode(1));
+
+    // it reverts with NoTransactionQueued
+    vm.expectRevert(ISafeEntrypoint.NoTransactionQueued.selector);
+    safeEntrypoint.getApprovedHashSigners(_actionsBuilder);
   }
 
   modifier givenCallerIsSafeOwner(address _caller) {
@@ -585,67 +595,5 @@ contract UnitSafeEntrypoint is Test {
     vm.prank(SAFE);
     safeEntrypoint.approveActionsBuilder(_actionsBuilder, ACTIONS_BUILDER_APPROVAL_DURATION);
     _;
-  }
-
-  function test_ExecuteTransaction(
-    address _caller,
-    address _actionsBuilder,
-    IActionsBuilder.Action calldata _action,
-    ISafeEntrypoint.TransactionInfo memory _txInfo
-  ) external {
-    _txInfo.expiresAt = bound(_txInfo.expiresAt, block.timestamp + 1, type(uint256).max);
-    _txInfo.executableAt = bound(_txInfo.executableAt, block.timestamp - 1, block.timestamp);
-    _txInfo.isExecuted = false;
-    IActionsBuilder.Action[] memory _actions = new IActionsBuilder.Action[](1);
-    _actions[0] = _action;
-    bytes memory _actionsData = abi.encode(_actions);
-
-    // Mock SAFE contract calls
-    _mockAndExpect(SAFE, abi.encodeWithSelector(ISafe.nonce.selector), abi.encode(1));
-    _mockAndExpect(SAFE, abi.encodeWithSelector(ISafe.getTransactionHash.selector), abi.encode(bytes32(0)));
-    _mockAndExpect(SAFE, abi.encodeWithSelector(IOwnerManager.getOwners.selector), abi.encode(new address[](0)));
-
-    // Mock an already executed transaction
-    safeEntrypoint.mockTransaction(
-      _actionsBuilder, // actionsBuilder
-      _actionsData, // actionsData
-      _txInfo.executableAt, // executableAt
-      _txInfo.expiresAt, // expiresAt
-      true // isExecuted
-    );
-
-    vm.expectRevert(ISafeEntrypoint.TransactionAlreadyExecuted.selector);
-    vm.prank(_caller);
-    safeEntrypoint.executeTransaction(_actionsBuilder);
-  }
-
-  function test_GetApprovedHashSignersWhenTransactionExists(
-    address _actionsBuilder,
-    IActionsBuilder.Action memory _action,
-    ISafeEntrypoint.TransactionInfo memory _txInfo,
-    address _signer1,
-    address _signer2
-  ) external {
-    // Ensure expiresAt is not 0 to avoid NoTransactionQueued error
-    _txInfo.expiresAt = bound(_txInfo.expiresAt, 1, type(uint256).max);
-
-    IActionsBuilder.Action[] memory _actions = new IActionsBuilder.Action[](1);
-    _actions[0] = _action;
-    bytes memory _actionsData = abi.encode(_actions);
-    safeEntrypoint.mockTransaction(
-      _actionsBuilder, _actionsData, _txInfo.executableAt, _txInfo.expiresAt, _txInfo.isExecuted
-    );
-
-    address[] memory _signers = new address[](2);
-    _signers[0] = _signer1;
-    _signers[1] = _signer2;
-    _mockApprovedHashesForSigners(_signers, 1);
-
-    _mockAndExpect(SAFE, abi.encodeWithSelector(IOwnerManager.getOwners.selector), abi.encode(_signers));
-    _mockAndExpect(SAFE, abi.encodeWithSelector(ISafe.nonce.selector), abi.encode(1));
-    _mockAndExpect(SAFE, abi.encodeWithSelector(ISafe.getTransactionHash.selector), abi.encode(bytes32(0)));
-
-    address[] memory _approvedSigners = safeEntrypoint.getApprovedHashSigners(_actionsBuilder);
-    assertEq(_approvedSigners, _signers);
   }
 }
