@@ -54,13 +54,13 @@ contract IntegrationCappedTokenTransfers is IntegrationEthereumBase {
 
     // Queue the transaction
     vm.prank(_safeOwners[0]);
-    uint256 _txId = safeEntrypoint.queueHubTransaction(address(_cappedTokenTransfersHub), _actionsBuilder);
+    safeEntrypoint.queueHubTransaction(address(_cappedTokenTransfersHub), _actionsBuilder);
 
     // Wait for the timelock period
     vm.warp(block.timestamp + SHORT_TX_EXECUTION_DELAY);
 
     // Get the Safe transaction hash
-    bytes32 _safeTxHash = safeEntrypoint.getSafeTransactionHash(_txId);
+    bytes32 _safeTxHash = safeEntrypoint.getSafeTransactionHash(_actionsBuilder);
 
     // Approve the Safe transaction hash
     for (uint256 _i; _i < _safeThreshold; ++_i) {
@@ -70,7 +70,7 @@ contract IntegrationCappedTokenTransfers is IntegrationEthereumBase {
     vm.stopPrank();
 
     // Execute the transaction
-    safeEntrypoint.executeTransaction(_txId);
+    safeEntrypoint.executeTransaction(_actionsBuilder);
 
     // Assert the token balances
     assertEq(WETH.balanceOf(_recipient), _safeBalance);
@@ -90,13 +90,13 @@ contract IntegrationCappedTokenTransfers is IntegrationEthereumBase {
 
     // Queue the transaction
     vm.prank(_safeOwners[0]);
-    uint256 _txId = safeEntrypoint.queueHubTransaction(address(_cappedTokenTransfersHub), _actionsBuilder);
+    safeEntrypoint.queueHubTransaction(address(_cappedTokenTransfersHub), _actionsBuilder);
 
     // Wait for the timelock period
     vm.warp(block.timestamp + SHORT_TX_EXECUTION_DELAY);
 
     // Get the Safe transaction hash
-    bytes32 _safeTxHash = safeEntrypoint.getSafeTransactionHash(_txId);
+    bytes32 _safeTxHash = safeEntrypoint.getSafeTransactionHash(_actionsBuilder);
 
     // Approve the Safe transaction hash
     for (uint256 _i; _i < _safeThreshold; ++_i) {
@@ -107,7 +107,7 @@ contract IntegrationCappedTokenTransfers is IntegrationEthereumBase {
 
     // Execute the transaction
     vm.expectRevert('GS013'); // tx does revert with CapExceeded(), but the revert is catched by the safe
-    safeEntrypoint.executeTransaction(_txId);
+    safeEntrypoint.executeTransaction(_actionsBuilder);
 
     // Assert the token balances
     assertEq(WETH.balanceOf(_recipient), 0);

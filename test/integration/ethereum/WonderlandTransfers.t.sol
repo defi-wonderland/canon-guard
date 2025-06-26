@@ -36,13 +36,13 @@ contract IntegrationWonderlandTransfers is IntegrationEthereumBase {
 
     // Queue the transaction
     vm.prank(_safeOwners[0]);
-    uint256 _txId = safeEntrypoint.queueTransaction(_actionsBuilder);
+    safeEntrypoint.queueTransaction(_actionsBuilder);
 
     // Wait for the timelock period
     vm.warp(block.timestamp + SHORT_TX_EXECUTION_DELAY);
 
     // Get the Safe transaction hash
-    bytes32 _safeTxHash = safeEntrypoint.getSafeTransactionHash(_txId);
+    bytes32 _safeTxHash = safeEntrypoint.getSafeTransactionHash(_actionsBuilder);
 
     // Approve the Safe transaction hash
     for (uint256 _i; _i < _safeThreshold; ++_i) {
@@ -52,7 +52,7 @@ contract IntegrationWonderlandTransfers is IntegrationEthereumBase {
     vm.stopPrank();
 
     // Execute the transaction
-    safeEntrypoint.executeTransaction(_txId);
+    safeEntrypoint.executeTransaction(_actionsBuilder);
 
     // Assert the token balances
     assertEq(USDC.balanceOf(_salariesDeposit), _safeBalance);
