@@ -9,7 +9,7 @@ contract SafeEntrypointForTest is SafeEntrypoint {
     address _multiSendCallOnly,
     uint256 _shortTxExecutionDelay,
     uint256 _longTxExecutionDelay,
-    uint256 _defaultTxExpiryDelay,
+    uint256 _txExpiryDelay,
     address _emergencyTrigger,
     address _emergencyCaller
   )
@@ -18,7 +18,7 @@ contract SafeEntrypointForTest is SafeEntrypoint {
       _multiSendCallOnly,
       _shortTxExecutionDelay,
       _longTxExecutionDelay,
-      _defaultTxExpiryDelay,
+      _txExpiryDelay,
       _emergencyTrigger,
       _emergencyCaller
     )

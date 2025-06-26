@@ -13,7 +13,7 @@ interface ISafeEntrypointFactory {
    * @param _safe The Gnosis Safe contract address
    * @param _shortTxExecutionDelay The short transaction execution delay (in seconds)
    * @param _longTxExecutionDelay The long transaction execution delay (in seconds)
-   * @param _defaultTxExpiryDelay The default transaction expiry delay (in seconds)
+   * @param _txExpiryDelay The transaction expiry delay (in seconds after executable)
    * @param _emergencyTrigger The emergency trigger address
    * @param _emergencyCaller The emergency caller address
    * @return _safeEntrypoint The SafeEntrypoint contract address
@@ -22,7 +22,7 @@ interface ISafeEntrypointFactory {
     address _safe,
     uint256 _shortTxExecutionDelay,
     uint256 _longTxExecutionDelay,
-    uint256 _defaultTxExpiryDelay,
+    uint256 _txExpiryDelay,
     address _emergencyTrigger,
     address _emergencyCaller
   ) external returns (address _safeEntrypoint);

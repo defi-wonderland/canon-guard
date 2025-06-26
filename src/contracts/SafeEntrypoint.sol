@@ -5,6 +5,8 @@ import {EmergencyModeHook} from 'contracts/EmergencyModeHook.sol';
 import {SafeManageable} from 'contracts/SafeManageable.sol';
 
 import {ISafeEntrypoint} from 'interfaces/ISafeEntrypoint.sol';
+
+import {IActionHub} from 'interfaces/action-hubs/IActionHub.sol';
 import {IActionsBuilder} from 'interfaces/actions-builders/IActionsBuilder.sol';
 
 import {Enum} from '@safe-smart-account/libraries/Enum.sol';
@@ -27,7 +29,7 @@ contract SafeEntrypoint is SafeManageable, EmergencyModeHook, ISafeEntrypoint {
   uint256 public immutable LONG_TX_EXECUTION_DELAY;
 
   /// @inheritdoc ISafeEntrypoint
-  uint256 public immutable DEFAULT_TX_EXPIRY_DELAY;
+  uint256 public immutable TX_EXPIRY_DELAY;
 
   /// @inheritdoc ISafeEntrypoint
   uint256 public transactionNonce;
@@ -46,7 +48,7 @@ contract SafeEntrypoint is SafeManageable, EmergencyModeHook, ISafeEntrypoint {
    * @param _multiSendCallOnly The MultiSendCallOnly contract address
    * @param _shortTxExecutionDelay The short transaction execution delay (in seconds)
    * @param _longTxExecutionDelay The long transaction execution delay (in seconds)
-   * @param _defaultTxExpiryDelay The default transaction expiry delay (in seconds)
+   * @param _txExpiryDelay The transaction expiry delay (in seconds after executable)
    * @param _emergencyTrigger The emergency trigger address
    * @param _emergencyCaller The emergency caller address
    */
@@ -55,7 +57,7 @@ contract SafeEntrypoint is SafeManageable, EmergencyModeHook, ISafeEntrypoint {
     address _multiSendCallOnly,
     uint256 _shortTxExecutionDelay,
     uint256 _longTxExecutionDelay,
-    uint256 _defaultTxExpiryDelay,
+    uint256 _txExpiryDelay,
     address _emergencyTrigger,
     address _emergencyCaller
   ) SafeManageable(_safe) EmergencyModeHook(_emergencyTrigger, _emergencyCaller) {
@@ -63,7 +65,7 @@ contract SafeEntrypoint is SafeManageable, EmergencyModeHook, ISafeEntrypoint {
 
     SHORT_TX_EXECUTION_DELAY = _shortTxExecutionDelay;
     LONG_TX_EXECUTION_DELAY = _longTxExecutionDelay;
-    DEFAULT_TX_EXPIRY_DELAY = _defaultTxExpiryDelay;
+    TX_EXPIRY_DELAY = _txExpiryDelay;
   }
 
   // ~~~ ADMIN METHODS ~~~
@@ -78,40 +80,23 @@ contract SafeEntrypoint is SafeManageable, EmergencyModeHook, ISafeEntrypoint {
   // ~~~ TRANSACTION METHODS ~~~
 
   /// @inheritdoc ISafeEntrypoint
-  function queueTransaction(address _actionsBuilder, uint256 _expiryDelay) external isSafeOwner returns (uint256 _txId) {
-    bool _isArbitrary;
-    uint256 _txExecutionDelay;
+  function queueHubTransaction(
+    address _actionHub,
+    address _actionsBuilder
+  ) external isSafeOwner returns (uint256 _txId) {
+    if (!IActionHub(_actionHub).isChild(_actionsBuilder)) revert InvalidHubOrActionsBuilder();
+    bool _txIsPreApproved = _isPreApproved(_actionHub);
+    _txId = _queueTransaction(_actionsBuilder, _txIsPreApproved);
 
-    // If approved, tx is not arbitrary, use short execution delay
-    if (approvalExpiries[_actionsBuilder] > block.timestamp) {
-      // `_isArbitrary` is already false by default
-      _txExecutionDelay = SHORT_TX_EXECUTION_DELAY;
-    } else {
-      // Otherwise, tx is arbitrary, use long execution delay
-      _isArbitrary = true;
-      _txExecutionDelay = LONG_TX_EXECUTION_DELAY;
-    }
+    emit TransactionQueued(_txId, _actionHub, _actionsBuilder);
+  }
 
-    // Generate a simple transaction ID
-    _txId = ++transactionNonce;
+  /// @inheritdoc ISafeEntrypoint
+  function queueTransaction(address _actionsBuilder) external isSafeOwner returns (uint256 _txId) {
+    bool _txIsPreApproved = _isPreApproved(_actionsBuilder);
+    _txId = _queueTransaction(_actionsBuilder, _txIsPreApproved);
 
-    // Fetch actions from the builder
-    IActionsBuilder.Action[] memory _actions = IActionsBuilder(_actionsBuilder).getActions();
-
-    // Use default expiry delay if duration is 0
-    _expiryDelay = _expiryDelay == 0 ? DEFAULT_TX_EXPIRY_DELAY : _expiryDelay;
-
-    // Store the transaction information
-    transactions[_txId] = TransactionInfo({
-      actionsBuilder: _actionsBuilder,
-      actionsData: abi.encode(_actions),
-      executableAt: block.timestamp + _txExecutionDelay,
-      expiresAt: block.timestamp + _txExecutionDelay + _expiryDelay,
-      isExecuted: false
-    });
-
-    // NOTE: event picked up by off-chain monitoring service
-    emit TransactionQueued(_txId, _isArbitrary);
+    emit TransactionQueued(_txId, address(0), _actionsBuilder);
   }
 
   /// @inheritdoc ISafeEntrypoint
@@ -224,7 +209,42 @@ contract SafeEntrypoint is SafeManageable, EmergencyModeHook, ISafeEntrypoint {
     });
   }
 
+  /**
+   * @notice Internal function to queue a transaction
+   * @param _actionsBuilder The actions builder contract address
+   * @param _txIsPreApproved Whether the actions builder is pre-approved
+   * @return _txId The ID of the queued transaction
+   */
+  function _queueTransaction(address _actionsBuilder, bool _txIsPreApproved) internal returns (uint256 _txId) {
+    // If approved, tx is not arbitrary, use short execution delay. Otherwise, tx is arbitrary, use long execution delay
+    uint256 _txExecutionDelay = _txIsPreApproved ? SHORT_TX_EXECUTION_DELAY : LONG_TX_EXECUTION_DELAY;
+
+    // Generate a simple transaction ID
+    _txId = ++transactionNonce;
+
+    // Fetch actions from the builder
+    IActionsBuilder.Action[] memory _actions = IActionsBuilder(_actionsBuilder).getActions();
+
+    // Store the transaction information
+    transactions[_txId] = TransactionInfo({
+      actionsBuilder: _actionsBuilder,
+      actionsData: abi.encode(_actions),
+      executableAt: block.timestamp + _txExecutionDelay,
+      expiresAt: block.timestamp + _txExecutionDelay + TX_EXPIRY_DELAY,
+      isExecuted: false
+    });
+  }
+
   // ~~~ INTERNAL VIEW METHODS ~~~
+
+  /**
+   * @notice Internal function to check if the actions builder (or actionHub) is pre-approved
+   * @param _actionsBuilderOrActionHub The actions builder contract address (or actionHub)
+   * @return _isApproved Whether the actions builder (or actionHub) is pre-approved
+   */
+  function _isPreApproved(address _actionsBuilderOrActionHub) internal view returns (bool _isApproved) {
+    _isApproved = approvalExpiries[_actionsBuilderOrActionHub] > block.timestamp;
+  }
 
   /**
    * @notice Internal function to get the Safe transaction hash
