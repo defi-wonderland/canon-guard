@@ -22,9 +22,7 @@ contract UnitDeployEntrypoint is Constants, Test {
     _ghost_safeEntrypoint = ISafeEntrypoint(
       deployCode(
         'SafeEntrypoint',
-        abi.encode(
-          SAFE_PROXY, MULTI_SEND_CALL_ONLY, SHORT_TX_EXECUTION_DELAY, LONG_TX_EXECUTION_DELAY, DEFAULT_TX_EXPIRY_DELAY
-        )
+        abi.encode(SAFE_PROXY, MULTI_SEND_CALL_ONLY, SHORT_TX_EXECUTION_DELAY, LONG_TX_EXECUTION_DELAY, TX_EXPIRY_DELAY)
       )
     );
 
@@ -45,6 +43,6 @@ contract UnitDeployEntrypoint is Constants, Test {
     assertEq(_safeEntrypoint.MULTI_SEND_CALL_ONLY(), address(MULTI_SEND_CALL_ONLY));
     assertEq(_safeEntrypoint.SHORT_TX_EXECUTION_DELAY(), SHORT_TX_EXECUTION_DELAY);
     assertEq(_safeEntrypoint.LONG_TX_EXECUTION_DELAY(), LONG_TX_EXECUTION_DELAY);
-    assertEq(_safeEntrypoint.DEFAULT_TX_EXPIRY_DELAY(), DEFAULT_TX_EXPIRY_DELAY);
+    assertEq(_safeEntrypoint.TX_EXPIRY_DELAY(), TX_EXPIRY_DELAY);
   }
 }

@@ -56,7 +56,7 @@ contract IntegrationBasicTest is DeploySaferSafe, EthereumConstants, Test {
     // Deploy the SafeEntrypoint contract
     _safeEntrypoint = ISafeEntrypoint(
       safeEntrypointFactory.createSafeEntrypoint(
-        address(_safeProxy), SHORT_TX_EXECUTION_DELAY, LONG_TX_EXECUTION_DELAY, DEFAULT_TX_EXPIRY_DELAY
+        address(_safeProxy), SHORT_TX_EXECUTION_DELAY, LONG_TX_EXECUTION_DELAY, TX_EXPIRY_DELAY
       )
     );
 
@@ -90,7 +90,7 @@ contract IntegrationBasicTest is DeploySaferSafe, EthereumConstants, Test {
     vm.startPrank(_safeOwner);
 
     // Queue the transaction
-    uint256 _txId = _safeEntrypoint.queueTransaction(_actionsBuilder, DEFAULT_TX_EXPIRY_DELAY);
+    uint256 _txId = _safeEntrypoint.queueTransaction(_actionsBuilder);
 
     // Wait for the timelock period
     vm.warp(block.timestamp + SHORT_TX_EXECUTION_DELAY);
