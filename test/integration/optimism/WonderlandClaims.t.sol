@@ -2,11 +2,13 @@
 pragma solidity 0.8.29;
 
 import {IERC20} from 'forge-std/interfaces/IERC20.sol';
+import {OPxAction} from 'src/contracts/actions-builders/OPxAction.sol';
 import {ISimpleActions} from 'src/interfaces/actions-builders/ISimpleActions.sol';
 import {IntegrationOptimismBase} from 'test/integration/optimism/IntegrationOptimismBase.sol';
 
 contract IntegrationWonderlandClaims is IntegrationOptimismBase {
   address internal _actionsBuilder;
+  address internal _opxAction;
 
   address internal _opx = 0x1828Bff08BD244F7990edDCd9B19cc654b33cDB4;
   address internal _kiteVestingPlans = 0x1bb64AF7FE05fc69c740609267d2AbE3e119Ef82;
@@ -18,15 +20,6 @@ contract IntegrationWonderlandClaims is IntegrationOptimismBase {
 
   function setUp() public override {
     super.setUp();
-
-    // Deploy the SimpleActions contract
-    uint256 _opxBalance = IERC20(_opx).balanceOf(address(SAFE_PROXY));
-    ISimpleActions.SimpleAction memory _claimOP = ISimpleActions.SimpleAction({
-      target: address(_opx),
-      signature: 'downgrade(uint256)',
-      data: abi.encode(_opxBalance),
-      value: 0
-    });
 
     uint256[] memory _plans = new uint256[](1);
     _plans[0] = 9;
@@ -44,16 +37,15 @@ contract IntegrationWonderlandClaims is IntegrationOptimismBase {
       value: 0
     });
 
-    ISimpleActions.SimpleAction[] memory _simpleActions = new ISimpleActions.SimpleAction[](3);
-    _simpleActions[0] = _claimOP;
-    _simpleActions[1] = _claimKITE;
-    _simpleActions[2] = _claimWLD;
+    ISimpleActions.SimpleAction[] memory _simpleActions = new ISimpleActions.SimpleAction[](2);
+    _simpleActions[0] = _claimKITE;
+    _simpleActions[1] = _claimWLD;
 
     _actionsBuilder = simpleActionsFactory.createSimpleActions(_simpleActions);
+    _opxAction = address(new OPxAction(_opx, address(SAFE_PROXY)));
   }
 
   function test_ExecuteTransaction() public {
-    assertEq(OP.balanceOf(address(SAFE_PROXY)), _safeBalance);
     assertEq(KITE.balanceOf(address(SAFE_PROXY)), _safeBalance);
     assertEq(WLD.balanceOf(address(SAFE_PROXY)), _safeBalance);
 
@@ -84,8 +76,40 @@ contract IntegrationWonderlandClaims is IntegrationOptimismBase {
     safeEntrypoint.executeTransaction(_txId);
 
     // Assert the token balances
-    assertEq(OP.balanceOf(address(SAFE_PROXY)), _claimableOP + _safeBalance);
     assertEq(KITE.balanceOf(address(SAFE_PROXY)), _claimableKITE + _safeBalance);
     assertEq(WLD.balanceOf(address(SAFE_PROXY)), _claimableWLD + _safeBalance);
+  }
+
+  function test_OPxDowngrade() public {
+    assertEq(OP.balanceOf(address(SAFE_PROXY)), _safeBalance);
+
+    // Allow the SafeEntrypoint to call the contract
+    uint256 _approvalDuration = block.timestamp + 1 days;
+
+    vm.prank(address(SAFE_PROXY));
+    safeEntrypoint.approveActionsBuilder(_opxAction, _approvalDuration);
+
+    // Queue the transaction
+    vm.prank(_safeOwners[0]);
+    uint256 _txId = safeEntrypoint.queueTransaction(_opxAction);
+
+    // Wait for the timelock period
+    vm.warp(block.timestamp + SHORT_TX_EXECUTION_DELAY);
+
+    // Get the Safe transaction hash
+    bytes32 _safeTxHash = safeEntrypoint.getSafeTransactionHash(_txId);
+
+    // Approve the Safe transaction hash
+    for (uint256 _i; _i < _safeThreshold; ++_i) {
+      vm.startPrank(_safeOwners[_i]);
+      SAFE_PROXY.approveHash(_safeTxHash);
+    }
+    vm.stopPrank();
+
+    // Execute the transaction
+    safeEntrypoint.executeTransaction(_txId);
+
+    // Assert the token balances
+    assertEq(OP.balanceOf(address(SAFE_PROXY)), _claimableOP + _safeBalance);
   }
 }
