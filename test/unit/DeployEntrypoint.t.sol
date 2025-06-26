@@ -25,7 +25,13 @@ contract UnitDeployEntrypoint is Constants, Test {
       deployCode(
         'SafeEntrypoint',
         abi.encode(
-          SAFE_PROXY, MULTI_SEND_CALL_ONLY, SHORT_TX_EXECUTION_DELAY, LONG_TX_EXECUTION_DELAY, DEFAULT_TX_EXPIRY_DELAY
+          SAFE_PROXY,
+          MULTI_SEND_CALL_ONLY,
+          SHORT_TX_EXECUTION_DELAY,
+          LONG_TX_EXECUTION_DELAY,
+          DEFAULT_TX_EXPIRY_DELAY,
+          EMERGENCY_TRIGGER,
+          EMERGENCY_CALLER
         )
       )
     );

@@ -47,14 +47,18 @@ contract SafeEntrypoint is SafeManageable, EmergencyModeHook, ISafeEntrypoint {
    * @param _shortTxExecutionDelay The short transaction execution delay (in seconds)
    * @param _longTxExecutionDelay The long transaction execution delay (in seconds)
    * @param _defaultTxExpiryDelay The default transaction expiry delay (in seconds)
+   * @param _emergencyTrigger The emergency trigger address
+   * @param _emergencyCaller The emergency caller address
    */
   constructor(
     address _safe,
     address _multiSendCallOnly,
     uint256 _shortTxExecutionDelay,
     uint256 _longTxExecutionDelay,
-    uint256 _defaultTxExpiryDelay
-  ) SafeManageable(_safe) {
+    uint256 _defaultTxExpiryDelay,
+    address _emergencyTrigger,
+    address _emergencyCaller
+  ) SafeManageable(_safe) EmergencyModeHook(_emergencyTrigger, _emergencyCaller) {
     MULTI_SEND_CALL_ONLY = _multiSendCallOnly;
 
     SHORT_TX_EXECUTION_DELAY = _shortTxExecutionDelay;

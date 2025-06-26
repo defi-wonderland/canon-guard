@@ -21,10 +21,12 @@ abstract contract Constants {
 
   // Wonderland Safer Safe
   ISafe public constant SAFE_PROXY = ISafe(0x74fEa3FB0eD030e9228026E7F413D66186d3D107);
-  address public constant EMERGENCY_CALLER = address(0); // TODO: Replace with the address of the emergency caller (can be contract or EOA)
   uint256 public constant SHORT_TX_EXECUTION_DELAY = 1 hours;
   uint256 public constant LONG_TX_EXECUTION_DELAY = 7 days;
   uint256 public constant DEFAULT_TX_EXPIRY_DELAY = 7 days;
+  // TODO: Replace with the correct address
+  address public constant EMERGENCY_TRIGGER = address(1);
+  address public constant EMERGENCY_CALLER = address(1);
 }
 
 abstract contract EthereumConstants is Constants {
