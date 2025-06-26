@@ -188,6 +188,38 @@ contract UnitSafeEntrypoint is Test {
     assertEq(_expiresAt, block.timestamp + LONG_TX_EXECUTION_DELAY + TX_EXPIRY_DELAY);
   }
 
+  function test_QueueTransactionWhenTransactionIsAlreadyQueuedButExpired(
+    address _caller,
+    address _target,
+    uint256 _value,
+    address _actionsBuilder,
+    bytes memory _data
+  ) external whenCallerIsSafeOwner {
+    _assumeFuzzable(_actionsBuilder);
+
+    IActionsBuilder.Action[] memory _actions = new IActionsBuilder.Action[](1);
+    _actions[0] = IActionsBuilder.Action({target: _target, value: _value, data: _data});
+
+    _mockAndExpect(
+      address(_actionsBuilder), abi.encodeWithSelector(IActionsBuilder.getActions.selector), abi.encode(_actions)
+    );
+
+    vm.prank(_caller);
+    safeEntrypoint.queueTransaction(_actionsBuilder);
+
+    // Move time forward past expiry
+    vm.warp(block.timestamp + LONG_TX_EXECUTION_DELAY + TX_EXPIRY_DELAY + 1);
+
+    vm.prank(_caller);
+    safeEntrypoint.queueTransaction(_actionsBuilder);
+
+    // Verify transaction info using the new interface
+    (,, uint256 _expiresAt) = safeEntrypoint.queuedTransactions(_actionsBuilder);
+
+    // it should queue the transaction
+    assertEq(_expiresAt, block.timestamp + LONG_TX_EXECUTION_DELAY + TX_EXPIRY_DELAY);
+  }
+
   function test_QueueTransactionWhenCallerIsNotSafeOwner(
     address _caller,
     address _actionsBuilder
@@ -198,15 +230,15 @@ contract UnitSafeEntrypoint is Test {
     safeEntrypoint.queueTransaction(_actionsBuilder);
   }
 
-  function test_QueueTransactionWhenTransactionIsAlreadyQueued(
+  function test_QueueTransactionWhenTransactionIsAlreadyQueuedAndNotExpired(
     address _caller,
-    address _actionsBuilder
+    address _actionsBuilder,
+    uint256 _expiry
   ) external givenCallerIsSafeOwner(_caller) {
+    _expiry = bound(_expiry, block.timestamp + 1, block.timestamp + TX_EXPIRY_DELAY);
+
     safeEntrypoint.mockTransaction(
-      _actionsBuilder,
-      abi.encode(new IActionsBuilder.Action[](0)),
-      block.timestamp,
-      block.timestamp + SHORT_TX_EXECUTION_DELAY
+      _actionsBuilder, abi.encode(new IActionsBuilder.Action[](0)), block.timestamp, _expiry
     );
 
     // it reverts with TransactionAlreadyQueued
@@ -299,6 +331,43 @@ contract UnitSafeEntrypoint is Test {
     assertEq(_expiresAt, block.timestamp + LONG_TX_EXECUTION_DELAY + TX_EXPIRY_DELAY);
   }
 
+  function test_QueueHubTransactionWhenTransactionIsAlreadyQueuedButExpired(
+    address _caller,
+    address _actionHub,
+    address _actionsBuilder,
+    address _target,
+    uint256 _value,
+    bytes memory _data
+  ) external givenCallerIsSafeOwner(_caller) givenActionsBuilderIsApproved(_actionHub) {
+    _assumeFuzzable(_actionsBuilder);
+    _assumeFuzzable(_actionHub);
+    _assumeFuzzable(_caller);
+
+    _modifyIsChildReturnValue(_actionHub, _actionsBuilder, true);
+
+    IActionsBuilder.Action[] memory _actions = new IActionsBuilder.Action[](1);
+    _actions[0] = IActionsBuilder.Action({target: _target, value: _value, data: _data});
+
+    _mockAndExpect(
+      address(_actionsBuilder), abi.encodeWithSelector(IActionsBuilder.getActions.selector), abi.encode(_actions)
+    );
+
+    vm.prank(_caller);
+    safeEntrypoint.queueHubTransaction(_actionHub, _actionsBuilder);
+
+    // Move time forward past expiry
+    vm.warp(block.timestamp + LONG_TX_EXECUTION_DELAY + TX_EXPIRY_DELAY + 1);
+
+    vm.prank(_caller);
+    safeEntrypoint.queueHubTransaction(_actionHub, _actionsBuilder);
+
+    // Verify transaction info using the new interface
+    (,, uint256 _expiresAt) = safeEntrypoint.queuedTransactions(_actionsBuilder);
+
+    // it should queue the transaction
+    assertEq(_expiresAt, block.timestamp + LONG_TX_EXECUTION_DELAY + TX_EXPIRY_DELAY);
+  }
+
   function test_QueueHubTransactionWhenCallerIsNotSafeOwner(
     address _caller,
     address _actionHub,
@@ -315,10 +384,11 @@ contract UnitSafeEntrypoint is Test {
     safeEntrypoint.queueHubTransaction(_actionHub, _actionsBuilder);
   }
 
-  function test_QueueHubTransactionWhenTransactionIsAlreadyQueued(
+  function test_QueueHubTransactionWhenTransactionIsAlreadyQueuedAndNotExpired(
     address _caller,
     address _actionHub,
-    address _actionsBuilder
+    address _actionsBuilder,
+    uint256 _expiry
   ) external givenCallerIsSafeOwner(_caller) givenActionsBuilderIsApproved(_actionHub) {
     _assumeFuzzable(_actionHub);
     _assumeFuzzable(_actionsBuilder);
@@ -326,11 +396,10 @@ contract UnitSafeEntrypoint is Test {
 
     _modifyIsChildReturnValue(_actionHub, _actionsBuilder, true);
 
+    _expiry = bound(_expiry, block.timestamp + 1, block.timestamp + TX_EXPIRY_DELAY);
+
     safeEntrypoint.mockTransaction(
-      _actionsBuilder,
-      abi.encode(new IActionsBuilder.Action[](0)),
-      block.timestamp,
-      block.timestamp + SHORT_TX_EXECUTION_DELAY
+      _actionsBuilder, abi.encode(new IActionsBuilder.Action[](0)), block.timestamp, _expiry
     );
 
     // it reverts with TransactionAlreadyQueued

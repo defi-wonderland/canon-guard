@@ -30,9 +30,11 @@ UnitSafeEntrypoint::queueTransaction
 │       ├── it sets executable time at block timestamp plus long delay
 │       ├── it sets expiry time at executable time plus expiry delay
 │       └── it emits TransactionQueued event
+├── when transaction is already queued but expired
+│   └── it should queue the transaction
 ├── when caller is not safe owner
 │   └── it reverts with NotSafeOwner
-└── when transaction is already queued
+└── when transaction is already queued and not expired
     └── it reverts with TransactionAlreadyQueued
 
 
@@ -50,9 +52,11 @@ UnitSafeEntrypoint::queueHubTransaction
 │       ├── it sets executable at to block timestamp plus long delay
 │       ├── it sets expiry time
 │       └── it emits TransactionQueued event
+├── when transaction is already queued but expired
+│   └── it should queue the transaction
 ├── when caller is not safe owner
 │   └── it reverts with NotSafeOwner
-└── when transaction is already queued
+└── when transaction is already queued and not expired
     └── it reverts with TransactionAlreadyQueued
 
 

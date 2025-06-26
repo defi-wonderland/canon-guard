@@ -217,9 +217,9 @@ contract SafeEntrypoint is SafeManageable, ISafeEntrypoint {
     // If approved, tx is not arbitrary, use short execution delay. Otherwise, tx is arbitrary, use long execution delay
     uint256 _txExecutionDelay = _txIsPreApproved ? SHORT_TX_EXECUTION_DELAY : LONG_TX_EXECUTION_DELAY;
 
-    // Revert if the transaction is already queued
+    // Revert if the transaction is already queued and not expired
     TransactionInfo memory _queuedTransactionInfo = queuedTransactions[_actionsBuilder];
-    if (_queuedTransactionInfo.expiresAt != 0) {
+    if (_queuedTransactionInfo.expiresAt > block.timestamp) {
       revert TransactionAlreadyQueued(_actionsBuilder);
     }
 
