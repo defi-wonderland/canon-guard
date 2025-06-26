@@ -3,9 +3,6 @@ pragma solidity 0.8.29;
 
 import {Test} from 'forge-std/Test.sol';
 
-import {OnlyEntrypointGuard} from 'contracts/OnlyEntrypointGuard.sol';
-
-import {IOnlyEntrypointGuard} from 'interfaces/IOnlyEntrypointGuard.sol';
 import {ISafeEntrypoint} from 'interfaces/ISafeEntrypoint.sol';
 import {ISimpleActions} from 'interfaces/actions-builders/ISimpleActions.sol';
 
@@ -25,9 +22,6 @@ contract IntegrationBasicTest is DeploySaferSafe, EthereumConstants, Test {
 
   // ~~~ ENTRYPOINT ~~~
   ISafeEntrypoint internal _safeEntrypoint;
-
-  // ~~~ GUARD ~~~
-  IOnlyEntrypointGuard internal _onlyEntrypointGuard;
 
   // ~~~ ACTIONS ~~~
   address internal _actionsBuilder;
@@ -71,11 +65,8 @@ contract IntegrationBasicTest is DeploySaferSafe, EthereumConstants, Test {
       )
     );
 
-    // Deploy the OnlyEntrypointGuard contract
-    _onlyEntrypointGuard = new OnlyEntrypointGuard(address(_safeEntrypoint), EMERGENCY_CALLER);
-
     vm.prank(address(_safeProxy));
-    _safeProxy.setGuard(address(_onlyEntrypointGuard));
+    _safeProxy.setGuard(address(_safeEntrypoint));
 
     // Deploy the SimpleActions contract
     ISimpleActions.SimpleAction memory _depositAction =
@@ -104,16 +95,16 @@ contract IntegrationBasicTest is DeploySaferSafe, EthereumConstants, Test {
     vm.startPrank(_safeOwner);
 
     // Queue the transaction
-    uint256 _txId = _safeEntrypoint.queueTransaction(_actionsBuilder);
+    _safeEntrypoint.queueTransaction(_actionsBuilder);
 
     // Wait for the timelock period
     vm.warp(block.timestamp + SHORT_TX_EXECUTION_DELAY);
 
     // Get and approve the Safe transaction hash
-    bytes32 _safeTxHash = _safeEntrypoint.getSafeTransactionHash(_txId);
+    bytes32 _safeTxHash = _safeEntrypoint.getSafeTransactionHash(_actionsBuilder);
     _safeProxy.approveHash(_safeTxHash);
 
     // Execute the transaction
-    _safeEntrypoint.executeTransaction{value: 1}(_txId);
+    _safeEntrypoint.executeTransaction{value: 1}(_actionsBuilder);
   }
 }
