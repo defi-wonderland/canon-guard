@@ -8,7 +8,7 @@ import {IOnlyEntrypointGuard} from 'interfaces/IOnlyEntrypointGuard.sol';
 
 /**
  * @title OnlyEntrypointGuard
- * @notice Guard that ensures transactions are either executed through the entrypoint or by an emergency caller
+ * @notice Guard that ensures transactions are executed through the entrypoint
  */
 // solhint-disable-next-line payable-fallback
 abstract contract OnlyEntrypointGuard is BaseTransactionGuard, IOnlyEntrypointGuard {
