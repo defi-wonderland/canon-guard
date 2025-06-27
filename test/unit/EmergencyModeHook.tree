@@ -1,0 +1,47 @@
+UnitEmergencyModeHook::constructor
+├── When emergencyTrigger is zero address
+│   └── It reverts with ZeroAddress
+├── When emergencyCaller is zero address
+│   └── It reverts with ZeroAddress
+└── When emergencyTrigger and emergencyCaller are not zero address
+    ├── It sets emergencyTrigger to the given value
+    └── It sets emergencyCaller to the given value
+
+UnitEmergencyModeHook::setEmergencyMode
+├── When sender is not emergencyTrigger
+│   └── It reverts with Unauthorized
+└── When sender is emergencyTrigger
+    └── It sets emergencyMode to true
+
+UnitEmergencyModeHook::unsetEmergencyMode
+├── When sender is Safe
+│   └── It sets emergencyMode to false
+└── When sender is not Safe
+    └── It reverts
+
+UnitEmergencyModeHook::setEmergencyCaller
+├── When sender is Safe
+│   ├── When emergencyCaller is zero address
+│   │   └── It reverts with ZeroAddress
+│   └── When emergencyCaller is not zero address
+│       └── It sets emergencyCaller to the given value
+└── When sender is not Safe
+    └── It reverts
+
+UnitEmergencyModeHook::setEmergencyTrigger
+├── When sender is Safe
+│   ├── When emergencyTrigger is zero address
+│   │   └── It reverts with ZeroAddress
+│   └── When emergencyTrigger is not zero address
+│       └── It sets emergencyTrigger to the given value
+└── When sender is not Safe
+    └── It reverts
+
+UnitEmergencyModeHook::_onBeforeExecution
+├── When emergencyMode is true
+│   ├── When sender is not emergencyCaller
+│   │   └── It reverts with Unauthorized
+│   └── When sender is emergencyCaller
+│       └── It does not revert
+└── When emergencyMode is false
+    └── It does not revert
