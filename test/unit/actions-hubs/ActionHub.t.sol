@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.29;
 
-import {ActionHubForTest} from './mocks/ActionHubForTest.sol';
 import {Test} from 'forge-std/Test.sol';
 import {IActionHub} from 'interfaces/action-hubs/IActionHub.sol';
 import {CREATE3} from 'solady/utils/CREATE3.sol';
 import {CappedTokenTransfers} from 'src/contracts/actions-builders/CappedTokenTransfers.sol';
+import {ActionHubForTest} from 'test/unit/mocks/ActionHubForTest.sol';
 
 contract UnitActionHub is Test {
   ActionHubForTest public actionHub;
