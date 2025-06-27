@@ -2,7 +2,6 @@
 pragma solidity 0.8.29;
 
 import {IERC20} from 'forge-std/interfaces/IERC20.sol';
-import {ISafeManageable} from 'interfaces/ISafeManageable.sol';
 import {IActionsBuilder} from 'interfaces/actions-builders/IActionsBuilder.sol';
 import {IEverclearTokenStake} from 'interfaces/actions-builders/IEverclearTokenStake.sol';
 import {IGateway} from 'interfaces/external/IGateway.sol';

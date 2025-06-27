@@ -21,14 +21,14 @@ import {Constants} from 'script/Constants.sol';
 contract UnitDeploySaferSafe is Constants, Test {
   DeploySaferSafe public deploySaferSafe;
 
-  ISafeEntrypointFactory internal _ghost_safeEntrypointFactory;
+  ISafeEntrypointFactory internal _auxSafeEntrypointFactory;
 
   function setUp() public {
     // Deploy the DeploySaferSafe contract
     deploySaferSafe = new DeploySaferSafe();
 
     // Deploy the SafeEntrypointFactory contract
-    _ghost_safeEntrypointFactory =
+    _auxSafeEntrypointFactory =
       ISafeEntrypointFactory(deployCode('SafeEntrypointFactory', abi.encode(MULTI_SEND_CALL_ONLY)));
   }
 
@@ -44,7 +44,7 @@ contract UnitDeploySaferSafe is Constants, Test {
     ISimpleTransfersFactory _simpleTransfersFactory = deploySaferSafe.simpleTransfersFactory();
 
     // It should deploy the SafeEntrypointFactory contract with correct args
-    assertEq(address(_safeEntrypointFactory).code, address(_ghost_safeEntrypointFactory).code);
+    assertEq(address(_safeEntrypointFactory).code, address(_auxSafeEntrypointFactory).code);
     assertEq(_safeEntrypointFactory.MULTI_SEND_CALL_ONLY(), address(MULTI_SEND_CALL_ONLY));
 
     // It should deploy the AllowanceClaimorFactory contract
