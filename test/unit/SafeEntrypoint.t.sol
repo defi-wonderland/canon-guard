@@ -153,7 +153,7 @@ contract UnitSafeEntrypoint is Test {
     assertEq(_expiresAt, block.timestamp + SHORT_TX_EXECUTION_DELAY + TX_EXPIRY_DELAY);
   }
 
-  function test_QueueTransactionWhenQueueingArbitraryAction(
+  function test_QueueTransactionWhenQueueingNotApprovedAction(
     address _caller,
     address _target,
     uint256 _value,
@@ -293,7 +293,7 @@ contract UnitSafeEntrypoint is Test {
     assertEq(_expiresAt, block.timestamp + SHORT_TX_EXECUTION_DELAY + TX_EXPIRY_DELAY);
   }
 
-  function test_QueueHubTransactionWhenQueueingArbitraryAction(
+  function test_QueueHubTransactionWhenQueueingNotApprovedAction(
     address _caller,
     address _target,
     uint256 _value,
@@ -501,11 +501,9 @@ contract UnitSafeEntrypoint is Test {
       _txInfo.expiresAt // expiresAt
     );
 
-    bool _isArbitrary = _actionsBuilder == address(0);
-
     // it emits TransactionExecuted event
     vm.expectEmit(address(safeEntrypoint));
-    emit ISafeEntrypoint.TransactionExecuted(_actionsBuilder, _isArbitrary, bytes32(0), new address[](0));
+    emit ISafeEntrypoint.TransactionExecuted(_actionsBuilder, bytes32(0), new address[](0));
 
     vm.prank(_caller);
     safeEntrypoint.executeTransaction(_actionsBuilder);
