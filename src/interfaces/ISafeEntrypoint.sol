@@ -44,13 +44,10 @@ interface ISafeEntrypoint is ISafeManageable {
   /**
    * @notice Emitted when a transaction is executed
    * @param _actionsBuilder The actions builder contract address
-   * @param _isArbitrary Whether the transaction is arbitrary or pre-approved
    * @param _safeTxHash The hash of the Safe transaction
    * @param _signers The array of signer addresses
    */
-  event TransactionExecuted(
-    address indexed _actionsBuilder, bool indexed _isArbitrary, bytes32 indexed _safeTxHash, address[] _signers
-  );
+  event TransactionExecuted(address indexed _actionsBuilder, bytes32 indexed _safeTxHash, address[] _signers);
 
   /**
    * @notice Thrown when no transaction is queued for the actions builder
@@ -128,7 +125,7 @@ interface ISafeEntrypoint is ISafeManageable {
   function SHORT_TX_EXECUTION_DELAY() external view returns (uint256 _shortTxExecutionDelay);
 
   /**
-   * @notice Gets the long execution delay applied to arbitrary transactions
+   * @notice Gets the long execution delay applied to not approved transactions
    * @return _longTxExecutionDelay The long transaction execution delay (in seconds)
    */
   function LONG_TX_EXECUTION_DELAY() external view returns (uint256 _longTxExecutionDelay);

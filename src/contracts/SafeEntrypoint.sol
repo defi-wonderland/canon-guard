@@ -184,11 +184,8 @@ contract SafeEntrypoint is SafeManageable, OnlyEntrypointGuard, EmergencyModeHoo
     // Remove the transaction from the queue
     delete queuedTransactions[_actionsBuilder];
 
-    // NOTE: only for event logging
-    bool _isArbitrary = _actionsBuilder == address(0); // TODO: deprecate this
-
     // NOTE: event emitted to log successful execution
-    emit TransactionExecuted(_actionsBuilder, _isArbitrary, _safeTxHash, _signers);
+    emit TransactionExecuted(_actionsBuilder, _safeTxHash, _signers);
   }
 
   /**
@@ -218,7 +215,7 @@ contract SafeEntrypoint is SafeManageable, OnlyEntrypointGuard, EmergencyModeHoo
    * @param _txIsPreApproved Whether the actions builder is pre-approved
    */
   function _queueTransaction(address _actionsBuilder, bool _txIsPreApproved) internal {
-    // If approved, tx is not arbitrary, use short execution delay. Otherwise, tx is arbitrary, use long execution delay
+    // If approved, use short execution delay. Otherwise, use long execution delay
     uint256 _txExecutionDelay = _txIsPreApproved ? SHORT_TX_EXECUTION_DELAY : LONG_TX_EXECUTION_DELAY;
 
     // Revert if the transaction is already queued and not expired
