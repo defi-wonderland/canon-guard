@@ -25,7 +25,7 @@ UnitSafeEntrypoint::queueTransaction
 │   │   ├── it sets executable time at block timestamp plus short delay
 │   │   ├── it sets expiry time at executable time plus expiry delay
 │   │   └── it emits TransactionQueued event
-│   └── when queueing arbitrary action
+│   └── when queueing not approved action
 │       ├── it sets transaction info
 │       ├── it sets executable time at block timestamp plus long delay
 │       ├── it sets expiry time at executable time plus expiry delay
@@ -47,7 +47,7 @@ UnitSafeEntrypoint::queueHubTransaction
 │   │   ├── it sets executable at to block timestamp plus short delay
 │   │   ├── it sets expiry time
 │   │   └── it emits TransactionQueued event
-│   └── when queueing arbitrary action
+│   └── when queueing not approved action
 │       ├── it sets transaction info
 │       ├── it sets executable at to block timestamp plus long delay
 │       ├── it sets expiry time
