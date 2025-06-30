@@ -25,14 +25,28 @@ contract UnitSafeEntrypointFactory is Test {
     address _safe,
     uint256 _shortTxExecutionDelay,
     uint256 _longTxExecutionDelay,
-    uint256 _txExpiryDelay
+    uint256 _txExpiryDelay,
+    address _emergencyTrigger,
+    address _emergencyCaller
   ) external {
-    address _safeEntrypoint =
-      safeEntrypointFactory.createSafeEntrypoint(_safe, _shortTxExecutionDelay, _longTxExecutionDelay, _txExpiryDelay);
+    vm.assume(_emergencyTrigger != address(0));
+    vm.assume(_emergencyCaller != address(0));
+
+    address _safeEntrypoint = safeEntrypointFactory.createSafeEntrypoint(
+      _safe, _shortTxExecutionDelay, _longTxExecutionDelay, _txExpiryDelay, _emergencyTrigger, _emergencyCaller
+    );
     auxSafeEntrypoint = ISafeEntrypoint(
       deployCode(
         'SafeEntrypoint',
-        abi.encode(_safe, multiSendCallOnly, _shortTxExecutionDelay, _longTxExecutionDelay, _txExpiryDelay)
+        abi.encode(
+          _safe,
+          multiSendCallOnly,
+          _shortTxExecutionDelay,
+          _longTxExecutionDelay,
+          _txExpiryDelay,
+          _emergencyTrigger,
+          _emergencyCaller
+        )
       )
     );
 

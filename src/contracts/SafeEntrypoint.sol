@@ -1,22 +1,20 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.29;
 
-import {OnlyEntrypointGuard} from 'contracts/OnlyEntrypointGuard.sol';
-import {SafeManageable} from 'contracts/SafeManageable.sol';
-
-import {ISafeEntrypoint} from 'interfaces/ISafeEntrypoint.sol';
-
-import {IActionHub} from 'interfaces/action-hubs/IActionHub.sol';
-import {IActionsBuilder} from 'interfaces/actions-builders/IActionsBuilder.sol';
-
 import {Enum} from '@safe-smart-account/libraries/Enum.sol';
 import {MultiSendCallOnly} from '@safe-smart-account/libraries/MultiSendCallOnly.sol';
+import {EmergencyModeHook} from 'contracts/EmergencyModeHook.sol';
+import {OnlyEntrypointGuard} from 'contracts/OnlyEntrypointGuard.sol';
+import {SafeManageable} from 'contracts/SafeManageable.sol';
+import {ISafeEntrypoint} from 'interfaces/ISafeEntrypoint.sol';
+import {IActionHub} from 'interfaces/action-hubs/IActionHub.sol';
+import {IActionsBuilder} from 'interfaces/actions-builders/IActionsBuilder.sol';
 
 /**
  * @title SafeEntrypoint
  * @notice Contract that allows for the execution of transactions on a Safe
  */
-contract SafeEntrypoint is SafeManageable, OnlyEntrypointGuard, ISafeEntrypoint {
+contract SafeEntrypoint is SafeManageable, OnlyEntrypointGuard, EmergencyModeHook, ISafeEntrypoint {
   // ~~~ STORAGE ~~~
 
   /// @inheritdoc ISafeEntrypoint
@@ -46,14 +44,18 @@ contract SafeEntrypoint is SafeManageable, OnlyEntrypointGuard, ISafeEntrypoint 
    * @param _shortTxExecutionDelay The short transaction execution delay (in seconds)
    * @param _longTxExecutionDelay The long transaction execution delay (in seconds)
    * @param _txExpiryDelay The transaction expiry delay (in seconds after executable)
+   * @param _emergencyTrigger The emergency trigger address
+   * @param _emergencyCaller The emergency caller address
    */
   constructor(
     address _safe,
     address _multiSendCallOnly,
     uint256 _shortTxExecutionDelay,
     uint256 _longTxExecutionDelay,
-    uint256 _txExpiryDelay
-  ) SafeManageable(_safe) {
+    uint256 _txExpiryDelay,
+    address _emergencyTrigger,
+    address _emergencyCaller
+  ) SafeManageable(_safe) EmergencyModeHook(_emergencyTrigger, _emergencyCaller) {
     MULTI_SEND_CALL_ONLY = _multiSendCallOnly;
 
     SHORT_TX_EXECUTION_DELAY = _shortTxExecutionDelay;
@@ -100,6 +102,7 @@ contract SafeEntrypoint is SafeManageable, OnlyEntrypointGuard, ISafeEntrypoint 
     bytes32 _safeTxHash = _getSafeTransactionHash(_multiSendData, SAFE.nonce());
     address[] memory _signers = _getApprovedHashSigners(_safeTxHash);
 
+    _onBeforeExecution();
     _executeTransaction(_actionsBuilder, _safeTxHash, _signers, _multiSendData);
   }
 
