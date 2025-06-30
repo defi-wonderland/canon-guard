@@ -17,7 +17,12 @@ contract DeployEntrypoint is Constants, Script {
     // Deploy the SafeEntrypoint contract
     safeEntrypoint = ISafeEntrypoint(
       SAFE_ENTRYPOINT_FACTORY.createSafeEntrypoint(
-        address(SAFE_PROXY), SHORT_TX_EXECUTION_DELAY, LONG_TX_EXECUTION_DELAY, TX_EXPIRY_DELAY
+        address(SAFE_PROXY),
+        SHORT_TX_EXECUTION_DELAY,
+        LONG_TX_EXECUTION_DELAY,
+        TX_EXPIRY_DELAY,
+        EMERGENCY_TRIGGER,
+        EMERGENCY_CALLER
       )
     );
 

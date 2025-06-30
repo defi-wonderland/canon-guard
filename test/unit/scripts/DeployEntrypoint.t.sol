@@ -22,7 +22,15 @@ contract UnitDeployEntrypoint is Constants, Test {
     _ghost_safeEntrypoint = ISafeEntrypoint(
       deployCode(
         'SafeEntrypoint',
-        abi.encode(SAFE_PROXY, MULTI_SEND_CALL_ONLY, SHORT_TX_EXECUTION_DELAY, LONG_TX_EXECUTION_DELAY, TX_EXPIRY_DELAY)
+        abi.encode(
+          SAFE_PROXY,
+          MULTI_SEND_CALL_ONLY,
+          SHORT_TX_EXECUTION_DELAY,
+          LONG_TX_EXECUTION_DELAY,
+          TX_EXPIRY_DELAY,
+          EMERGENCY_TRIGGER,
+          EMERGENCY_CALLER
+        )
       )
     );
 

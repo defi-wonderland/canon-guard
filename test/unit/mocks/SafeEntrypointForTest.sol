@@ -9,8 +9,20 @@ contract SafeEntrypointForTest is SafeEntrypoint {
     address _multiSendCallOnly,
     uint256 _shortTxExecutionDelay,
     uint256 _longTxExecutionDelay,
-    uint256 _txExpiryDelay
-  ) SafeEntrypoint(_safe, _multiSendCallOnly, _shortTxExecutionDelay, _longTxExecutionDelay, _txExpiryDelay) {}
+    uint256 _txExpiryDelay,
+    address _emergencyTrigger,
+    address _emergencyCaller
+  )
+    SafeEntrypoint(
+      _safe,
+      _multiSendCallOnly,
+      _shortTxExecutionDelay,
+      _longTxExecutionDelay,
+      _txExpiryDelay,
+      _emergencyTrigger,
+      _emergencyCaller
+    )
+  {}
 
   // Mock functions to directly manipulate storage
   function mockTransaction(

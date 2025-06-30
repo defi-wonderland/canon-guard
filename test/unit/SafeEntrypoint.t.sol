@@ -19,10 +19,18 @@ contract UnitSafeEntrypoint is Test {
   uint256 public constant ACTIONS_BUILDER_APPROVAL_DURATION = 7 days;
   address public immutable SAFE = makeAddr('SAFE');
   address public immutable MULTI_SEND_CALL_ONLY = makeAddr('MULTI_SEND_CALL_ONLY');
+  address public immutable EMERGENCY_TRIGGER = makeAddr('EMERGENCY_TRIGGER');
+  address public immutable EMERGENCY_CALLER = makeAddr('EMERGENCY_CALLER');
 
   function setUp() public {
     safeEntrypoint = new SafeEntrypointForTest(
-      SAFE, MULTI_SEND_CALL_ONLY, SHORT_TX_EXECUTION_DELAY, LONG_TX_EXECUTION_DELAY, TX_EXPIRY_DELAY
+      SAFE,
+      MULTI_SEND_CALL_ONLY,
+      SHORT_TX_EXECUTION_DELAY,
+      LONG_TX_EXECUTION_DELAY,
+      TX_EXPIRY_DELAY,
+      EMERGENCY_TRIGGER,
+      EMERGENCY_CALLER
     );
   }
 
@@ -59,7 +67,13 @@ contract UnitSafeEntrypoint is Test {
     uint256 _txExpiryDelay
   ) external {
     safeEntrypoint = new SafeEntrypointForTest(
-      _safe, _multiSendCallOnly, _shortTxExecutionDelay, _longTxExecutionDelay, _txExpiryDelay
+      _safe,
+      _multiSendCallOnly,
+      _shortTxExecutionDelay,
+      _longTxExecutionDelay,
+      _txExpiryDelay,
+      EMERGENCY_TRIGGER,
+      EMERGENCY_CALLER
     );
     assertEq(address(ISafeManageable(address(safeEntrypoint)).SAFE()), _safe);
     assertEq(safeEntrypoint.MULTI_SEND_CALL_ONLY(), _multiSendCallOnly);
@@ -301,6 +315,8 @@ contract UnitSafeEntrypoint is Test {
     address _actionsBuilder,
     bytes memory _data
   ) external whenCallerIsSafeOwner {
+    _assumeFuzzable(_actionsBuilder);
+
     _modifyIsChildReturnValue(_actionHub, _actionsBuilder, true);
     _assumeFuzzable(_actionHub);
     _assumeFuzzable(_actionsBuilder);
