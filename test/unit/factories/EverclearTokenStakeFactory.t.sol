@@ -27,13 +27,14 @@ contract UnitEverclearTokenStakeFactorycreateEverclearTokenStake is Test {
       _vestingEscrow, _vestingWallet, _spokeBridge, _clearLockbox, _next, _clear, _safe, _lockTime
     );
 
-    // it should deploy a EverclearTokenStake
     auxEverclearTokenStake = IEverclearTokenStake(
       deployCode(
         'EverclearTokenStake',
         abi.encode(_vestingEscrow, _vestingWallet, _spokeBridge, _clearLockbox, _next, _clear, _safe, _lockTime)
       )
     );
+    // it should deploy a EverclearTokenStake
+    assertEq(address(auxEverclearTokenStake).code, _everclearTokenStake.code);
 
     // it should match the parameters sent to the constructor
     assertEq(address(IEverclearTokenStake(_everclearTokenStake).VESTING_ESCROW()), _vestingEscrow);

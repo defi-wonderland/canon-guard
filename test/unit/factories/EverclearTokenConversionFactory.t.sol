@@ -14,9 +14,13 @@ contract UnitEverclearTokenConversionFactorycreateEverclearTokenConversion is Te
   }
 
   function test_WhenCalled(address _lockbox, address _next, address _safe) external {
-    // it should deploy a EverclearTokenConversion
+    address _everclearTokenConversion =
+      everclearTokenConversionFactory.createEverclearTokenConversion(_lockbox, _next, _safe);
     auxEverclearTokenConversion =
-      IEverclearTokenConversion(everclearTokenConversionFactory.createEverclearTokenConversion(_lockbox, _next, _safe));
+      IEverclearTokenConversion(deployCode('EverclearTokenConversion', abi.encode(_lockbox, _next, _safe)));
+
+    // it should deploy a EverclearTokenConversion
+    assertEq(address(auxEverclearTokenConversion).code, _everclearTokenConversion.code);
 
     // it should match the parameters sent to the constructor
     assertEq(address(auxEverclearTokenConversion.CLEAR_LOCKBOX()), _lockbox);
