@@ -1,0 +1,22 @@
+{
+  "name": "proxysigner-eip712-interface",
+  "version": "1.0.0",
+  "description": "Simple web interface for signing EIP712 messages with ProxySigner contract",
+  "keywords": [
+    "eip712",
+    "web3",
+    "ethereum",
+    "signature",
+    "proxysigner"
+  ],
+  "license": "MIT",
+  "author": "",
+  "main": "app.js",
+  "scripts": {
+    "dev": "npx http-server -p 8000 -c-1",
+    "start": "npx http-server -p 8000"
+  },
+  "devDependencies": {
+    "http-server": "^14.1.1"
+  }
+}
