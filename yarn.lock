@@ -621,9 +621,9 @@ find-up@^7.0.0:
     path-exists "^5.0.0"
     unicorn-magic "^0.1.0"
 
-"forge-std@github:foundry-rs/forge-std#60acb7aaadcce2d68e52986a0a66fe79f07d138f":
+"forge-std@github:foundry-rs/forge-std#1.9.7":
   version "1.9.7"
-  resolved "https://codeload.github.com/foundry-rs/forge-std/tar.gz/60acb7aaadcce2d68e52986a0a66fe79f07d138f"
+  resolved "https://codeload.github.com/foundry-rs/forge-std/tar.gz/77041d2ce690e692d6e03cc812b57d1ddaa4d505"
 
 fs.realpath@^1.0.0:
   version "1.0.0"
