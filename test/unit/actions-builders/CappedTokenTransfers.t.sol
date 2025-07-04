@@ -37,7 +37,7 @@ contract UnitCappedTokenTransfers is Test {
     assertEq(cappedTokenTransfers.HUB(), _actionHub);
   }
 
-  function test_GetActionsWhenCalled() external {
+  function test_GetActionsWhenCalled() external view {
     IActionsBuilder.Action[] memory actions = cappedTokenTransfers.getActions();
 
     // it returns an action to update the state

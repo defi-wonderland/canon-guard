@@ -12,14 +12,14 @@ import {Constants} from 'script/Constants.sol';
 contract UnitDeployEntrypoint is Constants, Test {
   DeployEntrypoint public deployEntrypoint;
 
-  ISafeEntrypoint internal _ghost_safeEntrypoint;
+  ISafeEntrypoint internal _auxSafeEntrypoint;
 
   function setUp() public {
     // Deploy the DeployEntrypoint contract
     deployEntrypoint = new DeployEntrypoint();
 
     // Deploy the SafeEntrypoint contract
-    _ghost_safeEntrypoint = ISafeEntrypoint(
+    _auxSafeEntrypoint = ISafeEntrypoint(
       deployCode(
         'SafeEntrypoint',
         abi.encode(
@@ -46,7 +46,7 @@ contract UnitDeployEntrypoint is Constants, Test {
     ISafeEntrypoint _safeEntrypoint = deployEntrypoint.safeEntrypoint();
 
     // It should deploy the SafeEntrypoint contract with correct args
-    assertEq(address(_safeEntrypoint).code, address(_ghost_safeEntrypoint).code);
+    assertEq(address(_safeEntrypoint).code, address(_auxSafeEntrypoint).code);
     assertEq(address(_safeEntrypoint.SAFE()), address(SAFE_PROXY));
     assertEq(_safeEntrypoint.MULTI_SEND_CALL_ONLY(), address(MULTI_SEND_CALL_ONLY));
     assertEq(_safeEntrypoint.SHORT_TX_EXECUTION_DELAY(), SHORT_TX_EXECUTION_DELAY);

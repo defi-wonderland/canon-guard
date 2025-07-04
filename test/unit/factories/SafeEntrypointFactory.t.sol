@@ -16,7 +16,7 @@ contract UnitSafeEntrypointFactory is Test {
     safeEntrypointFactory = new SafeEntrypointFactory(multiSendCallOnly);
   }
 
-  function test_ConstructorWhenCalled() external {
+  function test_ConstructorWhenCalled() external view {
     // it should deploy a new SafeEntrypointFactory with correct parameters
     assertEq(safeEntrypointFactory.MULTI_SEND_CALL_ONLY(), multiSendCallOnly);
   }

@@ -15,7 +15,7 @@ contract UnitOnlyEntrypointGuardcheckTransaction is Test {
     onlyEntrypointGuard = new OnlyEntrypointGuardForTest();
   }
 
-  function test_WhenCallerIsEntrypoint() external {
+  function test_WhenCallerIsEntrypoint() external view {
     // it allows transaction
     onlyEntrypointGuard.checkTransaction(
       MULTI_SEND_CALL_ONLY,
