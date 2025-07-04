@@ -28,6 +28,6 @@ contract Approver is IApprover {
     bytes32 _safeTxHash = ENTRYPOINT.getSafeTransactionHash(_actionBuilder, _safeNonce);
     SAFE.approveHash(_safeTxHash);
 
-    emit TxApproved(msg.sender, _actionBuilder, _safeNonce);
+    emit TxApproved(_actionBuilder, _safeNonce, _safeTxHash);
   }
 }

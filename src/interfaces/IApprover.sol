@@ -7,11 +7,11 @@ import {ISafeEntrypoint} from 'src/interfaces/ISafeEntrypoint.sol';
 interface IApprover {
   /**
    * @notice Emitted when a transaction is approved
-   * @param _sender The address of the sender
    * @param _actionBuilder The address of the action builder
    * @param _safeNonce The nonce of the Safe transaction
+   * @param _txHash The hash of the transaction
    */
-  event TxApproved(address indexed _sender, address _actionBuilder, uint256 _safeNonce);
+  event TxApproved(address _actionBuilder, uint256 _safeNonce, bytes32 _txHash);
 
   /**
    * @notice Emitted when the sender is not the EOA itself
