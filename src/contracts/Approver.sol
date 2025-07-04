@@ -18,7 +18,7 @@ contract Approver is IApprover {
    */
   constructor(address _entrypoint) {
     ENTRYPOINT = ISafeEntrypoint(_entrypoint);
-    SAFE = ISafe(ENTRYPOINT.SAFE());
+    SAFE = ENTRYPOINT.SAFE();
   }
 
   /// @inheritdoc IApprover
