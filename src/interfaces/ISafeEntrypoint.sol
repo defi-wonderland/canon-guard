@@ -202,4 +202,10 @@ interface ISafeEntrypoint is ISafeManageable {
    * @return _approvedHashSigners The array of approved hash signer addresses
    */
   function getApprovedHashSigners(bytes32 _safeTxHash) external view returns (address[] memory _approvedHashSigners);
+
+  /**
+   * @notice Gets the Safe nonce
+   * @return _safeNonce The Safe nonce
+   */
+  function getSafeNonce() external view returns (uint256 _safeNonce);
 }
