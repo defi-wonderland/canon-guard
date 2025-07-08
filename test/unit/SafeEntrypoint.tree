@@ -80,15 +80,3 @@ UnitSafeEntrypoint::getSafeTransactionHash
 │       └── it returns correct hash
 └── when transaction does not exist
     └── it reverts with NoTransactionQueued
-
-
-UnitSafeEntrypoint::getApprovedHashSigners
-├── when transaction exists
-│   ├── when getting signers with actionsBuilder
-│   │   └── it returns approved signers
-│   ├── when getting signers with actionsBuilder and nonce
-│   │   └── it returns approved signers
-│   └── when getting signers with hash
-│       └── it returns approved signers
-└── when transaction does not exist
-    └── it reverts with NoTransactionQueued

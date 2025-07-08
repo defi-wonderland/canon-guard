@@ -114,20 +114,6 @@ contract SafeEntrypoint is SafeManageable, OnlyEntrypointGuard, EmergencyModeHoo
   }
 
   /// @inheritdoc ISafeEntrypoint
-  function getApprovedHashSigners(address _actionsBuilder)
-    external
-    view
-    returns (address[] memory _approvedHashSigners)
-  {
-    _approvedHashSigners = getApprovedHashSigners(_actionsBuilder, SAFE.nonce());
-  }
-
-  /// @inheritdoc ISafeEntrypoint
-  function getApprovedHashSigners(bytes32 _safeTxHash) external view returns (address[] memory _approvedHashSigners) {
-    _approvedHashSigners = _getApprovedHashSigners(_safeTxHash);
-  }
-
-  /// @inheritdoc ISafeEntrypoint
   function getSafeTransactionHash(
     address _actionsBuilder,
     uint256 _safeNonce
