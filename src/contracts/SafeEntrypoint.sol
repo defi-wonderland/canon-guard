@@ -114,20 +114,6 @@ contract SafeEntrypoint is SafeManageable, OnlyEntrypointGuard, EmergencyModeHoo
   }
 
   /// @inheritdoc ISafeEntrypoint
-  function getSafeTransactionHash(
-    address _actionsBuilder,
-    uint256 _safeNonce
-  ) public view returns (bytes32 _safeTxHash) {
-    TransactionInfo memory _txInfo = queuedTransactions[_actionsBuilder];
-    if (_txInfo.expiresAt == 0) revert NoTransactionQueued();
-
-    IActionsBuilder.Action[] memory _actions = abi.decode(_txInfo.actionsData, (IActionsBuilder.Action[]));
-
-    bytes memory _multiSendData = _buildMultiSendData(_actions);
-    _safeTxHash = _getSafeTransactionHash(_multiSendData, _safeNonce);
-  }
-
-  /// @inheritdoc ISafeEntrypoint
   function getApprovedHashSigners(
     address _actionsBuilder,
     uint256 _safeNonce
@@ -140,6 +126,20 @@ contract SafeEntrypoint is SafeManageable, OnlyEntrypointGuard, EmergencyModeHoo
     bytes memory _multiSendData = _buildMultiSendData(_actions);
     bytes32 _safeTxHash = _getSafeTransactionHash(_multiSendData, _safeNonce);
     _approvedHashSigners = _getApprovedHashSigners(_safeTxHash);
+  }
+
+  /// @inheritdoc ISafeEntrypoint
+  function getSafeTransactionHash(
+    address _actionsBuilder,
+    uint256 _safeNonce
+  ) public view returns (bytes32 _safeTxHash) {
+    TransactionInfo memory _txInfo = queuedTransactions[_actionsBuilder];
+    if (_txInfo.expiresAt == 0) revert NoTransactionQueued();
+
+    IActionsBuilder.Action[] memory _actions = abi.decode(_txInfo.actionsData, (IActionsBuilder.Action[]));
+
+    bytes memory _multiSendData = _buildMultiSendData(_actions);
+    _safeTxHash = _getSafeTransactionHash(_multiSendData, _safeNonce);
   }
 
   // ~~~ INTERNAL METHODS ~~~
