@@ -589,6 +589,43 @@ contract UnitSafeEntrypoint is Test {
     safeEntrypoint.getSafeTransactionHash(_actionsBuilder);
   }
 
+  function test_GetApprovedHashSignersWhenTransactionExists(
+    address _signer1,
+    address _signer2,
+    address _actionsBuilder,
+    IActionsBuilder.Action memory _action,
+    ISafeEntrypoint.TransactionInfo memory _txInfo,
+    uint256 _safeNonce
+  ) external {
+    // Ensure expiresAt is not 0 to avoid NoTransactionQueued error
+    _txInfo.expiresAt = bound(_txInfo.expiresAt, 1, type(uint256).max);
+
+    IActionsBuilder.Action[] memory _actions = new IActionsBuilder.Action[](1);
+    _actions[0] = _action;
+    bytes memory _actionsData = abi.encode(_actions);
+    safeEntrypoint.mockTransaction(_actionsBuilder, _actionsData, _txInfo.executableAt, _txInfo.expiresAt);
+
+    address[] memory _signers = new address[](2);
+    _signers[0] = _signer1;
+    _signers[1] = _signer2;
+    _mockApprovedHashesForSigners(_signers, 1);
+
+    _mockAndExpect(SAFE, abi.encodeWithSelector(IOwnerManager.getOwners.selector), abi.encode(_signers));
+    _mockAndExpect(SAFE, abi.encodeWithSelector(ISafe.getTransactionHash.selector), abi.encode(bytes32(0)));
+
+    // it returns approved signers
+    address[] memory _approvedSigners = safeEntrypoint.getApprovedHashSigners(_actionsBuilder, _safeNonce);
+    assertEq(_approvedSigners, _signers);
+  }
+
+  function test_GetApprovedHashSignersWhenTransactionDoesNotExist(address _actionsBuilder, uint256 _nonce) external {
+    _assumeFuzzable(_actionsBuilder);
+
+    // it reverts with NoTransactionQueued
+    vm.expectRevert(ISafeEntrypoint.NoTransactionQueued.selector);
+    safeEntrypoint.getApprovedHashSigners(_actionsBuilder, _nonce);
+  }
+
   modifier givenCallerIsSafeOwner(address _caller) {
     _mockAndExpect(SAFE, abi.encodeWithSelector(IOwnerManager.isOwner.selector), abi.encode(true));
     _;

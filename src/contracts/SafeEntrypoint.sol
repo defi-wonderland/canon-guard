@@ -131,7 +131,7 @@ contract SafeEntrypoint is SafeManageable, OnlyEntrypointGuard, EmergencyModeHoo
   function getApprovedHashSigners(
     address _actionsBuilder,
     uint256 _safeNonce
-  ) public view returns (address[] memory _approvedHashSigners) {
+  ) external view returns (address[] memory _approvedHashSigners) {
     TransactionInfo memory _txInfo = queuedTransactions[_actionsBuilder];
     if (_txInfo.expiresAt == 0) revert NoTransactionQueued();
 
