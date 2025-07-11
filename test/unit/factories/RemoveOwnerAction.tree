@@ -1,0 +1,4 @@
+UnitRemoveOwnerActionFactory::createRemoveOwnerAction
+└── when called
+    ├── it should deploy a RemoveOwnerAction
+    └── it should match the parameters sent to the constructor
