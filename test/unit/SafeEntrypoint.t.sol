@@ -589,35 +589,7 @@ contract UnitSafeEntrypoint is Test {
     safeEntrypoint.getSafeTransactionHash(_actionsBuilder);
   }
 
-  function test_GetApprovedHashSignersWhenGettingSignersWithActionsBuilder(
-    address _actionsBuilder,
-    IActionsBuilder.Action memory _action,
-    ISafeEntrypoint.TransactionInfo memory _txInfo,
-    address _signer1,
-    address _signer2
-  ) external {
-    // Ensure expiresAt is not 0 to avoid NoTransactionQueued error
-    _txInfo.expiresAt = bound(_txInfo.expiresAt, 1, type(uint256).max);
-
-    IActionsBuilder.Action[] memory _actions = new IActionsBuilder.Action[](1);
-    _actions[0] = _action;
-    bytes memory _actionsData = abi.encode(_actions);
-    safeEntrypoint.mockTransaction(_actionsBuilder, _actionsData, _txInfo.executableAt, _txInfo.expiresAt);
-
-    address[] memory _signers = new address[](2);
-    _signers[0] = _signer1;
-    _signers[1] = _signer2;
-    _mockApprovedHashesForSigners(_signers, 1);
-
-    _mockAndExpect(SAFE, abi.encodeWithSelector(IOwnerManager.getOwners.selector), abi.encode(_signers));
-    _mockAndExpect(SAFE, abi.encodeWithSelector(ISafe.nonce.selector), abi.encode(1));
-    _mockAndExpect(SAFE, abi.encodeWithSelector(ISafe.getTransactionHash.selector), abi.encode(bytes32(0)));
-
-    address[] memory _approvedSigners = safeEntrypoint.getApprovedHashSigners(_actionsBuilder);
-    assertEq(_approvedSigners, _signers);
-  }
-
-  function test_GetApprovedHashSignersWhenGettingSignersWithActionsBuilderAndNonce(
+  function test_GetApprovedHashSignersWhenTransactionExists(
     address _signer1,
     address _signer2,
     address _actionsBuilder,
@@ -641,34 +613,17 @@ contract UnitSafeEntrypoint is Test {
     _mockAndExpect(SAFE, abi.encodeWithSelector(IOwnerManager.getOwners.selector), abi.encode(_signers));
     _mockAndExpect(SAFE, abi.encodeWithSelector(ISafe.getTransactionHash.selector), abi.encode(bytes32(0)));
 
+    // it returns approved signers
     address[] memory _approvedSigners = safeEntrypoint.getApprovedHashSigners(_actionsBuilder, _safeNonce);
     assertEq(_approvedSigners, _signers);
   }
 
-  function test_GetApprovedHashSignersWhenGettingSignersWithHash(
-    address _signer1,
-    address _signer2,
-    bytes32 _safeHash
-  ) external {
-    address[] memory _signers = new address[](2);
-    _signers[0] = _signer1;
-    _signers[1] = _signer2;
-    _mockApprovedHashesForSigners(_signers, 1);
-
-    _mockAndExpect(SAFE, abi.encodeWithSelector(IOwnerManager.getOwners.selector), abi.encode(_signers));
-
-    address[] memory _approvedSigners = safeEntrypoint.getApprovedHashSigners(_safeHash);
-    assertEq(_approvedSigners, _signers);
-  }
-
-  function test_GetApprovedHashSignersWhenTransactionDoesNotExist(address _actionsBuilder) external {
+  function test_GetApprovedHashSignersWhenTransactionDoesNotExist(address _actionsBuilder, uint256 _nonce) external {
     _assumeFuzzable(_actionsBuilder);
-
-    _mockAndExpect(SAFE, abi.encodeWithSelector(ISafe.nonce.selector), abi.encode(1));
 
     // it reverts with NoTransactionQueued
     vm.expectRevert(ISafeEntrypoint.NoTransactionQueued.selector);
-    safeEntrypoint.getApprovedHashSigners(_actionsBuilder);
+    safeEntrypoint.getApprovedHashSigners(_actionsBuilder, _nonce);
   }
 
   function test_GetSafeNonceReturnsCorrectNonce(uint256 _nonce) external {
