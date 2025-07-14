@@ -17,12 +17,6 @@ interface IChangeSafeGuardAction is IActionsBuilder {
   function SAFE() external view returns (address _safe);
 
   /**
-   * @notice Gets the actions builder contract address
-   * @return _actionsBuilder The actions builder contract address
-   */
-  function ACTIONS_BUILDER() external view returns (address _actionsBuilder);
-
-  /**
    * @notice Gets the safe guard contract address
    * @return _safeGuard The safe guard contract address
    */

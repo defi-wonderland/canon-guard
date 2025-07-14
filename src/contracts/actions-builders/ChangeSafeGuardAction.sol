@@ -10,20 +10,15 @@ contract ChangeSafeGuardAction is IChangeSafeGuardAction {
   address public immutable SAFE;
 
   /// @inheritdoc IChangeSafeGuardAction
-  address public immutable ACTIONS_BUILDER;
-
-  /// @inheritdoc IChangeSafeGuardAction
   address public immutable SAFE_GUARD;
 
   /**
    * @notice Constructor that sets up the ChangeSafeGuardAction contract
    * @param _safe The Safe contract address
-   * @param _actionsBuilder The actions builder contract address
    * @param _safeGuard The safe guard contract address
    */
-  constructor(address _safe, address _actionsBuilder, address _safeGuard) {
+  constructor(address _safe, address _safeGuard) {
     SAFE = _safe;
-    ACTIONS_BUILDER = _actionsBuilder;
     SAFE_GUARD = _safeGuard;
   }
 
