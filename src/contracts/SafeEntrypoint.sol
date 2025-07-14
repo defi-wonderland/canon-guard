@@ -153,6 +153,11 @@ contract SafeEntrypoint is SafeManageable, OnlyEntrypointGuard, EmergencyModeHoo
   }
 
   /// @inheritdoc ISafeEntrypoint
+  function getSafeNonce() external view returns (uint256 _safeNonce) {
+    _safeNonce = SAFE.nonce();
+  }
+
+  /// @inheritdoc ISafeEntrypoint
   function getSafeTransactionHash(
     address _actionsBuilder,
     uint256 _safeNonce
