@@ -68,9 +68,7 @@ contract IntegrationEntrypointManageActions is IntegrationEthereumBase {
     // Deploy the ChangeSafeGuardAction contract
     changeSafeGuardActionFactory = new ChangeSafeGuardActionFactory();
     changeSafeGuardAction = IChangeSafeGuardAction(
-      changeSafeGuardActionFactory.createChangeSafeGuardAction(
-        address(SAFE_PROXY), address(actionsBuilder), newSafeGuard
-      )
+      changeSafeGuardActionFactory.createChangeSafeGuardAction(address(SAFE_PROXY), newSafeGuard)
     );
 
     // Deploy the AddOwnerWithThresholdAction contract

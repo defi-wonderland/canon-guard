@@ -26,6 +26,7 @@ contract UnitSafeEntrypointFactory is Test {
     uint256 _shortTxExecutionDelay,
     uint256 _longTxExecutionDelay,
     uint256 _txExpiryDelay,
+    uint256 _maxApprovalDuration,
     address _emergencyTrigger,
     address _emergencyCaller
   ) external {
@@ -33,7 +34,13 @@ contract UnitSafeEntrypointFactory is Test {
     vm.assume(_emergencyCaller != address(0));
 
     address _safeEntrypoint = safeEntrypointFactory.createSafeEntrypoint(
-      _safe, _shortTxExecutionDelay, _longTxExecutionDelay, _txExpiryDelay, _emergencyTrigger, _emergencyCaller
+      _safe,
+      _shortTxExecutionDelay,
+      _longTxExecutionDelay,
+      _txExpiryDelay,
+      _maxApprovalDuration,
+      _emergencyTrigger,
+      _emergencyCaller
     );
     auxSafeEntrypoint = ISafeEntrypoint(
       deployCode(
@@ -44,6 +51,7 @@ contract UnitSafeEntrypointFactory is Test {
           _shortTxExecutionDelay,
           _longTxExecutionDelay,
           _txExpiryDelay,
+          _maxApprovalDuration,
           _emergencyTrigger,
           _emergencyCaller
         )
@@ -59,5 +67,6 @@ contract UnitSafeEntrypointFactory is Test {
     assertEq(ISafeEntrypoint(_safeEntrypoint).SHORT_TX_EXECUTION_DELAY(), _shortTxExecutionDelay);
     assertEq(ISafeEntrypoint(_safeEntrypoint).LONG_TX_EXECUTION_DELAY(), _longTxExecutionDelay);
     assertEq(ISafeEntrypoint(_safeEntrypoint).TX_EXPIRY_DELAY(), _txExpiryDelay);
+    assertEq(ISafeEntrypoint(_safeEntrypoint).MAX_APPROVAL_DURATION(), _maxApprovalDuration);
   }
 }

@@ -17,6 +17,7 @@ contract UnitSafeEntrypoint is Test {
   uint256 public constant LONG_TX_EXECUTION_DELAY = 7 days;
   uint256 public constant TX_EXPIRY_DELAY = 2 hours;
   uint256 public constant ACTIONS_BUILDER_APPROVAL_DURATION = 7 days;
+  uint256 public constant MAX_APPROVAL_DURATION = 4 * 365 days;
   address public immutable SAFE = makeAddr('SAFE');
   address public immutable MULTI_SEND_CALL_ONLY = makeAddr('MULTI_SEND_CALL_ONLY');
   address public immutable EMERGENCY_TRIGGER = makeAddr('EMERGENCY_TRIGGER');
@@ -29,6 +30,7 @@ contract UnitSafeEntrypoint is Test {
       SHORT_TX_EXECUTION_DELAY,
       LONG_TX_EXECUTION_DELAY,
       TX_EXPIRY_DELAY,
+      MAX_APPROVAL_DURATION,
       EMERGENCY_TRIGGER,
       EMERGENCY_CALLER
     );
@@ -64,7 +66,8 @@ contract UnitSafeEntrypoint is Test {
     address _multiSendCallOnly,
     uint256 _shortTxExecutionDelay,
     uint256 _longTxExecutionDelay,
-    uint256 _txExpiryDelay
+    uint256 _txExpiryDelay,
+    uint256 _maxApprovalDuration
   ) external {
     safeEntrypoint = new SafeEntrypointForTest(
       _safe,
@@ -72,6 +75,7 @@ contract UnitSafeEntrypoint is Test {
       _shortTxExecutionDelay,
       _longTxExecutionDelay,
       _txExpiryDelay,
+      _maxApprovalDuration,
       EMERGENCY_TRIGGER,
       EMERGENCY_CALLER
     );
@@ -80,14 +84,17 @@ contract UnitSafeEntrypoint is Test {
     assertEq(safeEntrypoint.SHORT_TX_EXECUTION_DELAY(), _shortTxExecutionDelay);
     assertEq(safeEntrypoint.LONG_TX_EXECUTION_DELAY(), _longTxExecutionDelay);
     assertEq(safeEntrypoint.TX_EXPIRY_DELAY(), _txExpiryDelay);
+    assertEq(safeEntrypoint.MAX_APPROVAL_DURATION(), _maxApprovalDuration);
   }
 
   modifier whenCallerIsSafe() {
+    vm.startPrank(SAFE);
     _;
+    vm.stopPrank();
   }
 
   function test_ApproveActionsBuilderWhenCallerIsSafe(uint256 _approvalDuration, address _actionsBuilder) external {
-    _approvalDuration = bound(_approvalDuration, 0, type(uint256).max - block.timestamp);
+    _approvalDuration = bound(_approvalDuration, 0, MAX_APPROVAL_DURATION);
 
     vm.expectEmit(address(safeEntrypoint));
     emit ISafeEntrypoint.ActionsBuilderApproved(_actionsBuilder, _approvalDuration, block.timestamp + _approvalDuration);
@@ -98,12 +105,23 @@ contract UnitSafeEntrypoint is Test {
     assertEq(safeEntrypoint.approvalExpiries(_actionsBuilder), block.timestamp + _approvalDuration);
   }
 
+  function test_ApproveActionsBuilderWhenApprovalDurationIsGreaterThanMaxApprovalDuration(uint256 _approvalDuration)
+    external
+    whenCallerIsSafe
+  {
+    _approvalDuration = bound(_approvalDuration, safeEntrypoint.MAX_APPROVAL_DURATION() + 1, type(uint256).max);
+
+    // it reverts with InvalidApprovalDuration
+    vm.expectRevert(ISafeEntrypoint.InvalidApprovalDuration.selector);
+    safeEntrypoint.approveActionsBuilder(address(0), _approvalDuration);
+  }
+
   function test_ApproveActionsBuilderWhenExtendingApproval(
     address _actionsBuilder,
     uint256 _previousApprovalExpiry,
     uint256 _newApprovalDuration
   ) external {
-    _newApprovalDuration = bound(_newApprovalDuration, 0, type(uint256).max - block.timestamp);
+    _newApprovalDuration = bound(_newApprovalDuration, 0, MAX_APPROVAL_DURATION);
 
     safeEntrypoint.mockApprovalExpiry(_actionsBuilder, _previousApprovalExpiry);
 
@@ -589,35 +607,7 @@ contract UnitSafeEntrypoint is Test {
     safeEntrypoint.getSafeTransactionHash(_actionsBuilder);
   }
 
-  function test_GetApprovedHashSignersWhenGettingSignersWithActionsBuilder(
-    address _actionsBuilder,
-    IActionsBuilder.Action memory _action,
-    ISafeEntrypoint.TransactionInfo memory _txInfo,
-    address _signer1,
-    address _signer2
-  ) external {
-    // Ensure expiresAt is not 0 to avoid NoTransactionQueued error
-    _txInfo.expiresAt = bound(_txInfo.expiresAt, 1, type(uint256).max);
-
-    IActionsBuilder.Action[] memory _actions = new IActionsBuilder.Action[](1);
-    _actions[0] = _action;
-    bytes memory _actionsData = abi.encode(_actions);
-    safeEntrypoint.mockTransaction(_actionsBuilder, _actionsData, _txInfo.executableAt, _txInfo.expiresAt);
-
-    address[] memory _signers = new address[](2);
-    _signers[0] = _signer1;
-    _signers[1] = _signer2;
-    _mockApprovedHashesForSigners(_signers, 1);
-
-    _mockAndExpect(SAFE, abi.encodeWithSelector(IOwnerManager.getOwners.selector), abi.encode(_signers));
-    _mockAndExpect(SAFE, abi.encodeWithSelector(ISafe.nonce.selector), abi.encode(1));
-    _mockAndExpect(SAFE, abi.encodeWithSelector(ISafe.getTransactionHash.selector), abi.encode(bytes32(0)));
-
-    address[] memory _approvedSigners = safeEntrypoint.getApprovedHashSigners(_actionsBuilder);
-    assertEq(_approvedSigners, _signers);
-  }
-
-  function test_GetApprovedHashSignersWhenGettingSignersWithActionsBuilderAndNonce(
+  function test_GetApprovedHashSignersWhenTransactionExists(
     address _signer1,
     address _signer2,
     address _actionsBuilder,
@@ -641,34 +631,17 @@ contract UnitSafeEntrypoint is Test {
     _mockAndExpect(SAFE, abi.encodeWithSelector(IOwnerManager.getOwners.selector), abi.encode(_signers));
     _mockAndExpect(SAFE, abi.encodeWithSelector(ISafe.getTransactionHash.selector), abi.encode(bytes32(0)));
 
+    // it returns approved signers
     address[] memory _approvedSigners = safeEntrypoint.getApprovedHashSigners(_actionsBuilder, _safeNonce);
     assertEq(_approvedSigners, _signers);
   }
 
-  function test_GetApprovedHashSignersWhenGettingSignersWithHash(
-    address _signer1,
-    address _signer2,
-    bytes32 _safeHash
-  ) external {
-    address[] memory _signers = new address[](2);
-    _signers[0] = _signer1;
-    _signers[1] = _signer2;
-    _mockApprovedHashesForSigners(_signers, 1);
-
-    _mockAndExpect(SAFE, abi.encodeWithSelector(IOwnerManager.getOwners.selector), abi.encode(_signers));
-
-    address[] memory _approvedSigners = safeEntrypoint.getApprovedHashSigners(_safeHash);
-    assertEq(_approvedSigners, _signers);
-  }
-
-  function test_GetApprovedHashSignersWhenTransactionDoesNotExist(address _actionsBuilder) external {
+  function test_GetApprovedHashSignersWhenTransactionDoesNotExist(address _actionsBuilder, uint256 _nonce) external {
     _assumeFuzzable(_actionsBuilder);
-
-    _mockAndExpect(SAFE, abi.encodeWithSelector(ISafe.nonce.selector), abi.encode(1));
 
     // it reverts with NoTransactionQueued
     vm.expectRevert(ISafeEntrypoint.NoTransactionQueued.selector);
-    safeEntrypoint.getApprovedHashSigners(_actionsBuilder);
+    safeEntrypoint.getApprovedHashSigners(_actionsBuilder, _nonce);
   }
 
   modifier givenCallerIsSafeOwner(address _caller) {

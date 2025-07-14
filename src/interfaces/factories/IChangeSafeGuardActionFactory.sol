@@ -11,13 +11,11 @@ interface IChangeSafeGuardActionFactory {
   /**
    * @notice Creates a ChangeSafeGuardAction contract
    * @param _safe The Safe contract address
-   * @param _actionsBuilder The actions builder contract address
    * @param _safeGuard The safe guard contract address
    * @return _changeSafeGuardAction The ChangeSafeGuardAction contract address
    */
   function createChangeSafeGuardAction(
     address _safe,
-    address _actionsBuilder,
     address _safeGuard
   ) external returns (address _changeSafeGuardAction);
 }
