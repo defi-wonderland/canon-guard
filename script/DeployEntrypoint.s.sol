@@ -21,6 +21,7 @@ contract DeployEntrypoint is Constants, Script {
         SHORT_TX_EXECUTION_DELAY,
         LONG_TX_EXECUTION_DELAY,
         TX_EXPIRY_DELAY,
+        MAX_APPROVAL_DURATION,
         EMERGENCY_TRIGGER,
         EMERGENCY_CALLER
       )
