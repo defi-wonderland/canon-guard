@@ -9,6 +9,8 @@ UnitSafeEntrypoint::constructor
 
 UnitSafeEntrypoint::approveActionsBuilder
 ├── when caller is safe
+│   ├── when approval duration is greater than max approval duration
+│   │   └── it reverts with InvalidApprovalDuration
 │   ├── it sets approval expiry time
 │   ├── it emits ActionsBuilderApproved event
 │   └── when extending approval
@@ -81,14 +83,8 @@ UnitSafeEntrypoint::getSafeTransactionHash
 └── when transaction does not exist
     └── it reverts with NoTransactionQueued
 
-
 UnitSafeEntrypoint::getApprovedHashSigners
 ├── when transaction exists
-│   ├── when getting signers with actionsBuilder
-│   │   └── it returns approved signers
-│   ├── when getting signers with actionsBuilder and nonce
-│   │   └── it returns approved signers
-│   └── when getting signers with hash
-│       └── it returns approved signers
+│   └── it returns approved signers
 └── when transaction does not exist
     └── it reverts with NoTransactionQueued

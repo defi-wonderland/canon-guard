@@ -75,6 +75,11 @@ interface ISafeEntrypoint is ISafeManageable {
    */
   error InvalidHubOrActionsBuilder();
 
+  /**
+   * @notice Thrown when an invalid approval duration is provided
+   */
+  error InvalidApprovalDuration();
+
   // ~~~ ADMIN METHODS ~~~
 
   /**
@@ -137,6 +142,12 @@ interface ISafeEntrypoint is ISafeManageable {
   function TX_EXPIRY_DELAY() external view returns (uint256 _txExpiryDelay);
 
   /**
+   * @notice Gets the maximum approval duration
+   * @return _maxApprovalDuration The maximum approval duration for an actions builder or hub (in seconds)
+   */
+  function MAX_APPROVAL_DURATION() external view returns (uint256 _maxApprovalDuration);
+
+  /**
    * @notice Gets the approval expiry time for an actions builder
    * @param _actionsBuilder The address of the actions builder contract
    * @return _approvalExpiresAt The timestamp from which the actions builder contract is no longer approved to be queued
@@ -176,16 +187,6 @@ interface ISafeEntrypoint is ISafeManageable {
   ) external view returns (bytes32 _safeTxHash);
 
   /**
-   * @notice Gets the list of signers who have approved a Safe transaction hash for an actions builder
-   * @param _actionsBuilder The actions builder contract address
-   * @return _approvedHashSigners The array of approved hash signer addresses
-   */
-  function getApprovedHashSigners(address _actionsBuilder)
-    external
-    view
-    returns (address[] memory _approvedHashSigners);
-
-  /**
    * @notice Gets the list of signers who have approved a Safe transaction hash for an actions builder with a specific Safe nonce
    * @param _actionsBuilder The actions builder contract address
    * @param _safeNonce The Safe nonce to use for the hash calculation
@@ -195,11 +196,4 @@ interface ISafeEntrypoint is ISafeManageable {
     address _actionsBuilder,
     uint256 _safeNonce
   ) external view returns (address[] memory _approvedHashSigners);
-
-  /**
-   * @notice Gets the list of signers who have approved a Safe transaction hash for a Safe transaction hash
-   * @param _safeTxHash The hash of the Safe transaction
-   * @return _approvedHashSigners The array of approved hash signer addresses
-   */
-  function getApprovedHashSigners(bytes32 _safeTxHash) external view returns (address[] memory _approvedHashSigners);
 }

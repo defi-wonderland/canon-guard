@@ -10,6 +10,7 @@ contract SafeEntrypointForTest is SafeEntrypoint {
     uint256 _shortTxExecutionDelay,
     uint256 _longTxExecutionDelay,
     uint256 _txExpiryDelay,
+    uint256 _maxApprovalDuration,
     address _emergencyTrigger,
     address _emergencyCaller
   )
@@ -19,6 +20,7 @@ contract SafeEntrypointForTest is SafeEntrypoint {
       _shortTxExecutionDelay,
       _longTxExecutionDelay,
       _txExpiryDelay,
+      _maxApprovalDuration,
       _emergencyTrigger,
       _emergencyCaller
     )
