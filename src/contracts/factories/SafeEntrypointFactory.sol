@@ -33,6 +33,7 @@ contract SafeEntrypointFactory is ISafeEntrypointFactory {
     uint256 _shortTxExecutionDelay,
     uint256 _longTxExecutionDelay,
     uint256 _txExpiryDelay,
+    uint256 _maxApprovalDuration,
     address _emergencyTrigger,
     address _emergencyCaller
   ) external returns (address _safeEntrypoint) {
@@ -43,6 +44,7 @@ contract SafeEntrypointFactory is ISafeEntrypointFactory {
         _shortTxExecutionDelay,
         _longTxExecutionDelay,
         _txExpiryDelay,
+        _maxApprovalDuration,
         _emergencyTrigger,
         _emergencyCaller
       )

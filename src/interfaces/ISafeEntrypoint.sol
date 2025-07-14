@@ -75,6 +75,11 @@ interface ISafeEntrypoint is ISafeManageable {
    */
   error InvalidHubOrActionsBuilder();
 
+  /**
+   * @notice Thrown when an invalid approval duration is provided
+   */
+  error InvalidApprovalDuration();
+
   // ~~~ ADMIN METHODS ~~~
 
   /**
@@ -135,6 +140,12 @@ interface ISafeEntrypoint is ISafeManageable {
    * @return _txExpiryDelay The default transaction expiry delay (in seconds)
    */
   function TX_EXPIRY_DELAY() external view returns (uint256 _txExpiryDelay);
+
+  /**
+   * @notice Gets the maximum approval duration
+   * @return _maxApprovalDuration The maximum approval duration for an actions builder or hub (in seconds)
+   */
+  function MAX_APPROVAL_DURATION() external view returns (uint256 _maxApprovalDuration);
 
   /**
    * @notice Gets the approval expiry time for an actions builder

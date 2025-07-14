@@ -9,6 +9,8 @@ UnitSafeEntrypoint::constructor
 
 UnitSafeEntrypoint::approveActionsBuilder
 ├── when caller is safe
+│   ├── when approval duration is greater than max approval duration
+│   │   └── it reverts with InvalidApprovalDuration
 │   ├── it sets approval expiry time
 │   ├── it emits ActionsBuilderApproved event
 │   └── when extending approval

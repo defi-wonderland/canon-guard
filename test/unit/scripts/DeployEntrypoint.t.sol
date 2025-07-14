@@ -28,6 +28,7 @@ contract UnitDeployEntrypoint is Constants, Test {
           SHORT_TX_EXECUTION_DELAY,
           LONG_TX_EXECUTION_DELAY,
           TX_EXPIRY_DELAY,
+          MAX_APPROVAL_DURATION,
           EMERGENCY_TRIGGER,
           EMERGENCY_CALLER
         )
@@ -52,5 +53,6 @@ contract UnitDeployEntrypoint is Constants, Test {
     assertEq(_safeEntrypoint.SHORT_TX_EXECUTION_DELAY(), SHORT_TX_EXECUTION_DELAY);
     assertEq(_safeEntrypoint.LONG_TX_EXECUTION_DELAY(), LONG_TX_EXECUTION_DELAY);
     assertEq(_safeEntrypoint.TX_EXPIRY_DELAY(), TX_EXPIRY_DELAY);
+    assertEq(_safeEntrypoint.MAX_APPROVAL_DURATION(), MAX_APPROVAL_DURATION);
   }
 }
