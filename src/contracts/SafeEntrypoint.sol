@@ -30,6 +30,9 @@ contract SafeEntrypoint is SafeManageable, OnlyEntrypointGuard, EmergencyModeHoo
   uint256 public immutable TX_EXPIRY_DELAY;
 
   /// @inheritdoc ISafeEntrypoint
+  uint256 public immutable MAX_APPROVAL_DURATION;
+
+  /// @inheritdoc ISafeEntrypoint
   mapping(address _actionsBuilder => uint256 _approvalExpiresAt) public approvalExpiries;
 
   /// @inheritdoc ISafeEntrypoint
@@ -44,6 +47,7 @@ contract SafeEntrypoint is SafeManageable, OnlyEntrypointGuard, EmergencyModeHoo
    * @param _shortTxExecutionDelay The short transaction execution delay (in seconds)
    * @param _longTxExecutionDelay The long transaction execution delay (in seconds)
    * @param _txExpiryDelay The transaction expiry delay (in seconds after executable)
+   * @param _maxApprovalDuration The maximum approval duration for an actions builder or hub (in seconds)
    * @param _emergencyTrigger The emergency trigger address
    * @param _emergencyCaller The emergency caller address
    */
@@ -53,6 +57,7 @@ contract SafeEntrypoint is SafeManageable, OnlyEntrypointGuard, EmergencyModeHoo
     uint256 _shortTxExecutionDelay,
     uint256 _longTxExecutionDelay,
     uint256 _txExpiryDelay,
+    uint256 _maxApprovalDuration,
     address _emergencyTrigger,
     address _emergencyCaller
   ) SafeManageable(_safe) EmergencyModeHook(_emergencyTrigger, _emergencyCaller) {
@@ -61,12 +66,15 @@ contract SafeEntrypoint is SafeManageable, OnlyEntrypointGuard, EmergencyModeHoo
     SHORT_TX_EXECUTION_DELAY = _shortTxExecutionDelay;
     LONG_TX_EXECUTION_DELAY = _longTxExecutionDelay;
     TX_EXPIRY_DELAY = _txExpiryDelay;
+    MAX_APPROVAL_DURATION = _maxApprovalDuration;
   }
 
   // ~~~ ADMIN METHODS ~~~
 
   /// @inheritdoc ISafeEntrypoint
   function approveActionsBuilder(address _actionsBuilder, uint256 _approvalDuration) external isSafe {
+    if (_approvalDuration > MAX_APPROVAL_DURATION) revert InvalidApprovalDuration();
+
     uint256 _approvalExpiresAt = block.timestamp + _approvalDuration;
     approvalExpiries[_actionsBuilder] = _approvalExpiresAt;
     emit ActionsBuilderApproved(_actionsBuilder, _approvalDuration, _approvalExpiresAt);

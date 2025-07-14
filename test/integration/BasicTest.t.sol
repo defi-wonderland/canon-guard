@@ -60,6 +60,7 @@ contract IntegrationBasicTest is DeploySaferSafe, EthereumConstants, Test {
         SHORT_TX_EXECUTION_DELAY,
         LONG_TX_EXECUTION_DELAY,
         TX_EXPIRY_DELAY,
+        MAX_APPROVAL_DURATION,
         EMERGENCY_TRIGGER,
         EMERGENCY_CALLER
       )
@@ -87,7 +88,7 @@ contract IntegrationBasicTest is DeploySaferSafe, EthereumConstants, Test {
 
   function test_ExecuteTransaction() public {
     // Allow the SafeEntrypoint to call the SimpleActions contract
-    uint256 _approvalDuration = block.timestamp + 1 days;
+    uint256 _approvalDuration = 1 days;
 
     vm.prank(address(_safeProxy));
     _safeEntrypoint.approveActionsBuilder(_actionsBuilder, _approvalDuration);

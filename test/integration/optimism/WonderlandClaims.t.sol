@@ -49,7 +49,7 @@ contract IntegrationWonderlandClaims is IntegrationOptimismBase {
     assertEq(WLD.balanceOf(address(SAFE_PROXY)), _safeBalance);
 
     // Allow the SafeEntrypoint to call the SimpleTransfers contract
-    uint256 _approvalDuration = block.timestamp + 1 days;
+    uint256 _approvalDuration = 1 days;
 
     vm.prank(address(SAFE_PROXY));
     safeEntrypoint.approveActionsBuilder(_actionsBuilder, _approvalDuration);
@@ -83,7 +83,7 @@ contract IntegrationWonderlandClaims is IntegrationOptimismBase {
     assertEq(OP.balanceOf(address(SAFE_PROXY)), _safeBalance);
 
     // Allow the SafeEntrypoint to call the contract
-    uint256 _approvalDuration = block.timestamp + 1 days;
+    uint256 _approvalDuration = 1 days;
 
     vm.prank(address(SAFE_PROXY));
     safeEntrypoint.approveActionsBuilder(_opxAction, _approvalDuration);
