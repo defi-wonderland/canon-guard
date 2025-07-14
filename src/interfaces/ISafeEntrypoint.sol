@@ -185,7 +185,7 @@ interface ISafeEntrypoint is ISafeManageable {
     address _actionsBuilder,
     uint256 _safeNonce
   ) external view returns (address[] memory _approvedHashSigners);
-  
+
   /**
    * @notice Gets the Safe nonce
    * @return _safeNonce The Safe nonce
