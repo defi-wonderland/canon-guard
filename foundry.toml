@@ -25,6 +25,9 @@ out = 'out-via-ir'
 [profile.docs]
 src = 'src/interfaces/'
 
+[invariant]
+timeout = 10
+
 [fuzz]
 runs = 1000
 
