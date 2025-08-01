@@ -11,7 +11,7 @@ abstract contract HandlersApproveAction is BaseHandlers {
     address _actionsBuilder = ghost_hashToActionsBuilder[_hash];
 
     try safeEntrypoint.executeTransaction(_actionsBuilder) {
-      // ApproveAction doesn't interact with actionTarget
+      assertTrue(actionTarget.isApproved());
       actionTarget.reset();
     } catch (bytes memory _reason) {
       assertTrue(

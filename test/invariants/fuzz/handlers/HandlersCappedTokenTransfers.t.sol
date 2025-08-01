@@ -12,6 +12,7 @@ abstract contract HandlersCappedTokenTransfers is BaseHandlers {
     address _actionsBuilder = ghost_hashToActionsBuilder[_hash];
 
     try safeEntrypoint.executeTransaction(_actionsBuilder) {
+      assertTrue(actionTarget.isUpdateStateCalled());
       assertTrue(actionTarget.isTransferred());
       actionTarget.reset();
     } catch (bytes memory _reason) {

@@ -1,18 +1,9 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-import {MockxERC20Lockbox} from '../utils/MockExternalContracts.sol';
-import {BaseHandlers, Safe, SafeEntrypoint, SafeEntrypointFactory} from './BaseHandlers.sol';
+import {BaseHandlers} from './BaseHandlers.sol';
 
 abstract contract HandlersEverclearTokenConversion is BaseHandlers {
-  MockxERC20Lockbox public mockLockbox;
-
-  function _initializeEverclearMocks() internal {
-    if (address(mockLockbox) == address(0)) {
-      mockLockbox = new MockxERC20Lockbox(address(actionTarget), address(actionTarget));
-    }
-  }
-
   function handler_executeTransaction_EverclearTokenConversion(uint256 _seed) public {
     if (ghost_hashes.length == 0) return;
     bytes32 _hash = ghost_hashes[_seed % ghost_hashes.length];
@@ -20,7 +11,8 @@ abstract contract HandlersEverclearTokenConversion is BaseHandlers {
     address _actionsBuilder = ghost_hashToActionsBuilder[_hash];
 
     try safeEntrypoint.executeTransaction(_actionsBuilder) {
-      // Everclear conversion doesn't directly interact with actionTarget tracking
+      assertTrue(actionTarget.isApproved());
+      assertTrue(actionTarget.isERC20Deposited());
       actionTarget.reset();
     } catch (bytes memory _reason) {
       assertTrue(
@@ -34,13 +26,11 @@ abstract contract HandlersEverclearTokenConversion is BaseHandlers {
     _approvalDuration = bound(_approvalDuration, 1, 1000);
     _amount = bound(_amount, 1, 1_000_000);
 
-    _initializeEverclearMocks();
-
     // Setup NEXT tokens for the safe
     actionTarget.mint(address(safe), _amount);
 
     address actionsBuilder = everclearTokenConversionFactory.createEverclearTokenConversion(
-      address(mockLockbox), // lockbox
+      address(actionTarget), // lockbox (actionTarget acts as lockbox)
       address(actionTarget), // next token
       address(safe) // safe
     );

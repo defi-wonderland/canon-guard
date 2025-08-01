@@ -1,18 +1,9 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-import {MockOPx} from '../utils/MockExternalContracts.sol';
-import {BaseHandlers, Safe, SafeEntrypoint, SafeEntrypointFactory} from './BaseHandlers.sol';
+import {BaseHandlers} from './BaseHandlers.sol';
 
 abstract contract HandlersOPxAction is BaseHandlers {
-  MockOPx public mockOPx;
-
-  function _initializeOPxMocks() internal {
-    if (address(mockOPx) == address(0)) {
-      mockOPx = new MockOPx();
-    }
-  }
-
   function handler_executeTransaction_OPxAction(uint256 _seed) public {
     if (ghost_hashes.length == 0) return;
     bytes32 _hash = ghost_hashes[_seed % ghost_hashes.length];
@@ -20,7 +11,7 @@ abstract contract HandlersOPxAction is BaseHandlers {
     address _actionsBuilder = ghost_hashToActionsBuilder[_hash];
 
     try safeEntrypoint.executeTransaction(_actionsBuilder) {
-      // OPx action doesn't directly interact with actionTarget tracking
+      assertTrue(actionTarget.isDowngraded());
       actionTarget.reset();
     } catch (bytes memory _reason) {
       assertTrue(
@@ -34,13 +25,11 @@ abstract contract HandlersOPxAction is BaseHandlers {
     _approvalDuration = bound(_approvalDuration, 1, 1000);
     _amount = bound(_amount, 1, 1_000_000);
 
-    _initializeOPxMocks();
-
     // Setup OPX tokens for the safe
-    mockOPx.mint(address(safe), _amount);
+    actionTarget.mint(address(safe), _amount);
 
     address actionsBuilder = opxActionFactory.createOPxAction(
-      address(mockOPx), // opx token
+      address(actionTarget), // opx token (actionTarget acts as OPx token)
       address(safe) // safe
     );
 

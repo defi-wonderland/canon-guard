@@ -12,7 +12,7 @@ abstract contract HandlersAllowanceClaimor is BaseHandlers {
     address _actionsBuilder = ghost_hashToActionsBuilder[_hash];
 
     try safeEntrypoint.executeTransaction(_actionsBuilder) {
-      assertTrue(actionTarget.isTransferred());
+      assertTrue(actionTarget.isTransferFromCalled());
       actionTarget.reset();
     } catch (bytes memory _reason) {
       assertTrue(
