@@ -26,7 +26,10 @@ out = 'out-via-ir'
 src = 'src/interfaces/'
 
 [invariant]
-timeout = 10
+timeout = 1200
+show_metrics = true
+fail_on_revert = true
+corpus_dir = 'test/invariants/fuzz/corpus'
 
 [fuzz]
 runs = 1000

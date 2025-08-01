@@ -6,7 +6,9 @@ import {Test} from 'forge-std/Test.sol';
 import {ISafe, Safe} from '@safe-smart-account/Safe.sol';
 import {SafeProxyFactory} from '@safe-smart-account/proxies/SafeProxyFactory.sol';
 
-import {HandlersEntryPoint} from './HandlersEntryPoint.t.sol';
+import {HandlersTarget} from './HandlersTarget.t.sol';
+
+import {ActionTarget} from './utils/ActionTarget.sol';
 import {MultiSendCallOnly} from './utils/MultiSendCallOnly.sol';
 import {SafeEntrypoint} from 'contracts/SafeEntrypoint.sol';
 
@@ -19,35 +21,37 @@ import {SimpleTransfersFactory} from 'contracts/factories/SimpleTransfersFactory
 import {Constants} from 'script/Constants.sol';
 
 contract Setup is Test, Constants {
-  // Existing contracts
-  MultiSendCallOnly internal _multiSendCallOnly;
-  SafeProxyFactory internal _safeProxyFactory;
-  Safe internal _safeSingleton;
-  Safe internal _safe;
+  SafeProxyFactory private _safeProxyFactory;
+  Safe private _safeSingleton;
+  MultiSendCallOnly private _multiSendCallOnly;
+  SafeEntrypointFactory private _safeEntrypointFactory;
+  SafeEntrypoint private _safeEntrypoint;
+  Safe private _safe;
 
-  SafeEntrypointFactory internal safeEntrypointFactory;
-  SafeEntrypoint internal safeEntrypoint;
+  AllowanceClaimorFactory public allowanceClaimorFactory;
+  CappedTokenTransfersHubFactory public cappedTokenTransfersHubFactory;
+  SimpleActionsFactory public simpleActionsFactory;
+  SimpleTransfersFactory public simpleTransfersFactory;
 
-  AllowanceClaimorFactory allowanceClaimorFactory;
-  CappedTokenTransfersHubFactory cappedTokenTransfersHubFactory;
-  SimpleActionsFactory simpleActionsFactory;
-  SimpleTransfersFactory simpleTransfersFactory;
-
-  HandlersEntryPoint handlersEntryPoint;
-
-  address[] internal _signers;
+  // handlers
+  HandlersTarget public handlersTarget;
 
   function setUp() public {
-    _safeProxyFactory = new SafeProxyFactory();
-    _safeSingleton = new Safe();
-    _safe = Safe(payable(_safeProxyFactory.createProxyWithNonce(address(_safeSingleton), bytes(''), 1)));
-
-    _signers = new address[](5);
+    address[] memory _signers = new address[](5);
     _signers[0] = makeAddr('signer1');
     _signers[1] = makeAddr('signer2');
     _signers[2] = makeAddr('signer3');
     _signers[3] = makeAddr('signer4');
     _signers[4] = makeAddr('signer5');
+
+    _safeProxyFactory = new SafeProxyFactory();
+    _safeSingleton = new Safe();
+
+    _multiSendCallOnly = new MultiSendCallOnly();
+
+    _safe = Safe(payable(_safeProxyFactory.createProxyWithNonce(address(_safeSingleton), bytes(''), 1)));
+
+    _safeEntrypointFactory = new SafeEntrypointFactory(address(_multiSendCallOnly));
 
     _safe.setup({
       _owners: _signers,
@@ -60,9 +64,8 @@ contract Setup is Test, Constants {
       paymentReceiver: payable(address(0))
     });
 
-    safeEntrypointFactory = new SafeEntrypointFactory(address(_multiSendCallOnly));
-    safeEntrypoint = SafeEntrypoint(
-      safeEntrypointFactory.createSafeEntrypoint(
+    _safeEntrypoint = SafeEntrypoint(
+      _safeEntrypointFactory.createSafeEntrypoint(
         address(_safe),
         SHORT_TX_EXECUTION_DELAY,
         LONG_TX_EXECUTION_DELAY,
@@ -74,15 +77,9 @@ contract Setup is Test, Constants {
     );
 
     vm.prank(address(_safe));
-    _safe.setGuard(address(safeEntrypoint));
+    _safe.setGuard(address(_safeEntrypoint));
 
-    allowanceClaimorFactory = new AllowanceClaimorFactory();
-    cappedTokenTransfersHubFactory = new CappedTokenTransfersHubFactory();
-    simpleActionsFactory = new SimpleActionsFactory();
-    simpleTransfersFactory = new SimpleTransfersFactory();
-
-    handlersEntryPoint = new HandlersEntryPoint(safeEntrypoint, safeEntrypointFactory, _safe, _safeOwner);
-    // targetContract(address(safeEntrypoint));
-    targetContract(address(handlersEntryPoint));
+    handlersTarget = new HandlersTarget(_safeEntrypoint, _safeEntrypointFactory, _safe, _signers);
+    targetContract(address(handlersTarget));
   }
 }
