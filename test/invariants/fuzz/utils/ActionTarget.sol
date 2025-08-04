@@ -39,6 +39,15 @@ contract ActionTarget is IERC20 {
   address public transferFromRecipient;
   uint256 public transferFromAmount;
 
+  // Hub-specific functions (not implemented in ActionTarget, use real hubs)
+
+  // Cap tracking
+  mapping(address => uint256) public tokenCaps;
+  mapping(address => uint256) public tokenTotalSpent;
+  uint256 public currentEpochState;
+  uint256 public constant EPOCH_LENGTH = 1 days;
+  uint256 public constant STARTING_TIMESTAMP = 1;
+
   // Vesting/External functions
   uint256 public constant UNCLAIMED_AMOUNT = 1000;
   uint256 public constant VESTED_AMOUNT = 2000;
@@ -115,6 +124,25 @@ contract ActionTarget is IERC20 {
     return address(this);
   }
 
+  // Hub-specific functions - this should not be implemented in ActionTarget
+  // The real hub will deploy actual contracts
+
+  function cap(address _token) external view returns (uint256) {
+    return tokenCaps[_token];
+  }
+
+  function totalSpent(address _token) external view returns (uint256) {
+    return tokenTotalSpent[_token];
+  }
+
+  function currentEpoch() external view returns (uint256) {
+    return currentEpochState;
+  }
+
+  function setCap(address _token, uint256 _cap) external {
+    tokenCaps[_token] = _cap;
+  }
+
   function reset() public {
     // Reset original flags
     isDeposited = false;
@@ -141,6 +169,8 @@ contract ActionTarget is IERC20 {
     transferFromSender = address(0);
     transferFromRecipient = address(0);
     transferFromAmount = 0;
+
+    // Hub-specific flags are not needed since we use the real hub
   }
 
   // ERC20 Implementation

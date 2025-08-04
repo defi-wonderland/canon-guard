@@ -7,6 +7,7 @@ import {HandlersAllowanceClaimor} from './handlers/HandlersAllowanceClaimor.t.so
 import {HandlersApprove} from './handlers/HandlersApprove.t.sol';
 import {HandlersApproveAction} from './handlers/HandlersApproveAction.t.sol';
 import {HandlersCappedTokenTransfers} from './handlers/HandlersCappedTokenTransfers.t.sol';
+import {HandlersCappedTokenTransfersHub} from './handlers/HandlersCappedTokenTransfersHub.t.sol';
 import {HandlersEverclearTokenConversion} from './handlers/HandlersEverclearTokenConversion.t.sol';
 import {HandlersEverclearTokenStake} from './handlers/HandlersEverclearTokenStake.t.sol';
 import {HandlersOPxAction} from './handlers/HandlersOPxAction.t.sol';
@@ -21,6 +22,7 @@ contract HandlersTarget is
   HandlersAllowanceClaimor,
   HandlersApproveAction,
   HandlersCappedTokenTransfers,
+  HandlersCappedTokenTransfersHub,
   HandlersEverclearTokenConversion,
   HandlersEverclearTokenStake,
   HandlersOPxAction,
