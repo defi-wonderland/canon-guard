@@ -37,9 +37,9 @@ abstract contract HandlersAllowanceClaimor is BaseHandlers {
 
       if (bytes4(_reason) == bytes4(keccak256('TransactionNotYetExecutable()'))) {
         if (ghost_approvedActionsBuilder[_actionsBuilder]) {
-          assertLt(block.timestamp, ghost_timestampOfActionQueued[_hash] + safeEntrypoint.SHORT_TX_EXECUTION_DELAY());
+          assertGe(block.timestamp, ghost_timestampOfActionQueued[_hash] + safeEntrypoint.SHORT_TX_EXECUTION_DELAY());
         } else {
-          assertLt(block.timestamp, ghost_timestampOfActionQueued[_hash] + safeEntrypoint.LONG_TX_EXECUTION_DELAY());
+          assertGe(block.timestamp, ghost_timestampOfActionQueued[_hash] + safeEntrypoint.LONG_TX_EXECUTION_DELAY());
         }
       }
 
