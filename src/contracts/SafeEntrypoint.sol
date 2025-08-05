@@ -88,12 +88,12 @@ contract SafeEntrypoint is OnlyEntrypointGuard, EmergencyModeHook, ISafeEntrypoi
   // ~~~ ADMIN METHODS ~~~
 
   /// @inheritdoc ISafeEntrypoint
-  function approveActionsBuilder(address _actionsBuilder, uint256 _approvalDuration) external isSafe {
+  function approveActionsBuilderOrHub(address _actionsBuilderOrHub, uint256 _approvalDuration) external isSafe {
     if (_approvalDuration > MAX_APPROVAL_DURATION) revert InvalidApprovalDuration();
 
     uint256 _approvalExpiresAt = block.timestamp + _approvalDuration;
-    approvalExpiries[_actionsBuilder] = _approvalExpiresAt;
-    emit ActionsBuilderApproved(_actionsBuilder, _approvalDuration, _approvalExpiresAt);
+    approvalExpiries[_actionsBuilderOrHub] = _approvalExpiresAt;
+    emit ActionsBuilderOrHubApproved(_actionsBuilderOrHub, _approvalDuration, _approvalExpiresAt);
   }
 
   // ~~~ TRANSACTION METHODS ~~~
