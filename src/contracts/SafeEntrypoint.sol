@@ -427,6 +427,6 @@ contract SafeEntrypoint is OnlyEntrypointGuard, EmergencyModeHook, ISafeEntrypoi
       }
     }
 
-    return _signers;
+    _sortedSigners = _signers;
   }
 }
