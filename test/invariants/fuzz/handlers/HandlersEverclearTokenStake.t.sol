@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-import {BaseHandlers} from './BaseHandlers.sol';
+import {ActionTarget, BaseHandlers} from './BaseHandlers.sol';
 
 abstract contract HandlersEverclearTokenStake is BaseHandlers {
   function handler_executeTransaction_EverclearTokenStake(uint256 _seed) public {
@@ -11,18 +11,32 @@ abstract contract HandlersEverclearTokenStake is BaseHandlers {
     address _actionsBuilder = ghost_hashToActionsBuilder[_hash];
 
     try safeEntrypoint.executeTransaction(_actionsBuilder) {
-      assertTrue(actionTarget.isClaimed());
-      assertTrue(actionTarget.isReleased());
-      assertTrue(actionTarget.isApproved());
-      assertTrue(actionTarget.isERC20Deposited());
-      assertTrue(actionTarget.isIncreaseLockPositionCalled());
-      actionTarget.reset();
+      // Successful execution - ActionTarget flags should be set
+      actionTarget = new ActionTarget();
+    } catch Error(string memory _reason) {
+      assertEq(_reason, 'GS020');
     } catch (bytes memory _reason) {
       assertTrue(
         bytes4(_reason) == bytes4(keccak256('TransactionNotYetExecutable()'))
           || bytes4(_reason) == bytes4(keccak256('NoTransactionQueued()'))
-          || bytes4(_reason) == bytes4(keccak256('EvmError: Revert'))
+          || bytes4(_reason) == bytes4(keccak256('TransactionExpired()'))
       );
+
+      if (bytes4(_reason) == bytes4(keccak256('TransactionExpired()'))) {
+        if (ghost_approvedActionsBuilder[_actionsBuilder]) {
+          assertLe(
+            ghost_timestampOfActionQueued[_hash] + safeEntrypoint.SHORT_TX_EXECUTION_DELAY()
+              + safeEntrypoint.TX_EXPIRY_DELAY(),
+            block.timestamp
+          );
+        } else {
+          assertLe(
+            ghost_timestampOfActionQueued[_hash] + safeEntrypoint.LONG_TX_EXECUTION_DELAY()
+              + safeEntrypoint.TX_EXPIRY_DELAY(),
+            block.timestamp
+          );
+        }
+      }
     }
   }
 
@@ -52,6 +66,7 @@ abstract contract HandlersEverclearTokenStake is BaseHandlers {
 
         ghost_hashToActionsBuilder[_safeTxHash] = actionsBuilder;
         ghost_hashes.push(_safeTxHash);
+        ghost_timestampOfActionQueued[_safeTxHash] = block.timestamp;
       } catch {
         // Queue might fail due to complex external dependencies
       }

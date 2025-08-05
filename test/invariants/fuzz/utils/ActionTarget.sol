@@ -6,11 +6,9 @@ pragma solidity ^0.8.0;
 import {IERC20} from 'forge-std/interfaces/IERC20.sol';
 
 contract ActionTarget is IERC20 {
-  // Original flags
   bool public isDeposited;
   bool public isTransferred;
 
-  // External contract function flags and arguments
   bool public isClaimed;
   address public claimArg;
 
@@ -38,8 +36,6 @@ contract ActionTarget is IERC20 {
   address public transferFromSender;
   address public transferFromRecipient;
   uint256 public transferFromAmount;
-
-  // Hub-specific functions (not implemented in ActionTarget, use real hubs)
 
   // Cap tracking
   mapping(address => uint256) public tokenCaps;
@@ -143,36 +139,6 @@ contract ActionTarget is IERC20 {
     tokenCaps[_token] = _cap;
   }
 
-  function reset() public {
-    // Reset original flags
-    isDeposited = false;
-    isTransferred = false;
-
-    // Reset external function flags
-    isClaimed = false;
-    claimArg = address(0);
-    isReleased = false;
-    isApproved = false;
-    approveSpender = address(0);
-    approveAmount = 0;
-    isERC20Deposited = false;
-    depositAmount = 0;
-    isDowngraded = false;
-    downgradeAmount = 0;
-    isUpdateStateCalled = false;
-    updateStateData = '';
-    isIncreaseLockPositionCalled = false;
-    lockPositionAmount = 0;
-    lockTime = 0;
-    gasLimit = 0;
-    isTransferFromCalled = false;
-    transferFromSender = address(0);
-    transferFromRecipient = address(0);
-    transferFromAmount = 0;
-
-    // Hub-specific flags are not needed since we use the real hub
-  }
-
   // ERC20 Implementation
   function name() public pure returns (string memory) {
     return 'ActionTarget';
@@ -195,7 +161,7 @@ contract ActionTarget is IERC20 {
   }
 
   function allowance(address owner, address spender) public view override returns (uint256) {
-    return 1;
+    return 123_456;
   }
 
   function transferFrom(address from, address to, uint256 amount) public override returns (bool) {

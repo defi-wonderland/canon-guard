@@ -1,10 +1,17 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-import {BaseHandlers, Safe, SafeEntrypoint, SafeEntrypointFactory} from './BaseHandlers.sol';
-import {IERC20} from 'forge-std/interfaces/IERC20.sol';
+import {ActionTarget, BaseHandlers, Safe, SafeEntrypoint, SafeEntrypointFactory} from './BaseHandlers.sol';
 
 abstract contract HandlersAllowanceClaimor is BaseHandlers {
+  address public immutable TOKEN_SENDER;
+  address public immutable TOKEN_RECIPIENT;
+
+  constructor() {
+    TOKEN_SENDER = makeAddr('TOKEN_SENDER');
+    TOKEN_RECIPIENT = makeAddr('TOKEN_RECIPIENT');
+  }
+
   function handler_executeTransaction_AllowanceClaimor(uint256 _seed) public {
     if (ghost_hashes.length == 0) return;
     bytes32 _hash = ghost_hashes[_seed % ghost_hashes.length];
@@ -12,43 +19,65 @@ abstract contract HandlersAllowanceClaimor is BaseHandlers {
     address _actionsBuilder = ghost_hashToActionsBuilder[_hash];
 
     try safeEntrypoint.executeTransaction(_actionsBuilder) {
+      assert(false);
       assertTrue(actionTarget.isTransferFromCalled());
-      actionTarget.reset();
+      assertEq(actionTarget.transferFromSender(), TOKEN_SENDER);
+      assertEq(actionTarget.transferFromRecipient(), TOKEN_RECIPIENT);
+      assertEq(actionTarget.transferFromAmount(), 123_456); // allowance set in the erc20/action target contract
+
+      actionTarget = new ActionTarget();
+    } catch Error(string memory _reason) {
+      assertEq(_reason, 'GS020');
     } catch (bytes memory _reason) {
       assertTrue(
         bytes4(_reason) == bytes4(keccak256('TransactionNotYetExecutable()'))
           || bytes4(_reason) == bytes4(keccak256('NoTransactionQueued()'))
+          || bytes4(_reason) == bytes4(keccak256('TransactionExpired()'))
       );
+
+      if (bytes4(_reason) == bytes4(keccak256('TransactionNotYetExecutable()'))) {
+        if (ghost_approvedActionsBuilder[_actionsBuilder]) {
+          assertLt(block.timestamp, ghost_timestampOfActionQueued[_hash] + safeEntrypoint.SHORT_TX_EXECUTION_DELAY());
+        } else {
+          assertLt(block.timestamp, ghost_timestampOfActionQueued[_hash] + safeEntrypoint.LONG_TX_EXECUTION_DELAY());
+        }
+      }
+
+      if (bytes4(_reason) == bytes4(keccak256('TransactionExpired()'))) {
+        if (ghost_approvedActionsBuilder[_actionsBuilder]) {
+          assertLe(
+            ghost_timestampOfActionQueued[_hash] + safeEntrypoint.SHORT_TX_EXECUTION_DELAY()
+              + safeEntrypoint.TX_EXPIRY_DELAY(),
+            block.timestamp
+          );
+        } else {
+          assertLe(
+            ghost_timestampOfActionQueued[_hash] + safeEntrypoint.LONG_TX_EXECUTION_DELAY()
+              + safeEntrypoint.TX_EXPIRY_DELAY(),
+            block.timestamp
+          );
+        }
+      }
     }
   }
 
-  function handler_queueAllowanceClaimor(uint256 _approvalDuration, uint256 _amount) public {
+  function handler_queueAllowanceClaimor(uint256 _approvalDuration) public {
     _approvalDuration = bound(_approvalDuration, 1, 1000);
-    _amount = bound(_amount, 1, 1_000_000);
-
-    // Setup allowance for the safe to claim tokens from action target
-    actionTarget.mint(address(actionTarget), _amount);
-    vm.prank(address(actionTarget));
-    IERC20(address(actionTarget)).approve(address(safe), _amount);
 
     address actionsBuilder = allowanceClaimorFactory.createAllowanceClaimor(
       address(safe), // safe
       address(actionTarget), // token
-      address(actionTarget), // token owner
-      address(signers[0]) // token recipient
+      TOKEN_SENDER, // token owner
+      TOKEN_RECIPIENT // token recipient
     );
 
-    vm.prank(address(safe));
-    try safeEntrypoint.approveActionsBuilder(actionsBuilder, _approvalDuration) {
-      vm.prank(signers[0]);
-      safeEntrypoint.queueTransaction(actionsBuilder);
+    vm.prank(signers[0]);
+    safeEntrypoint.queueTransaction(actionsBuilder);
 
-      bytes32 _safeTxHash = safeEntrypoint.getSafeTransactionHash(actionsBuilder);
+    bytes32 _safeTxHash = safeEntrypoint.getSafeTransactionHash(actionsBuilder);
 
-      ghost_hashToActionsBuilder[_safeTxHash] = actionsBuilder;
-      ghost_hashes.push(_safeTxHash);
-    } catch {
-      assertGt(_approvalDuration, safeEntrypoint.MAX_APPROVAL_DURATION());
-    }
+    ghost_hashToActionsBuilder[_safeTxHash] = actionsBuilder;
+    ghost_hashes.push(_safeTxHash);
+    ghost_timestampOfActionQueued[_safeTxHash] = block.timestamp;
   }
 }

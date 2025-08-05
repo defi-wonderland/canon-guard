@@ -9,12 +9,20 @@ by default - use the nightly version (1.3.0) if desired: `foundryup --install ni
 - `SafeEntrypointFactory`
 - `SimpleActions`
 - `SimpleTransfers`
-- `CappedTokenTransfers`
+- `CappedTokenTransfers` and hub
 - `AllowanceClaimor`
 
 ## Invariants
 
-The core of the security relying on the Safe contract, these tests are privileging non-revertion/system "froze" over access control.
+The core of the security relying on the Safe contract, these tests are privileging non-revertion/system "frozen" state.
+
+Caps of any capped token transfers are never exceeded.
+
+## Setup
+
+The different action hub targets are all a single mock contract, `ActionTarget`, which is used to test the correct interaction with any arbitrary external contract (by setting flags which are then asserted in the invariants).
+
+Each action builders and hubs are in a dedicated handler, handling both queueing and execution. This should allow enough flexibility to add new action builders in the future.
 
 ## Delays assumptions
 

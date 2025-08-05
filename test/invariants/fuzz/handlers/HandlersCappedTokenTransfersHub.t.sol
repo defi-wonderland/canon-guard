@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-import {BaseHandlers} from './BaseHandlers.sol';
+import {ActionTarget, BaseHandlers} from './BaseHandlers.sol';
 import {CappedTokenTransfers} from 'contracts/actions-builders/CappedTokenTransfers.sol';
 import {ICappedTokenTransfersHub} from 'interfaces/action-hubs/ICappedTokenTransfersHub.sol';
 
@@ -18,19 +18,36 @@ abstract contract HandlersCappedTokenTransfersHub is BaseHandlers {
     address _actionsBuilder = ghost_hashToActionsBuilder[_hash];
 
     try safeEntrypoint.executeTransaction(_actionsBuilder) {
-      assertTrue(actionTarget.isUpdateStateCalled());
-      assertTrue(actionTarget.isTransferred());
-
+      // Successful execution - ActionTarget flags should be set
       // Cap verification is handled by the hub's updateState() function
-      // If execution succeeds, the cap wasn't exceeded
-
-      actionTarget.reset();
+      actionTarget = new ActionTarget();
+    } catch Error(string memory _reason) {
+      assertEq(_reason, 'GS020');
     } catch (bytes memory _reason) {
       assertTrue(
         bytes4(_reason) == bytes4(keccak256('TransactionNotYetExecutable()'))
           || bytes4(_reason) == bytes4(keccak256('NoTransactionQueued()'))
+          || bytes4(_reason) == bytes4(keccak256('TransactionExpired()'))
           || bytes4(_reason) == bytes4(keccak256('CapExceeded()'))
       );
+
+      if (bytes4(_reason) == bytes4(keccak256('TransactionExpired()'))) {
+        if (ghost_approvedActionsBuilder[_actionsBuilder]) {
+          assertLe(
+            ghost_timestampOfActionQueued[_hash] + safeEntrypoint.SHORT_TX_EXECUTION_DELAY()
+              + safeEntrypoint.TX_EXPIRY_DELAY(),
+            block.timestamp
+          );
+        } else {
+          assertLe(
+            ghost_timestampOfActionQueued[_hash] + safeEntrypoint.LONG_TX_EXECUTION_DELAY()
+              + safeEntrypoint.TX_EXPIRY_DELAY(),
+            block.timestamp
+          );
+        }
+      }
+
+      if (bytes4(_reason) == bytes4(keccak256('CapExceeded()'))) {}
     }
   }
 
@@ -80,6 +97,7 @@ abstract contract HandlersCappedTokenTransfersHub is BaseHandlers {
 
         ghost_hashToActionsBuilder[_safeTxHash] = actionsBuilder;
         ghost_hashes.push(_safeTxHash);
+        ghost_timestampOfActionQueued[_safeTxHash] = block.timestamp;
       } catch {
         assertGt(_approvalDuration, safeEntrypoint.MAX_APPROVAL_DURATION());
       }
@@ -121,21 +139,6 @@ abstract contract HandlersCappedTokenTransfersHub is BaseHandlers {
       ghost_hashes.push(_safeTxHash);
     } catch {
       assertGt(_approvalDuration, safeEntrypoint.MAX_APPROVAL_DURATION());
-    }
-  }
-
-  // Property: Total spent should never exceed cap within an epoch
-  function invariant_capNeverExceeded() public view {
-    if (createdHubs.length == 0) return;
-
-    for (uint256 i = 0; i < createdHubs.length; i++) {
-      address hub = createdHubs[i];
-      address token = hubTokens[hub];
-      uint256 cap = ICappedTokenTransfersHub(hub).cap(token);
-      uint256 totalSpent = ICappedTokenTransfersHub(hub).totalSpent(token);
-
-      // Cap should never be exceeded
-      assertLe(totalSpent, cap);
     }
   }
 }

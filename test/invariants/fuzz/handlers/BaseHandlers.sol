@@ -35,6 +35,8 @@ contract BaseHandlers is Test {
 
   mapping(bytes32 => address) public ghost_hashToActionsBuilder;
   bytes32[] public ghost_hashes;
+  mapping(bytes32 => uint256) public ghost_timestampOfActionQueued;
+  mapping(address => bool) public ghost_approvedActionsBuilder;
 
   ActionTarget public actionTarget;
 
@@ -68,5 +70,10 @@ contract BaseHandlers is Test {
     opxActionFactory = new OPxActionFactory();
     simpleActionsFactory = new SimpleActionsFactory();
     simpleTransfersFactory = new SimpleTransfersFactory();
+  }
+
+  function handler_warp(uint256 _timestamp) public {
+    _timestamp = bound(_timestamp, 1, safeEntrypoint.LONG_TX_EXECUTION_DELAY() * 10);
+    vm.warp(block.timestamp + _timestamp);
   }
 }

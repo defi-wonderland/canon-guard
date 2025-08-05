@@ -37,6 +37,8 @@ contract Setup is Test, Constants {
   HandlersTarget public handlersTarget;
 
   function setUp() public {
+    vm.warp(10);
+
     address[] memory _signers = new address[](5);
     _signers[0] = makeAddr('signer1');
     _signers[1] = makeAddr('signer2');
