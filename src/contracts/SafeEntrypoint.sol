@@ -30,7 +30,7 @@ import {IActionsBuilder} from 'interfaces/actions-builders/IActionsBuilder.sol';
  * @title SafeEntrypoint
  * @notice Contract that allows for the execution of transactions on a Safe
  */
-contract SafeEntrypoint is SafeManageable, OnlyEntrypointGuard, EmergencyModeHook, ISafeEntrypoint {
+contract SafeEntrypoint is OnlyEntrypointGuard, EmergencyModeHook, ISafeEntrypoint {
   // ~~~ STORAGE ~~~
 
   /// @inheritdoc ISafeEntrypoint
