@@ -1,7 +1,7 @@
-/// "Global" mock for all call target of the safe
-
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
+
+/// "Global" mock for all call target of the safe
 
 import {IERC20} from 'forge-std/interfaces/IERC20.sol';
 

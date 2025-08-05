@@ -1,9 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-import {Safe, SafeEntrypoint, SafeEntrypointFactory} from '../Setup.t.sol';
-
-import {ActionTarget} from '../utils/ActionTarget.sol';
+import {Test} from 'forge-std/Test.sol';
+import {ISimpleActions} from 'interfaces/actions-builders/ISimpleActions.sol';
 
 import {AllowanceClaimorFactory} from 'contracts/factories/AllowanceClaimorFactory.sol';
 import {ApproveActionFactory} from 'contracts/factories/ApproveActionFactory.sol';
@@ -13,11 +12,12 @@ import {EverclearTokenStakeFactory} from 'contracts/factories/EverclearTokenStak
 import {OPxActionFactory} from 'contracts/factories/OPxActionFactory.sol';
 import {SimpleActionsFactory} from 'contracts/factories/SimpleActionsFactory.sol';
 import {SimpleTransfersFactory} from 'contracts/factories/SimpleTransfersFactory.sol';
-import {Test} from 'forge-std/Test.sol';
-import {ISimpleActions} from 'interfaces/actions-builders/ISimpleActions.sol';
+
+import {Safe, SafeEntrypoint, SafeEntrypointFactory} from '../Setup.t.sol';
+import {ActionTarget} from '../utils/ActionTarget.sol';
 
 /// @notice Base contract for all handlers, include ghost storage and constructor
-contract BaseHandlers is Test {
+abstract contract BaseHandlers is Test {
   SafeEntrypoint public safeEntrypoint;
   SafeEntrypointFactory public safeEntrypointFactory;
   Safe public safe;
@@ -88,6 +88,7 @@ contract BaseHandlers is Test {
 
     TOKEN_SENDER = makeAddr('TOKEN_SENDER');
     TOKEN_RECIPIENT = makeAddr('TOKEN_RECIPIENT');
+    AMOUNT = 100;
   }
 
   function handler_warp(uint256 _timestamp) public {

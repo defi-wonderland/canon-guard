@@ -140,6 +140,8 @@ abstract contract HandlersSafeEntrypoint is BaseHandlers {
   }
 
   function handler_changeMaxApprovalDuration(uint256 _maxApprovalDuration) public {
+    _maxApprovalDuration = bound(_maxApprovalDuration, 1, 365 days);
+
     // get current params
     uint256 _shortTxExecutionDelay = safeEntrypoint.SHORT_TX_EXECUTION_DELAY();
     uint256 _longTxExecutionDelay = safeEntrypoint.LONG_TX_EXECUTION_DELAY();
