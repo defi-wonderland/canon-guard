@@ -63,9 +63,7 @@ contract CappedTokenTransfersHub is ActionHub, ICappedTokenTransfersHub, SafeMan
   }
 
   /// @inheritdoc ICappedTokenTransfersHub
-  function updateState(bytes memory _data) external isSafe {
-    (uint256 _amount, address _token) = abi.decode(_data, (uint256, address));
-
+  function updateState(address _token, uint256 _amount) external isSafe {
     uint256 _currentEpoch = (block.timestamp - STARTING_TIMESTAMP) / EPOCH_LENGTH;
 
     // If we're in a new epoch, reset the spending

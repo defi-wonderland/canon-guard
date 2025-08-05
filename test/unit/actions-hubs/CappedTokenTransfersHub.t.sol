@@ -72,8 +72,7 @@ contract UnitCappedTokenTransfersHub is Test {
   function test_UpdateStateWhenCalledByTheSafe(uint256 _amount) external whenCalledByTheSafe {
     _amount = bound(_amount, 0, cappedTokenTransfersHub.cap(tokens[0]));
 
-    bytes memory data = abi.encode(_amount, tokens[0]);
-    cappedTokenTransfersHub.updateState(data);
+    cappedTokenTransfersHub.updateState(tokens[0], _amount);
 
     // it increments the total spent
     assertEq(cappedTokenTransfersHub.totalSpent(tokens[0]), _amount);
@@ -86,13 +85,12 @@ contract UnitCappedTokenTransfersHub is Test {
     _amount = bound(_amount, 0, cappedTokenTransfersHub.cap(tokens[0]));
 
     // spend all the cap for this epoch
-    cappedTokenTransfersHub.updateState(abi.encode(cappedTokenTransfersHub.cap(tokens[0]), tokens[0]));
+    cappedTokenTransfersHub.updateState(tokens[0], cappedTokenTransfersHub.cap(tokens[0]));
 
     // move to the next epoch
     vm.warp(block.timestamp + epochLength + 1);
 
-    bytes memory data = abi.encode(_amount, tokens[0]);
-    cappedTokenTransfersHub.updateState(data);
+    cappedTokenTransfersHub.updateState(tokens[0], _amount);
 
     // it resets the total spent
     assertEq(cappedTokenTransfersHub.totalSpent(tokens[0]), _amount);
@@ -103,17 +101,15 @@ contract UnitCappedTokenTransfersHub is Test {
   function test_UpdateStateWhenTheTotalSpentIsGreaterThanTheCap(uint256 _amount) external whenCalledByTheSafe {
     _amount = bound(_amount, cappedTokenTransfersHub.cap(tokens[0]) + 1, type(uint256).max);
 
-    bytes memory data = abi.encode(_amount, tokens[0]);
-
     // it reverts
     vm.expectRevert(ICappedTokenTransfersHub.CapExceeded.selector);
-    cappedTokenTransfersHub.updateState(data);
+    cappedTokenTransfersHub.updateState(tokens[0], _amount);
   }
 
   function test_UpdateStateWhenNotCalledByTheSafe() external {
     // It reverts
     vm.prank(makeAddr('notSafe'));
     vm.expectRevert(ISafeManageable.NotSafe.selector);
-    cappedTokenTransfersHub.updateState(bytes(''));
+    cappedTokenTransfersHub.updateState(tokens[0], 0);
   }
 }

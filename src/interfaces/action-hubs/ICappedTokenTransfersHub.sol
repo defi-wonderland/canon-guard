@@ -16,10 +16,10 @@ interface ICappedTokenTransfersHub is IActionHub, ISafeManageable {
 
   /**
    * @notice Updates the state. Checks if the cap is exceeded and resets the spending if we're in a new epoch.
-   * @param _data The data to update the state with
-   * @dev The data is a tuple of (amount, token)
+   * @param _token The token to update the state for
+   * @param _amount The amount of tokens to update the state for
    */
-  function updateState(bytes memory _data) external;
+  function updateState(address _token, uint256 _amount) external;
 
   /**
    * @notice Creates a new action builder
