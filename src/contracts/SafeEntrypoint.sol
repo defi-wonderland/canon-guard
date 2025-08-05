@@ -101,16 +101,16 @@ contract SafeEntrypoint is SafeManageable, OnlyEntrypointGuard, EmergencyModeHoo
   /// @inheritdoc ISafeEntrypoint
   function queueHubTransaction(address _actionHub, address _actionsBuilder) external isSafeOwner {
     if (!IActionHub(_actionHub).isChild(_actionsBuilder)) revert InvalidHubOrActionsBuilder();
-    bool _txIsPreApproved = _isPreApproved(_actionHub);
-    _queueTransaction(_actionsBuilder, _txIsPreApproved);
+    bool _actionIsPreApproved = _isPreApproved(_actionHub);
+    _queueTransaction(_actionsBuilder, _actionIsPreApproved);
 
     emit TransactionQueued(_actionHub, _actionsBuilder);
   }
 
   /// @inheritdoc ISafeEntrypoint
   function queueTransaction(address _actionsBuilder) external isSafeOwner {
-    bool _txIsPreApproved = _isPreApproved(_actionsBuilder);
-    _queueTransaction(_actionsBuilder, _txIsPreApproved);
+    bool _actionIsPreApproved = _isPreApproved(_actionsBuilder);
+    _queueTransaction(_actionsBuilder, _actionIsPreApproved);
 
     emit TransactionQueued(address(0), _actionsBuilder);
   }
@@ -227,11 +227,11 @@ contract SafeEntrypoint is SafeManageable, OnlyEntrypointGuard, EmergencyModeHoo
   /**
    * @notice Internal function to queue a transaction
    * @param _actionsBuilder The actions builder contract address
-   * @param _txIsPreApproved Whether the actions builder is pre-approved
+   * @param _actionIsPreApproved Whether the actions builder is pre-approved
    */
-  function _queueTransaction(address _actionsBuilder, bool _txIsPreApproved) internal {
+  function _queueTransaction(address _actionsBuilder, bool _actionIsPreApproved) internal {
     // If approved, use short execution delay. Otherwise, use long execution delay
-    uint256 _txExecutionDelay = _txIsPreApproved ? SHORT_TX_EXECUTION_DELAY : LONG_TX_EXECUTION_DELAY;
+    uint256 _txExecutionDelay = _actionIsPreApproved ? SHORT_TX_EXECUTION_DELAY : LONG_TX_EXECUTION_DELAY;
 
     // Revert if the transaction is already queued and not expired
     TransactionInfo memory _queuedTransactionInfo = queuedTransactions[_actionsBuilder];
