@@ -83,6 +83,9 @@ contract SafeEntrypoint is SafeManageable, OnlyEntrypointGuard, EmergencyModeHoo
     LONG_TX_EXECUTION_DELAY = _longTxExecutionDelay;
     TX_EXPIRY_DELAY = _txExpiryDelay;
     MAX_APPROVAL_DURATION = _maxApprovalDuration;
+
+    if (_txExpiryDelay == 0) revert TxExpiryDelayCannotBeZero();
+    if (_maxApprovalDuration == 0) revert MaxApprovalDurationCannotBeZero();
   }
 
   // ~~~ ADMIN METHODS ~~~

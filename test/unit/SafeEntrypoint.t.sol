@@ -69,6 +69,9 @@ contract UnitSafeEntrypoint is Test {
     uint256 _txExpiryDelay,
     uint256 _maxApprovalDuration
   ) external {
+    _txExpiryDelay = bound(_txExpiryDelay, 1, type(uint256).max);
+    _maxApprovalDuration = bound(_maxApprovalDuration, 1, type(uint256).max);
+
     safeEntrypoint = new SafeEntrypointForTest(
       _safe,
       _multiSendCallOnly,
@@ -85,6 +88,36 @@ contract UnitSafeEntrypoint is Test {
     assertEq(safeEntrypoint.LONG_TX_EXECUTION_DELAY(), _longTxExecutionDelay);
     assertEq(safeEntrypoint.TX_EXPIRY_DELAY(), _txExpiryDelay);
     assertEq(safeEntrypoint.MAX_APPROVAL_DURATION(), _maxApprovalDuration);
+  }
+
+  function test_ConstructorWhenTheTransactionExpiryDelayIsZero() external {
+    // it reverts
+    vm.expectRevert(ISafeEntrypoint.TxExpiryDelayCannotBeZero.selector);
+    new SafeEntrypointForTest(
+      SAFE,
+      MULTI_SEND_CALL_ONLY,
+      SHORT_TX_EXECUTION_DELAY,
+      LONG_TX_EXECUTION_DELAY,
+      0,
+      MAX_APPROVAL_DURATION,
+      EMERGENCY_TRIGGER,
+      EMERGENCY_CALLER
+    );
+  }
+
+  function test_ConstructorWhenTheMaximumApprovalDurationIsZero() external {
+    // it reverts
+    vm.expectRevert(ISafeEntrypoint.MaxApprovalDurationCannotBeZero.selector);
+    new SafeEntrypointForTest(
+      SAFE,
+      MULTI_SEND_CALL_ONLY,
+      SHORT_TX_EXECUTION_DELAY,
+      LONG_TX_EXECUTION_DELAY,
+      TX_EXPIRY_DELAY,
+      0,
+      EMERGENCY_TRIGGER,
+      EMERGENCY_CALLER
+    );
   }
 
   modifier whenCallerIsSafe() {

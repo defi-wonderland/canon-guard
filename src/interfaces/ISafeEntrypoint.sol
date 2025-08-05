@@ -80,6 +80,16 @@ interface ISafeEntrypoint is ISafeManageable {
    */
   error InvalidApprovalDuration();
 
+  /**
+   * @notice Thrown when the transaction expiry delay is zero
+   */
+  error TxExpiryDelayCannotBeZero();
+
+  /**
+   * @notice Thrown when the maximum approval duration is zero
+   */
+  error MaxApprovalDurationCannotBeZero();
+
   // ~~~ ADMIN METHODS ~~~
 
   /**
