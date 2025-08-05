@@ -191,13 +191,12 @@ contract SafeEntrypoint is SafeManageable, OnlyEntrypointGuard, EmergencyModeHoo
     if (_txInfo.executableAt > block.timestamp) revert TransactionNotYetExecutable();
     if (_txInfo.expiresAt <= block.timestamp) revert TransactionExpired();
 
-    address[] memory _sortedSigners = _sortSigners(_signers);
-    bytes memory _signatures = _buildApprovedHashSignatures(_sortedSigners);
-
-    _execSafeTransaction(_multiSendData, _signatures);
-
     // Remove the transaction from the queue
     delete queuedTransactions[_actionsBuilder];
+
+    address[] memory _sortedSigners = _sortSigners(_signers);
+    bytes memory _signatures = _buildApprovedHashSignatures(_sortedSigners);
+    _execSafeTransaction(_multiSendData, _signatures);
 
     // NOTE: event emitted to log successful execution
     emit TransactionExecuted(_actionsBuilder, _safeTxHash, _signers);
