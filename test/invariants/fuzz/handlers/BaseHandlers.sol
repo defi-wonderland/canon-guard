@@ -18,12 +18,11 @@ import {ISimpleActions} from 'interfaces/actions-builders/ISimpleActions.sol';
 
 /// @notice Base contract for all handlers, include ghost storage and constructor
 contract BaseHandlers is Test {
-  bool initialized;
-
   SafeEntrypoint public safeEntrypoint;
   SafeEntrypointFactory public safeEntrypointFactory;
   Safe public safe;
 
+  // All Actions builders factories
   AllowanceClaimorFactory public allowanceClaimorFactory;
   ApproveActionFactory public approveActionFactory;
   CappedTokenTransfersHubFactory public cappedTokenTransfersHubFactory;
@@ -33,15 +32,31 @@ contract BaseHandlers is Test {
   SimpleActionsFactory public simpleActionsFactory;
   SimpleTransfersFactory public simpleTransfersFactory;
 
+  // Ghost storage
+  enum ActionsBuilderType {
+    ALLOWANCE_CLAIMOR,
+    CAPPED_TOKEN_TRANSFERS_HUB,
+    EVERCLEAR_TOKEN_CONVERSION,
+    EVERCLEAR_TOKEN_STAKE,
+    OPX_ACTION,
+    SIMPLE_ACTIONS,
+    SIMPLE_TRANSFERS
+  }
+
   mapping(bytes32 => address) public ghost_hashToActionsBuilder;
   bytes32[] public ghost_hashes;
   mapping(bytes32 => uint256) public ghost_timestampOfActionQueued;
   mapping(address => bool) public ghost_approvedActionsBuilder;
+  mapping(address => ActionsBuilderType) public ghost_actionsBuilderType;
+  address[] public signers;
+  address public currentSigner;
 
   ActionTarget public actionTarget;
 
-  address[] public signers;
-  address public currentSigner;
+  // Mock data
+  address immutable TOKEN_SENDER;
+  address immutable TOKEN_RECIPIENT;
+  uint256 immutable AMOUNT;
 
   modifier usingSigner(uint256 _seed) {
     currentSigner = signers[_seed % signers.length];
@@ -70,6 +85,9 @@ contract BaseHandlers is Test {
     opxActionFactory = new OPxActionFactory();
     simpleActionsFactory = new SimpleActionsFactory();
     simpleTransfersFactory = new SimpleTransfersFactory();
+
+    TOKEN_SENDER = makeAddr('TOKEN_SENDER');
+    TOKEN_RECIPIENT = makeAddr('TOKEN_RECIPIENT');
   }
 
   function handler_warp(uint256 _timestamp) public {

@@ -6,36 +6,40 @@ pragma solidity ^0.8.0;
 import {IERC20} from 'forge-std/interfaces/IERC20.sol';
 
 contract ActionTarget is IERC20 {
-  bool public isDeposited;
-  bool public isTransferred;
-
-  bool public isClaimed;
-  address public claimArg;
-
-  bool public isReleased;
-
-  bool public isApproved;
-  address public approveSpender;
-  uint256 public approveAmount;
-
-  bool public isERC20Deposited;
-  uint256 public depositAmount;
-
-  bool public isDowngraded;
-  uint256 public downgradeAmount;
-
-  bool public isUpdateStateCalled;
-  bytes public updateStateData;
-
-  bool public isIncreaseLockPositionCalled;
-  uint128 public lockPositionAmount;
-  uint128 public lockTime;
-  uint256 public gasLimit;
-
+  // Allowance claimor
   bool public isTransferFromCalled;
   address public transferFromSender;
   address public transferFromRecipient;
   uint256 public transferFromAmount;
+
+  // Simple action
+  bool public isDepositCalled;
+  bool public isTransferCalled;
+  address public transferRecipient;
+  uint256 public transferAmount;
+
+  // OPx
+  bool public isDowngraded;
+  uint256 public downgradeAmount; // should be balanceOf
+
+  // Everclear token conversion
+  bool public isApproved;
+  address public approveSpender;
+  uint256 public approveAmount;
+  bool public isERC20Deposited;
+  uint256 public depositAmount;
+
+  // Everclear token stake
+  bool public isClaimed;
+  address public claimRecipient;
+  bool public isReleased;
+  bool public isIncreaseLockPositionCalled;
+
+  bool public isUpdateStateCalled;
+  bytes public updateStateData;
+  uint128 public lockPositionAmount;
+  uint128 public lockTime;
+  uint256 public gasLimit;
 
   // Cap tracking
   mapping(address => uint256) public tokenCaps;
@@ -52,18 +56,19 @@ contract ActionTarget is IERC20 {
   uint32 public constant EVERCLEAR_ID = 1;
 
   function deposit() public payable {
-    isDeposited = true;
+    isDepositCalled = true;
   }
 
   function transfer(address _to, uint256 _amount) public override returns (bool) {
-    isTransferred = true;
+    isTransferCalled = true;
+    transferRecipient = _to;
+    transferAmount = _amount;
     return true;
   }
 
-  // External contract functions with flags
   function claim(address _vestingEscrow) external {
     isClaimed = true;
-    claimArg = _vestingEscrow;
+    claimRecipient = _vestingEscrow;
   }
 
   function release() external {
@@ -157,11 +162,11 @@ contract ActionTarget is IERC20 {
   }
 
   function balanceOf(address account) public view override returns (uint256) {
-    return 1;
+    return 123;
   }
 
   function allowance(address owner, address spender) public view override returns (uint256) {
-    return 123_456;
+    return 789;
   }
 
   function transferFrom(address from, address to, uint256 amount) public override returns (bool) {
@@ -171,6 +176,4 @@ contract ActionTarget is IERC20 {
     transferFromAmount = amount;
     return true;
   }
-
-  function mint(address to, uint256 amount) public {}
 }

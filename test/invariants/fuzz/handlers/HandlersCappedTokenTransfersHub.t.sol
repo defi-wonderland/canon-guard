@@ -11,46 +11,6 @@ abstract contract HandlersCappedTokenTransfersHub is BaseHandlers {
   mapping(address => address) public hubTokens; // hub -> token address
   address[] public createdHubs;
 
-  function handler_executeTransaction_CappedTokenTransfersHub(uint256 _seed) public {
-    if (ghost_hashes.length == 0) return;
-    bytes32 _hash = ghost_hashes[_seed % ghost_hashes.length];
-
-    address _actionsBuilder = ghost_hashToActionsBuilder[_hash];
-
-    try safeEntrypoint.executeTransaction(_actionsBuilder) {
-      // Successful execution - ActionTarget flags should be set
-      // Cap verification is handled by the hub's updateState() function
-      actionTarget = new ActionTarget();
-    } catch Error(string memory _reason) {
-      assertEq(_reason, 'GS020');
-    } catch (bytes memory _reason) {
-      assertTrue(
-        bytes4(_reason) == bytes4(keccak256('TransactionNotYetExecutable()'))
-          || bytes4(_reason) == bytes4(keccak256('NoTransactionQueued()'))
-          || bytes4(_reason) == bytes4(keccak256('TransactionExpired()'))
-          || bytes4(_reason) == bytes4(keccak256('CapExceeded()'))
-      );
-
-      if (bytes4(_reason) == bytes4(keccak256('TransactionExpired()'))) {
-        if (ghost_approvedActionsBuilder[_actionsBuilder]) {
-          assertLe(
-            ghost_timestampOfActionQueued[_hash] + safeEntrypoint.SHORT_TX_EXECUTION_DELAY()
-              + safeEntrypoint.TX_EXPIRY_DELAY(),
-            block.timestamp
-          );
-        } else {
-          assertLe(
-            ghost_timestampOfActionQueued[_hash] + safeEntrypoint.LONG_TX_EXECUTION_DELAY()
-              + safeEntrypoint.TX_EXPIRY_DELAY(),
-            block.timestamp
-          );
-        }
-      }
-
-      if (bytes4(_reason) == bytes4(keccak256('CapExceeded()'))) {}
-    }
-  }
-
   function handler_createNewActionBuilderFromHub(
     uint256 _approvalDuration,
     uint256 _amount,
@@ -59,9 +19,6 @@ abstract contract HandlersCappedTokenTransfersHub is BaseHandlers {
     _approvalDuration = bound(_approvalDuration, 1, 1000);
     _amount = bound(_amount, 1, 1_000_000);
     _capMultiplier = bound(_capMultiplier, 1, 5); // Cap will be 1x to 5x the amount
-
-    // Setup tokens for the safe to transfer
-    actionTarget.mint(address(safe), _amount);
 
     // Create a hub first with cap set higher than the amount (usually)
     address[] memory tokens = new address[](1);
@@ -115,9 +72,6 @@ abstract contract HandlersCappedTokenTransfersHub is BaseHandlers {
 
     address hub = createdHubs[_amount % createdHubs.length];
 
-    // Setup tokens for the safe to transfer
-    actionTarget.mint(address(safe), _amount);
-
     // Create CappedTokenTransfers manually that references the hub
     address actionsBuilder = address(
       new CappedTokenTransfers(
@@ -137,6 +91,8 @@ abstract contract HandlersCappedTokenTransfersHub is BaseHandlers {
 
       ghost_hashToActionsBuilder[_safeTxHash] = actionsBuilder;
       ghost_hashes.push(_safeTxHash);
+      ghost_timestampOfActionQueued[_safeTxHash] = block.timestamp;
+      ghost_actionsBuilderType[actionsBuilder] = ActionsBuilderType.CAPPED_TOKEN_TRANSFERS_HUB;
     } catch {
       assertGt(_approvalDuration, safeEntrypoint.MAX_APPROVAL_DURATION());
     }

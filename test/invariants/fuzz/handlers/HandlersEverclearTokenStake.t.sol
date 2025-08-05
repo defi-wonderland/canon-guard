@@ -4,48 +4,9 @@ pragma solidity ^0.8.0;
 import {ActionTarget, BaseHandlers} from './BaseHandlers.sol';
 
 abstract contract HandlersEverclearTokenStake is BaseHandlers {
-  function handler_executeTransaction_EverclearTokenStake(uint256 _seed) public {
-    if (ghost_hashes.length == 0) return;
-    bytes32 _hash = ghost_hashes[_seed % ghost_hashes.length];
-
-    address _actionsBuilder = ghost_hashToActionsBuilder[_hash];
-
-    try safeEntrypoint.executeTransaction(_actionsBuilder) {
-      // Successful execution - ActionTarget flags should be set
-      actionTarget = new ActionTarget();
-    } catch Error(string memory _reason) {
-      assertEq(_reason, 'GS020');
-    } catch (bytes memory _reason) {
-      assertTrue(
-        bytes4(_reason) == bytes4(keccak256('TransactionNotYetExecutable()'))
-          || bytes4(_reason) == bytes4(keccak256('NoTransactionQueued()'))
-          || bytes4(_reason) == bytes4(keccak256('TransactionExpired()'))
-      );
-
-      if (bytes4(_reason) == bytes4(keccak256('TransactionExpired()'))) {
-        if (ghost_approvedActionsBuilder[_actionsBuilder]) {
-          assertLe(
-            ghost_timestampOfActionQueued[_hash] + safeEntrypoint.SHORT_TX_EXECUTION_DELAY()
-              + safeEntrypoint.TX_EXPIRY_DELAY(),
-            block.timestamp
-          );
-        } else {
-          assertLe(
-            ghost_timestampOfActionQueued[_hash] + safeEntrypoint.LONG_TX_EXECUTION_DELAY()
-              + safeEntrypoint.TX_EXPIRY_DELAY(),
-            block.timestamp
-          );
-        }
-      }
-    }
-  }
-
   function handler_queueEverclearTokenStake(uint256 _approvalDuration, uint256 _lockTime) public {
     _approvalDuration = bound(_approvalDuration, 1, 1000);
     _lockTime = bound(_lockTime, 1 days, 365 days);
-
-    // Setup tokens for the safe
-    actionTarget.mint(address(safe), 1000);
 
     address actionsBuilder = everclearTokenStakeFactory.createEverclearTokenStake(
       address(actionTarget), // vesting escrow (actionTarget acts as all external contracts)
@@ -67,6 +28,7 @@ abstract contract HandlersEverclearTokenStake is BaseHandlers {
         ghost_hashToActionsBuilder[_safeTxHash] = actionsBuilder;
         ghost_hashes.push(_safeTxHash);
         ghost_timestampOfActionQueued[_safeTxHash] = block.timestamp;
+        ghost_actionsBuilderType[actionsBuilder] = ActionsBuilderType.EVERCLEAR_TOKEN_STAKE;
       } catch {
         // Queue might fail due to complex external dependencies
       }

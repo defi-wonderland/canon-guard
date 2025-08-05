@@ -27,14 +27,14 @@ contract Invariants is Setup {
   }
 
   // Ghost state consistency: hash vs action builder
-  // function invariant_sanity_ghostStateConsistency() public view {
-  //   uint256 hashCount = handlersTarget.getGhostHashesLength();
+  function invariant_sanity_ghostStateConsistency() public view {
+    uint256 hashCount = handlersTarget.getGhostHashesLength();
 
-  //   // Every hash should have a corresponding action builder
-  //   for (uint256 i = 0; i < hashCount; i++) {
-  //     bytes32 hash = handlersTarget.getGhostHash(i);
-  //     address actionBuilder = handlersTarget.ghost_hashToActionsBuilder(hash);
-  //     assertTrue(actionBuilder != address(0));
-  //   }
-  // }
+    // Every hash should have a corresponding action builder
+    for (uint256 i = 0; i < hashCount; i++) {
+      bytes32 hash = handlersTarget.getGhostHash(i);
+      address actionBuilder = handlersTarget.ghost_hashToActionsBuilder(hash);
+      assertTrue(actionBuilder != address(0));
+    }
+  }
 }

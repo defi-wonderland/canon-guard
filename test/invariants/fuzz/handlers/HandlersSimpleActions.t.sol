@@ -7,42 +7,6 @@ import {SimpleActionsFactory} from 'contracts/factories/SimpleActionsFactory.sol
 import {ISimpleActions} from 'interfaces/actions-builders/ISimpleActions.sol';
 
 abstract contract HandlersSimpleActions is BaseHandlers {
-  function handler_executeTransaction_SimpleActions(uint256 _seed) public {
-    if (ghost_hashes.length == 0) return;
-    bytes32 _hash = ghost_hashes[_seed % ghost_hashes.length];
-
-    address _actionsBuilder = ghost_hashToActionsBuilder[_hash];
-
-    try safeEntrypoint.executeTransaction(_actionsBuilder) {
-      // Successful execution - ActionTarget flags should be set
-      actionTarget = new ActionTarget();
-    } catch Error(string memory _reason) {
-      assertEq(_reason, 'GS020');
-    } catch (bytes memory _reason) {
-      assertTrue(
-        bytes4(_reason) == bytes4(keccak256('TransactionNotYetExecutable()'))
-          || bytes4(_reason) == bytes4(keccak256('NoTransactionQueued()'))
-          || bytes4(_reason) == bytes4(keccak256('TransactionExpired()'))
-      );
-
-      if (bytes4(_reason) == bytes4(keccak256('TransactionExpired()'))) {
-        if (ghost_approvedActionsBuilder[_actionsBuilder]) {
-          assertLe(
-            ghost_timestampOfActionQueued[_hash] + safeEntrypoint.SHORT_TX_EXECUTION_DELAY()
-              + safeEntrypoint.TX_EXPIRY_DELAY(),
-            block.timestamp
-          );
-        } else {
-          assertLe(
-            ghost_timestampOfActionQueued[_hash] + safeEntrypoint.LONG_TX_EXECUTION_DELAY()
-              + safeEntrypoint.TX_EXPIRY_DELAY(),
-            block.timestamp
-          );
-        }
-      }
-    }
-  }
-
   function handler_queueSimpleAction(uint256 _approvalDuration) public {
     _approvalDuration = bound(_approvalDuration, 1, 1000);
 
@@ -51,7 +15,7 @@ abstract contract HandlersSimpleActions is BaseHandlers {
     ISimpleActions.SimpleAction memory _transferAction = ISimpleActions.SimpleAction({
       target: address(actionTarget),
       signature: 'transfer(address,uint256)',
-      data: abi.encode(address(signers[0]), 1),
+      data: abi.encode(TOKEN_RECIPIENT, AMOUNT),
       value: 0
     });
 
@@ -71,6 +35,7 @@ abstract contract HandlersSimpleActions is BaseHandlers {
       ghost_hashToActionsBuilder[_safeTxHash] = actionsBuilder;
       ghost_hashes.push(_safeTxHash);
       ghost_timestampOfActionQueued[_safeTxHash] = block.timestamp;
+      ghost_actionsBuilderType[actionsBuilder] = ActionsBuilderType.SIMPLE_ACTIONS;
     } catch {
       assertGt(_approvalDuration, safeEntrypoint.MAX_APPROVAL_DURATION());
     }
