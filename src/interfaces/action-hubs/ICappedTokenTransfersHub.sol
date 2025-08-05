@@ -15,6 +15,11 @@ interface ICappedTokenTransfersHub is IActionHub, ISafeManageable {
   error CapExceeded();
 
   /**
+   * @notice Thrown when the epoch length is zero
+   */
+  error EpochLengthCannotBeZero();
+
+  /**
    * @notice Updates the state. Checks if the cap is exceeded and resets the spending if we're in a new epoch.
    * @param _token The token to update the state for
    * @param _amount The amount of tokens to update the state for

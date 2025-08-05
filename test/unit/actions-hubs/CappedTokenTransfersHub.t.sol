@@ -31,6 +31,8 @@ contract UnitCappedTokenTransfersHub is Test {
   }
 
   function test_ConstructorWhenCalled(address _safe, address _recipient, uint256 _epochLength) external {
+    _epochLength = bound(_epochLength, 1, type(uint256).max);
+
     cappedTokenTransfersHub = new CappedTokenTransfersHub(_safe, _recipient, tokens, caps, _epochLength);
 
     // it sets the safe
@@ -45,6 +47,12 @@ contract UnitCappedTokenTransfersHub is Test {
     for (uint256 i = 0; i < tokens.length; i++) {
       assertEq(cappedTokenTransfersHub.cap(tokens[i]), caps[i]);
     }
+  }
+
+  function test_ConstructorWhenTheEpochLengthIsZero() external {
+    // it reverts
+    vm.expectRevert(ICappedTokenTransfersHub.EpochLengthCannotBeZero.selector);
+    new CappedTokenTransfersHub(safe, recipient, tokens, caps, 0);
   }
 
   function test_CreateNewActionBuilderWhenCalledByTheSafeOwner() external {
