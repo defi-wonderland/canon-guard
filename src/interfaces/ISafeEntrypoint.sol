@@ -90,6 +90,11 @@ interface ISafeEntrypoint is ISafeManageable {
    */
   error MaxApprovalDurationCannotBeZero();
 
+  /**
+   * @notice Thrown when the delay configuration is invalid
+   */
+  error InvalidDelayConfiguration();
+
   // ~~~ ADMIN METHODS ~~~
 
   /**

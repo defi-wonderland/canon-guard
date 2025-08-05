@@ -7,7 +7,9 @@ UnitSafeEntrypoint::constructor
 │   └── it set transaction expiry delay
 ├── when the transaction expiry delay is zero
 │   └── it reverts
-└── when the maximum approval duration is zero
+├── when the maximum approval duration is zero
+│   └── it reverts
+└── when the delay configuration is invalid
     └── it reverts
 
 UnitSafeEntrypoint::approveActionsBuilder

@@ -69,8 +69,9 @@ contract UnitSafeEntrypoint is Test {
     uint256 _txExpiryDelay,
     uint256 _maxApprovalDuration
   ) external {
-    _txExpiryDelay = bound(_txExpiryDelay, 1, type(uint256).max);
+    _txExpiryDelay = bound(_txExpiryDelay, 1, type(uint256).max - type(uint64).max);
     _maxApprovalDuration = bound(_maxApprovalDuration, 1, type(uint256).max);
+    _longTxExecutionDelay = bound(_longTxExecutionDelay, 0, type(uint256).max - type(uint64).max - _txExpiryDelay);
 
     safeEntrypoint = new SafeEntrypointForTest(
       _safe,
@@ -115,6 +116,27 @@ contract UnitSafeEntrypoint is Test {
       LONG_TX_EXECUTION_DELAY,
       TX_EXPIRY_DELAY,
       0,
+      EMERGENCY_TRIGGER,
+      EMERGENCY_CALLER
+    );
+  }
+
+  function test_ConstructorWhenTheDelayConfigurationIsInvalid(
+    uint256 _longTxExecutionDelay,
+    uint256 _txExpiryDelay
+  ) external {
+    _txExpiryDelay = bound(_txExpiryDelay, 1, type(uint256).max);
+    _longTxExecutionDelay = bound(_longTxExecutionDelay, type(uint256).max - _txExpiryDelay, type(uint256).max);
+
+    // it reverts
+    vm.expectRevert(ISafeEntrypoint.InvalidDelayConfiguration.selector);
+    new SafeEntrypointForTest(
+      SAFE,
+      MULTI_SEND_CALL_ONLY,
+      SHORT_TX_EXECUTION_DELAY,
+      _longTxExecutionDelay,
+      _txExpiryDelay,
+      MAX_APPROVAL_DURATION,
       EMERGENCY_TRIGGER,
       EMERGENCY_CALLER
     );
