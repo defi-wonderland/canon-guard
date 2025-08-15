@@ -64,7 +64,7 @@ contract IntegrationEntrypointManageActions is IntegrationEthereumBase {
       IUnsetEmergencyModeAction(unsetEmergencyModeActionFactory.createUnsetEmergencyModeAction(address(safeEntrypoint)));
   }
 
-  function test_ApproveActionsBuilder() public {
+  function test_ApproveActionsBuilderOrHub() public {
     // Queue the transaction
     vm.prank(_safeOwners[0]);
     safeEntrypoint.queueTransaction(address(approveAction));

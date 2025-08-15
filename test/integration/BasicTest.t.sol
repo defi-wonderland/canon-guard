@@ -91,7 +91,7 @@ contract IntegrationBasicTest is DeploySaferSafe, EthereumConstants, Test {
     uint256 _approvalDuration = 1 days;
 
     vm.prank(address(_safeProxy));
-    _safeEntrypoint.approveActionsBuilder(_actionsBuilder, _approvalDuration);
+    _safeEntrypoint.approveActionsBuilderOrHub(_actionsBuilder, _approvalDuration);
 
     vm.startPrank(_safeOwner);
 

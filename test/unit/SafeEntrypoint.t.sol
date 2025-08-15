@@ -93,30 +93,31 @@ contract UnitSafeEntrypoint is Test {
     vm.stopPrank();
   }
 
-  function test_ApproveActionsBuilderWhenCallerIsSafe(uint256 _approvalDuration, address _actionsBuilder) external {
+  function test_ApproveActionsBuilderOrHubWhenCallerIsSafe(uint256 _approvalDuration, address _actionsBuilder) external {
     _approvalDuration = bound(_approvalDuration, 0, MAX_APPROVAL_DURATION);
 
     vm.expectEmit(address(safeEntrypoint));
-    emit ISafeEntrypoint.ActionsBuilderApproved(_actionsBuilder, _approvalDuration, block.timestamp + _approvalDuration);
+    emit ISafeEntrypoint.ActionsBuilderOrHubApproved(
+      _actionsBuilder, _approvalDuration, block.timestamp + _approvalDuration
+    );
 
     vm.prank(SAFE);
-    safeEntrypoint.approveActionsBuilder(_actionsBuilder, _approvalDuration);
+    safeEntrypoint.approveActionsBuilderOrHub(_actionsBuilder, _approvalDuration);
 
     assertEq(safeEntrypoint.approvalExpiries(_actionsBuilder), block.timestamp + _approvalDuration);
   }
 
-  function test_ApproveActionsBuilderWhenApprovalDurationIsGreaterThanMaxApprovalDuration(uint256 _approvalDuration)
-    external
-    whenCallerIsSafe
-  {
+  function test_ApproveActionsBuilderOrHubWhenApprovalDurationIsGreaterThanMaxApprovalDuration(
+    uint256 _approvalDuration
+  ) external whenCallerIsSafe {
     _approvalDuration = bound(_approvalDuration, safeEntrypoint.MAX_APPROVAL_DURATION() + 1, type(uint256).max);
 
     // it reverts with InvalidApprovalDuration
     vm.expectRevert(ISafeEntrypoint.InvalidApprovalDuration.selector);
-    safeEntrypoint.approveActionsBuilder(address(0), _approvalDuration);
+    safeEntrypoint.approveActionsBuilderOrHub(address(0), _approvalDuration);
   }
 
-  function test_ApproveActionsBuilderWhenExtendingApproval(
+  function test_ApproveActionsBuilderOrHubWhenExtendingApproval(
     address _actionsBuilder,
     uint256 _previousApprovalExpiry,
     uint256 _newApprovalDuration
@@ -128,17 +129,17 @@ contract UnitSafeEntrypoint is Test {
     assertEq(safeEntrypoint.approvalExpiries(_actionsBuilder), _previousApprovalExpiry);
 
     vm.expectEmit(address(safeEntrypoint));
-    emit ISafeEntrypoint.ActionsBuilderApproved(
+    emit ISafeEntrypoint.ActionsBuilderOrHubApproved(
       _actionsBuilder, _newApprovalDuration, block.timestamp + _newApprovalDuration
     );
 
     vm.prank(SAFE);
-    safeEntrypoint.approveActionsBuilder(_actionsBuilder, _newApprovalDuration);
+    safeEntrypoint.approveActionsBuilderOrHub(_actionsBuilder, _newApprovalDuration);
 
     assertEq(safeEntrypoint.approvalExpiries(_actionsBuilder), block.timestamp + _newApprovalDuration);
   }
 
-  function test_ApproveActionsBuilderWhenCallerIsNotSafe(
+  function test_ApproveActionsBuilderOrHubWhenCallerIsNotSafe(
     address _caller,
     uint256 _approvalDuration,
     address _actionsBuilder
@@ -146,7 +147,7 @@ contract UnitSafeEntrypoint is Test {
     vm.assume(_caller != SAFE);
     vm.expectRevert(ISafeManageable.NotSafe.selector);
     vm.prank(_caller);
-    safeEntrypoint.approveActionsBuilder(_actionsBuilder, _approvalDuration);
+    safeEntrypoint.approveActionsBuilderOrHub(_actionsBuilder, _approvalDuration);
   }
 
   modifier whenCallerIsSafeOwner() {
@@ -662,7 +663,7 @@ contract UnitSafeEntrypoint is Test {
 
   modifier givenActionsBuilderIsApproved(address _actionsBuilder) {
     vm.prank(SAFE);
-    safeEntrypoint.approveActionsBuilder(_actionsBuilder, ACTIONS_BUILDER_APPROVAL_DURATION);
+    safeEntrypoint.approveActionsBuilderOrHub(_actionsBuilder, ACTIONS_BUILDER_APPROVAL_DURATION);
     _;
   }
 }
