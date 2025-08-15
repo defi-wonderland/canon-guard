@@ -89,16 +89,21 @@ contract IntegrationEntrypointManageActions is IntegrationEthereumBase {
     assertEq(safeEntrypoint.approvalExpiries(address(actionsBuilder)), block.timestamp + APPROVAL_DURATION);
   }
 
-  function test_SetEmergencyCallerAction() public {
+  function test_EmergencyModeFlow() public {
+    address _owner = _safeOwners[0];
+    bytes32 _safeTxHash;
+
+    /// 1) Set emergency caller
+
     // Queue the transaction
-    vm.prank(_safeOwners[0]);
+    vm.prank(_owner);
     safeEntrypoint.queueTransaction(address(setEmergencyCallerAction));
 
     // Wait for the timelock period
     vm.warp(block.timestamp + LONG_TX_EXECUTION_DELAY);
 
     // Get the Safe transaction hash
-    bytes32 _safeTxHash = safeEntrypoint.getSafeTransactionHash(address(setEmergencyCallerAction));
+    _safeTxHash = safeEntrypoint.getSafeTransactionHash(address(setEmergencyCallerAction));
 
     // Approve the Safe transaction hash
     for (uint256 _i; _i < _safeThreshold; ++_i) {
@@ -112,18 +117,18 @@ contract IntegrationEntrypointManageActions is IntegrationEthereumBase {
 
     // Assert that the emergency caller was set
     assertEq(IEmergencyModeHook(address(safeEntrypoint)).emergencyCaller(), newEmergencyCaller);
-  }
 
-  function test_SetEmergencyTriggerAction() public {
+    /// 2) Set emergency trigger
+
     // Queue the transaction
-    vm.prank(_safeOwners[0]);
+    vm.prank(_owner);
     safeEntrypoint.queueTransaction(address(setEmergencyTriggerAction));
 
     // Wait for the timelock period
     vm.warp(block.timestamp + LONG_TX_EXECUTION_DELAY);
 
     // Get the Safe transaction hash
-    bytes32 _safeTxHash = safeEntrypoint.getSafeTransactionHash(address(setEmergencyTriggerAction));
+    _safeTxHash = safeEntrypoint.getSafeTransactionHash(address(setEmergencyTriggerAction));
 
     // Approve the Safe transaction hash
     for (uint256 _i; _i < _safeThreshold; ++_i) {
@@ -137,25 +142,27 @@ contract IntegrationEntrypointManageActions is IntegrationEthereumBase {
 
     // Assert that the emergency trigger was set
     assertEq(IEmergencyModeHook(address(safeEntrypoint)).emergencyTrigger(), newEmergencyTrigger);
-  }
 
-  function test_UnsetEmergencyModeAction() public {
-    // First set emergency mode
-    vm.prank(IEmergencyModeHook(address(safeEntrypoint)).emergencyTrigger());
+    /// 3) Set emergency mode
+
+    // Queue the transaction
+    vm.prank(newEmergencyTrigger);
     IEmergencyModeHook(address(safeEntrypoint)).setEmergencyMode();
 
     // Verify emergency mode is set
     assertTrue(IEmergencyModeHook(address(safeEntrypoint)).emergencyMode());
 
+    /// 4) Unset emergency mode
+
     // Queue the transaction to unset emergency mode
-    vm.prank(_safeOwners[0]);
+    vm.prank(_owner);
     safeEntrypoint.queueTransaction(address(unsetEmergencyModeAction));
 
     // Wait for the timelock period
     vm.warp(block.timestamp + LONG_TX_EXECUTION_DELAY);
 
     // Get the Safe transaction hash
-    bytes32 _safeTxHash = safeEntrypoint.getSafeTransactionHash(address(unsetEmergencyModeAction));
+    _safeTxHash = safeEntrypoint.getSafeTransactionHash(address(unsetEmergencyModeAction));
 
     // Approve the Safe transaction hash
     for (uint256 _i; _i < _safeThreshold; ++_i) {
