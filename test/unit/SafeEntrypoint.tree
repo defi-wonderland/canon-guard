@@ -7,15 +7,15 @@ UnitSafeEntrypoint::constructor
     └── it set transaction expiry delay
 
 
-UnitSafeEntrypoint::approveActionsBuilder
+UnitSafeEntrypoint::approveActionsBuilderOrHub
 ├── when caller is safe
 │   ├── when approval duration is greater than max approval duration
 │   │   └── it reverts with InvalidApprovalDuration
 │   ├── it sets approval expiry time
-│   ├── it emits ActionsBuilderApproved event
+│   ├── it emits ActionsBuilderOrHubApproved event
 │   └── when extending approval
 │       ├── it updates approval expiry time
-│       └── it emits ActionsBuilderApproved event
+│       └── it emits ActionsBuilderOrHubApproved event
 └── when caller is not safe
     └── it reverts with NotSafeOwner
 

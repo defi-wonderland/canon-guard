@@ -26,12 +26,12 @@ interface ISafeEntrypoint is ISafeManageable {
 
   /**
    * @notice Emitted when an actions builder is approved
-   * @param _actionsBuilder The address of the actions builder contract
-   * @param _approvalDuration The duration (in seconds) of the approval to the actions builder contract (0 means disapproval)
-   * @param _approvalExpiresAt The timestamp from which the actions builder contract is no longer approved to be queued
+   * @param _actionsBuilderOrHub The address of the actions builder or hub contract
+   * @param _approvalDuration The duration (in seconds) of the approval to the actions builder or hub contract (0 means disapproval)
+   * @param _approvalExpiresAt The timestamp from which the actions builder or hub contract is no longer approved to be queued
    */
-  event ActionsBuilderApproved(
-    address indexed _actionsBuilder, uint256 indexed _approvalDuration, uint256 indexed _approvalExpiresAt
+  event ActionsBuilderOrHubApproved(
+    address indexed _actionsBuilderOrHub, uint256 indexed _approvalDuration, uint256 indexed _approvalExpiresAt
   );
 
   /**
@@ -88,7 +88,7 @@ interface ISafeEntrypoint is ISafeManageable {
    * @param _actionsBuilder The address of the actions builder contract to approve
    * @param _approvalDuration The duration (in seconds) of the approval to the actions builder contract (0 means disapproval)
    */
-  function approveActionsBuilder(address _actionsBuilder, uint256 _approvalDuration) external;
+  function approveActionsBuilderOrHub(address _actionsBuilder, uint256 _approvalDuration) external;
 
   // ~~~ TRANSACTION METHODS ~~~
 
