@@ -52,7 +52,7 @@ contract IntegrationWonderlandClaims is IntegrationOptimismBase {
     uint256 _approvalDuration = 1 days;
 
     vm.prank(address(SAFE_PROXY));
-    safeEntrypoint.approveActionsBuilder(_actionsBuilder, _approvalDuration);
+    safeEntrypoint.approveActionsBuilderOrHub(_actionsBuilder, _approvalDuration);
 
     // Queue the transaction
     vm.prank(_safeOwners[0]);
@@ -86,7 +86,7 @@ contract IntegrationWonderlandClaims is IntegrationOptimismBase {
     uint256 _approvalDuration = 1 days;
 
     vm.prank(address(SAFE_PROXY));
-    safeEntrypoint.approveActionsBuilder(_opxAction, _approvalDuration);
+    safeEntrypoint.approveActionsBuilderOrHub(_opxAction, _approvalDuration);
 
     // Queue the transaction
     vm.prank(_safeOwners[0]);

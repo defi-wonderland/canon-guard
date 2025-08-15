@@ -34,7 +34,7 @@ contract ApproveAction is IApproveAction {
     _actions = new Action[](1);
     _actions[0] = Action({
       target: SAFE_ENTRYPOINT,
-      data: abi.encodeCall(ISafeEntrypoint.approveActionsBuilder, (ACTIONS_BUILDER, APPROVAL_DURATION)),
+      data: abi.encodeCall(ISafeEntrypoint.approveActionsBuilderOrHub, (ACTIONS_BUILDER, APPROVAL_DURATION)),
       value: 0
     });
   }
