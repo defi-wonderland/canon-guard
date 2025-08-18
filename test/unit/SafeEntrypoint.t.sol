@@ -15,7 +15,7 @@ contract UnitSafeEntrypoint is Test {
 
   uint256 public constant SHORT_TX_EXECUTION_DELAY = 1 hours;
   uint256 public constant LONG_TX_EXECUTION_DELAY = 7 days;
-  uint256 public constant TX_EXPIRY_DELAY = 2 hours;
+  uint256 public constant TX_EXPIRY_DELAY = 1 days;
   uint256 public constant ACTIONS_BUILDER_APPROVAL_DURATION = 7 days;
   uint256 public constant MAX_APPROVAL_DURATION = 4 * 365 days;
   address public immutable SAFE = makeAddr('SAFE');
@@ -69,6 +69,10 @@ contract UnitSafeEntrypoint is Test {
     uint256 _txExpiryDelay,
     uint256 _maxApprovalDuration
   ) external {
+    _txExpiryDelay = bound(_txExpiryDelay, safeEntrypoint.MIN_EXPIRY_TIME(), type(uint256).max - type(uint64).max);
+    _maxApprovalDuration = bound(_maxApprovalDuration, safeEntrypoint.MIN_EXPIRY_TIME(), type(uint256).max);
+    _longTxExecutionDelay = bound(_longTxExecutionDelay, 0, type(uint256).max - type(uint64).max - _txExpiryDelay);
+
     safeEntrypoint = new SafeEntrypointForTest(
       _safe,
       _multiSendCallOnly,
@@ -85,6 +89,61 @@ contract UnitSafeEntrypoint is Test {
     assertEq(safeEntrypoint.LONG_TX_EXECUTION_DELAY(), _longTxExecutionDelay);
     assertEq(safeEntrypoint.TX_EXPIRY_DELAY(), _txExpiryDelay);
     assertEq(safeEntrypoint.MAX_APPROVAL_DURATION(), _maxApprovalDuration);
+  }
+
+  function test_ConstructorWhenTheTransactionExpiryDelayIsLessThanTheMinimumExpiryTime(uint256 _delay) external {
+    _delay = bound(_delay, 0, safeEntrypoint.MIN_EXPIRY_TIME() - 1);
+
+    // it reverts
+    vm.expectRevert(ISafeEntrypoint.TxExpiryDelayCannotBeLessThanMin.selector);
+    new SafeEntrypointForTest(
+      SAFE,
+      MULTI_SEND_CALL_ONLY,
+      SHORT_TX_EXECUTION_DELAY,
+      LONG_TX_EXECUTION_DELAY,
+      _delay,
+      MAX_APPROVAL_DURATION,
+      EMERGENCY_TRIGGER,
+      EMERGENCY_CALLER
+    );
+  }
+
+  function test_ConstructorWhenTheMaximumApprovalDurationIsLessThanTheMinimumExpiryTime(uint256 _duration) external {
+    _duration = bound(_duration, 0, safeEntrypoint.MIN_EXPIRY_TIME() - 1);
+
+    // it reverts
+    vm.expectRevert(ISafeEntrypoint.MaxApprovalDurationCannotBeLessThanMin.selector);
+    new SafeEntrypointForTest(
+      SAFE,
+      MULTI_SEND_CALL_ONLY,
+      SHORT_TX_EXECUTION_DELAY,
+      LONG_TX_EXECUTION_DELAY,
+      TX_EXPIRY_DELAY,
+      _duration,
+      EMERGENCY_TRIGGER,
+      EMERGENCY_CALLER
+    );
+  }
+
+  function test_ConstructorWhenTheDelayConfigurationIsInvalid(
+    uint256 _longTxExecutionDelay,
+    uint256 _txExpiryDelay
+  ) external {
+    _txExpiryDelay = bound(_txExpiryDelay, safeEntrypoint.MIN_EXPIRY_TIME(), type(uint256).max);
+    _longTxExecutionDelay = bound(_longTxExecutionDelay, type(uint256).max - _txExpiryDelay, type(uint256).max);
+
+    // it reverts
+    vm.expectRevert(ISafeEntrypoint.InvalidDelayConfiguration.selector);
+    new SafeEntrypointForTest(
+      SAFE,
+      MULTI_SEND_CALL_ONLY,
+      SHORT_TX_EXECUTION_DELAY,
+      _longTxExecutionDelay,
+      _txExpiryDelay,
+      MAX_APPROVAL_DURATION,
+      EMERGENCY_TRIGGER,
+      EMERGENCY_CALLER
+    );
   }
 
   modifier whenCallerIsSafe() {
