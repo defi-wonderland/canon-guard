@@ -34,6 +34,9 @@ contract SafeEntrypoint is SafeManageable, OnlyEntrypointGuard, EmergencyModeHoo
   // ~~~ STORAGE ~~~
 
   /// @inheritdoc ISafeEntrypoint
+  uint256 public constant MIN_EXPIRY_TIME = 1 days;
+
+  /// @inheritdoc ISafeEntrypoint
   address public immutable MULTI_SEND_CALL_ONLY;
 
   /// @inheritdoc ISafeEntrypoint
@@ -84,8 +87,8 @@ contract SafeEntrypoint is SafeManageable, OnlyEntrypointGuard, EmergencyModeHoo
     TX_EXPIRY_DELAY = _txExpiryDelay;
     MAX_APPROVAL_DURATION = _maxApprovalDuration;
 
-    if (_txExpiryDelay == 0) revert TxExpiryDelayCannotBeZero();
-    if (_maxApprovalDuration == 0) revert MaxApprovalDurationCannotBeZero();
+    if (_txExpiryDelay < MIN_EXPIRY_TIME) revert TxExpiryDelayCannotBeLessThanMin();
+    if (_maxApprovalDuration < MIN_EXPIRY_TIME) revert MaxApprovalDurationCannotBeLessThanMin();
 
     /// NOTE: Reverts if both delays + max block.timestamp overflows.
     /// Prevents wrong configuration that could brick the contract.

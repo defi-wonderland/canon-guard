@@ -10,6 +10,7 @@ contract UnitSafeEntrypointFactory is Test {
   SafeEntrypointFactory public safeEntrypointFactory;
   ISafeEntrypoint public auxSafeEntrypoint;
   address public multiSendCallOnly;
+  uint256 public constant MIN_EXPIRY_TIME = 1 days;
 
   function setUp() external {
     multiSendCallOnly = makeAddr('multiSendCallOnly');
@@ -33,8 +34,8 @@ contract UnitSafeEntrypointFactory is Test {
     vm.assume(_emergencyTrigger != address(0));
     vm.assume(_emergencyCaller != address(0));
 
-    _txExpiryDelay = bound(_txExpiryDelay, 1, type(uint256).max - type(uint64).max);
-    _maxApprovalDuration = bound(_maxApprovalDuration, 1, type(uint256).max);
+    _txExpiryDelay = bound(_txExpiryDelay, MIN_EXPIRY_TIME, type(uint256).max - type(uint64).max);
+    _maxApprovalDuration = bound(_maxApprovalDuration, MIN_EXPIRY_TIME, type(uint256).max);
     _longTxExecutionDelay = bound(_longTxExecutionDelay, 0, type(uint256).max - type(uint64).max - _txExpiryDelay);
 
     address _safeEntrypoint = safeEntrypointFactory.createSafeEntrypoint(

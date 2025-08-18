@@ -81,14 +81,14 @@ interface ISafeEntrypoint is ISafeManageable {
   error InvalidApprovalDuration();
 
   /**
-   * @notice Thrown when the transaction expiry delay is zero
+   * @notice Thrown when the transaction expiry delay is less than the minimum expiry time
    */
-  error TxExpiryDelayCannotBeZero();
+  error TxExpiryDelayCannotBeLessThanMin();
 
   /**
-   * @notice Thrown when the maximum approval duration is zero
+   * @notice Thrown when the maximum approval duration is less than the minimum expiry time
    */
-  error MaxApprovalDurationCannotBeZero();
+  error MaxApprovalDurationCannotBeLessThanMin();
 
   /**
    * @notice Thrown when the delay configuration is invalid
@@ -131,6 +131,12 @@ interface ISafeEntrypoint is ISafeManageable {
   function executeTransaction(address _actionsBuilder) external payable;
 
   // ~~~ STORAGE METHODS ~~~
+
+  /**
+   * @notice Gets the minimum expiry time
+   * @return _minExpiryTime The minimum expiry time (in seconds)
+   */
+  function MIN_EXPIRY_TIME() external view returns (uint256 _minExpiryTime);
 
   /**
    * @notice Gets the MultiSendCallOnly contract

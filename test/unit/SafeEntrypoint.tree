@@ -5,9 +5,9 @@ UnitSafeEntrypoint::constructor
 │   ├── it sets short execution delay
 │   ├── it sets long execution delay
 │   └── it set transaction expiry delay
-├── when the transaction expiry delay is zero
+├── when the transaction expiry delay is less than the minimum expiry time
 │   └── it reverts
-├── when the maximum approval duration is zero
+├── when the maximum approval duration is less than the minimum expiry time
 │   └── it reverts
 └── when the delay configuration is invalid
     └── it reverts
