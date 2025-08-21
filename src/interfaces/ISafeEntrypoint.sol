@@ -38,8 +38,9 @@ interface ISafeEntrypoint is ISafeManageable {
    * @notice Emitted when a transaction is queued
    * @param _actionHub The actionHub contract address (0 if no actionHub was used)
    * @param _actionsBuilder The actions builder contract address
+   * @param _isApproved Whether the transaction is pre-approved
    */
-  event TransactionQueued(address _actionHub, address indexed _actionsBuilder);
+  event TransactionQueued(address indexed _actionHub, address indexed _actionsBuilder, bool _isApproved);
 
   /**
    * @notice Emitted when a transaction is executed

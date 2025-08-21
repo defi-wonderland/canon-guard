@@ -7,7 +7,7 @@ import {IApproveActionFactory} from 'interfaces/factories/IApproveActionFactory.
 import {IntegrationEthereumBase} from 'test/integration/ethereum/IntegrationEthereumBase.sol';
 
 contract IntegrationEntrypointManageActions is IntegrationEthereumBase {
-  IApproveActionFactory public approveActionFactory;
+  // IApproveActionFactory public approveActionFactory;
   IApproveAction public approveAction;
 
   address public actionsBuilder;

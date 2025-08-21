@@ -33,6 +33,8 @@ import {IActionsBuilder} from 'interfaces/actions-builders/IActionsBuilder.sol';
 contract SafeEntrypoint is OnlyEntrypointGuard, EmergencyModeHook, ISafeEntrypoint {
   // ~~~ STORAGE ~~~
 
+  bool internal _isSimulation;
+
   /// @inheritdoc ISafeEntrypoint
   address public immutable MULTI_SEND_CALL_ONLY;
 
@@ -104,7 +106,7 @@ contract SafeEntrypoint is OnlyEntrypointGuard, EmergencyModeHook, ISafeEntrypoi
     bool _actionIsPreApproved = _isPreApproved(_actionHub);
     _queueTransaction(_actionsBuilder, _actionIsPreApproved);
 
-    emit TransactionQueued(_actionHub, _actionsBuilder);
+    emit TransactionQueued(_actionHub, _actionsBuilder, _actionIsPreApproved);
   }
 
   /// @inheritdoc ISafeEntrypoint
@@ -112,7 +114,7 @@ contract SafeEntrypoint is OnlyEntrypointGuard, EmergencyModeHook, ISafeEntrypoi
     bool _actionIsPreApproved = _isPreApproved(_actionsBuilder);
     _queueTransaction(_actionsBuilder, _actionIsPreApproved);
 
-    emit TransactionQueued(address(0), _actionsBuilder);
+    emit TransactionQueued(address(0), _actionsBuilder, _actionIsPreApproved);
   }
 
   /// @inheritdoc ISafeEntrypoint
@@ -124,7 +126,13 @@ contract SafeEntrypoint is OnlyEntrypointGuard, EmergencyModeHook, ISafeEntrypoi
 
     bytes memory _multiSendData = _buildMultiSendData(_actions);
     bytes32 _safeTxHash = _getSafeTransactionHash(_multiSendData, SAFE.nonce());
-    address[] memory _signers = _getApprovedHashSigners(_safeTxHash);
+    address[] memory _signers;
+    if (!_isSimulation) {
+      _signers = _getApprovedHashSigners(_safeTxHash);
+    } else {
+      _signers = new address[](1);
+      _signers[0] = address(this);
+    }
 
     _onBeforeExecution();
     _executeTransaction(_actionsBuilder, _safeTxHash, _signers, _multiSendData);

@@ -17,7 +17,7 @@ abstract contract Constants {
 
   // Safer Safe
   ISafeEntrypointFactory public constant SAFE_ENTRYPOINT_FACTORY =
-    ISafeEntrypointFactory(0x34A1D3fff3958843C43aD80F30b94c510645C316); // TODO: Replace with the address of the SafeEntrypointFactory contract once deployed
+    ISafeEntrypointFactory(0x6f67Aa2668F0020208b100d2D5e23947d2DC4ACC); // TODO: Replace with the address of the SafeEntrypointFactory contract once deployed
 
   // Wonderland Safer Safe
   ISafe public constant SAFE_PROXY = ISafe(0x74fEa3FB0eD030e9228026E7F413D66186d3D107);

@@ -169,7 +169,7 @@ contract UnitSafeEntrypoint is Test {
 
     // it emits TransactionQueued event
     vm.expectEmit(address(safeEntrypoint));
-    emit ISafeEntrypoint.TransactionQueued(address(0), _actionsBuilder);
+    emit ISafeEntrypoint.TransactionQueued(address(0), _actionsBuilder, true);
 
     vm.prank(_caller);
     safeEntrypoint.queueTransaction(_actionsBuilder);
@@ -204,7 +204,7 @@ contract UnitSafeEntrypoint is Test {
 
     // it emits TransactionQueued event
     vm.expectEmit(address(safeEntrypoint));
-    emit ISafeEntrypoint.TransactionQueued(address(0), _actionsBuilder);
+    emit ISafeEntrypoint.TransactionQueued(address(0), _actionsBuilder, false);
 
     vm.prank(_caller);
     safeEntrypoint.queueTransaction(_actionsBuilder);
@@ -309,7 +309,7 @@ contract UnitSafeEntrypoint is Test {
 
     // it emits TransactionQueued event
     vm.expectEmit(address(safeEntrypoint));
-    emit ISafeEntrypoint.TransactionQueued(_actionHub, _actionsBuilder);
+    emit ISafeEntrypoint.TransactionQueued(_actionHub, _actionsBuilder, true);
 
     vm.prank(_caller);
     safeEntrypoint.queueHubTransaction(_actionHub, _actionsBuilder);
@@ -349,7 +349,7 @@ contract UnitSafeEntrypoint is Test {
 
     // it emits TransactionQueued event
     vm.expectEmit(address(safeEntrypoint));
-    emit ISafeEntrypoint.TransactionQueued(_actionHub, _actionsBuilder);
+    emit ISafeEntrypoint.TransactionQueued(_actionHub, _actionsBuilder, false);
 
     vm.prank(_caller);
     safeEntrypoint.queueHubTransaction(_actionHub, _actionsBuilder);
