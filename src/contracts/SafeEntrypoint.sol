@@ -19,18 +19,22 @@ pragma solidity 0.8.29;
 
 import {Enum} from '@safe-smart-account/libraries/Enum.sol';
 import {MultiSendCallOnly} from '@safe-smart-account/libraries/MultiSendCallOnly.sol';
+
 import {EmergencyModeHook} from 'contracts/EmergencyModeHook.sol';
 import {OnlyEntrypointGuard} from 'contracts/OnlyEntrypointGuard.sol';
 import {SafeManageable} from 'contracts/SafeManageable.sol';
 import {ISafeEntrypoint} from 'interfaces/ISafeEntrypoint.sol';
 import {IActionHub} from 'interfaces/action-hubs/IActionHub.sol';
 import {IActionsBuilder} from 'interfaces/actions-builders/IActionsBuilder.sol';
+import {EnumerableSetLib} from 'solady/utils/EnumerableSetLib.sol';
 
 /**
  * @title SafeEntrypoint
  * @notice Contract that allows for the execution of transactions on a Safe
  */
 contract SafeEntrypoint is OnlyEntrypointGuard, EmergencyModeHook, ISafeEntrypoint {
+  using EnumerableSetLib for EnumerableSetLib.AddressSet;
+
   // ~~~ STORAGE ~~~
 
   bool internal _isSimulation;
@@ -55,6 +59,8 @@ contract SafeEntrypoint is OnlyEntrypointGuard, EmergencyModeHook, ISafeEntrypoi
 
   /// @inheritdoc ISafeEntrypoint
   mapping(address _actionsBuilder => TransactionInfo _txInfo) public queuedTransactions;
+
+  EnumerableSetLib.AddressSet internal _queuedTransactions;
 
   // ~~~ CONSTRUCTOR ~~~
 
@@ -179,6 +185,20 @@ contract SafeEntrypoint is OnlyEntrypointGuard, EmergencyModeHook, ISafeEntrypoi
     _safeTxHash = _getSafeTransactionHash(_multiSendData, _safeNonce);
   }
 
+  function getQueuedTransactions() external view returns (address[] memory _queuedTxs) {
+    _queuedTxs = _queuedTransactions.values();
+  }
+
+  function clearQueuedTransactions() external {
+    address[] memory _queuedTxs = _queuedTransactions.values();
+    for (uint256 _i; _i < _queuedTxs.length; ++_i) {
+      if (queuedTransactions[_queuedTxs[_i]].expiresAt > block.timestamp) {
+        delete queuedTransactions[_queuedTxs[_i]];
+        _queuedTransactions.remove(_queuedTxs[_i]);
+      }
+    }
+  }
+
   // ~~~ INTERNAL METHODS ~~~
 
   /**
@@ -201,6 +221,7 @@ contract SafeEntrypoint is OnlyEntrypointGuard, EmergencyModeHook, ISafeEntrypoi
 
     // Remove the transaction from the queue
     delete queuedTransactions[_actionsBuilder];
+    _queuedTransactions.remove(_actionsBuilder);
 
     address[] memory _sortedSigners = _sortSigners(_signers);
     bytes memory _signatures = _buildApprovedHashSignatures(_sortedSigners);
@@ -255,6 +276,8 @@ contract SafeEntrypoint is OnlyEntrypointGuard, EmergencyModeHook, ISafeEntrypoi
       executableAt: block.timestamp + _txExecutionDelay,
       expiresAt: block.timestamp + _txExecutionDelay + TX_EXPIRY_DELAY
     });
+
+    _queuedTransactions.add(_actionsBuilder);
   }
 
   // ~~~ INTERNAL VIEW METHODS ~~~

@@ -5,10 +5,13 @@ import {Script} from 'forge-std/Script.sol';
 
 import {AllowanceClaimorFactory} from 'contracts/factories/AllowanceClaimorFactory.sol';
 import {ApproveActionFactory} from 'contracts/factories/ApproveActionFactory.sol';
-import {CappedTokenTransfersHubFactory} from 'contracts/factories/CappedTokenTransfersHubFactory.sol';
+import {
+  CappedTokenTransfersHub,
+  CappedTokenTransfersHubFactory
+} from 'contracts/factories/CappedTokenTransfersHubFactory.sol';
 import {SafeEntrypointFactory} from 'contracts/factories/SafeEntrypointFactory.sol';
 import {SimpleActionsFactory} from 'contracts/factories/SimpleActionsFactory.sol';
-import {SimpleTransfersFactory} from 'contracts/factories/SimpleTransfersFactory.sol';
+import {ISimpleTransfers, SimpleTransfersFactory} from 'contracts/factories/SimpleTransfersFactory.sol';
 
 import {IAllowanceClaimorFactory} from 'interfaces/factories/IAllowanceClaimorFactory.sol';
 import {IApproveActionFactory} from 'interfaces/factories/IApproveActionFactory.sol';

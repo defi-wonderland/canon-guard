@@ -17,7 +17,7 @@ contract DeployEntrypoint is Constants, Script {
 
     // Deploy the SafeEntrypoint contract
     safeEntrypoint = ISafeEntrypoint(
-      ISafeEntrypointFactory(0x966e7066d8B498AaC6ad6642b02dA3B545d85bFE).createSafeEntrypoint(
+      ISafeEntrypointFactory(0x82386Bc221fc4C8FE8a1aBBCb9ba63d9379DE1dE).createSafeEntrypoint(
         0x3935C871e4f33EfE65400A010954024Ed3E352f2,
         0,
         120, // 2 minutes
