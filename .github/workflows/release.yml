@@ -46,7 +46,6 @@ jobs:
           out: 'out'
           interfaces: 'solidity/interfaces'
           contracts: 'solidity/contracts'
-          libraries: "solidity/libraries"
           export_type: '${{ matrix.export_type }}'
 
       - name: Publish to NPM - Export Type ${{ matrix.export_type }}
