@@ -18,7 +18,7 @@ jobs:
         export_type: ["interfaces", "all"]
 
     env:
-      NPM_PACKAGE_NAME: "@defi-wonderland/canon-vault"
+      NPM_PACKAGE_NAME: "@defi-wonderland/canon-guard"
       EXPORT_NAME: ${{ matrix.export_type == 'interfaces' && '-interfaces' || '' }}
 
     steps:
