@@ -62,6 +62,8 @@ contract SafeEntrypoint is OnlyEntrypointGuard, EmergencyModeHook, ISafeEntrypoi
 
   EnumerableSetLib.AddressSet internal _queuedTransactions;
 
+  EnumerableSetLib.AddressSet internal _approvedActionsBuildersAndHubs;
+
   // ~~~ CONSTRUCTOR ~~~
 
   /**
@@ -101,6 +103,11 @@ contract SafeEntrypoint is OnlyEntrypointGuard, EmergencyModeHook, ISafeEntrypoi
 
     uint256 _approvalExpiresAt = block.timestamp + _approvalDuration;
     approvalExpiries[_actionsBuilderOrHub] = _approvalExpiresAt;
+    if (_approvalDuration > 0) {
+      _approvedActionsBuildersAndHubs.add(_actionsBuilderOrHub);
+    } else {
+      _approvedActionsBuildersAndHubs.remove(_actionsBuilderOrHub);
+    }
     emit ActionsBuilderOrHubApproved(_actionsBuilderOrHub, _approvalDuration, _approvalExpiresAt);
   }
 
@@ -185,16 +192,27 @@ contract SafeEntrypoint is OnlyEntrypointGuard, EmergencyModeHook, ISafeEntrypoi
     _safeTxHash = _getSafeTransactionHash(_multiSendData, _safeNonce);
   }
 
-  function getQueuedTransactions() external view returns (address[] memory _queuedTxs) {
-    _queuedTxs = _queuedTransactions.values();
+  function getQueuedTransactions() external view returns (address[] memory _queuedList) {
+    _queuedList = _queuedTransactions.values();
   }
 
-  function clearQueuedTransactions() external {
-    address[] memory _queuedTxs = _queuedTransactions.values();
-    for (uint256 _i; _i < _queuedTxs.length; ++_i) {
-      if (queuedTransactions[_queuedTxs[_i]].expiresAt > block.timestamp) {
-        delete queuedTransactions[_queuedTxs[_i]];
-        _queuedTransactions.remove(_queuedTxs[_i]);
+  function getApprovedActionsBuildersAndHubs() external view returns (address[] memory _approvedList) {
+    _approvedList = _approvedActionsBuildersAndHubs.values();
+  }
+
+  function clearExpired() external {
+    address[] memory _queuedList = _queuedTransactions.values();
+    for (uint256 _i; _i < _queuedList.length; ++_i) {
+      if (queuedTransactions[_queuedList[_i]].expiresAt > block.timestamp) {
+        delete queuedTransactions[_queuedList[_i]];
+        _queuedTransactions.remove(_queuedList[_i]);
+      }
+    }
+    address[] memory _approvedList = _approvedActionsBuildersAndHubs.values();
+    for (uint256 _i; _i < _approvedList.length; ++_i) {
+      if (approvalExpiries[_approvedList[_i]] <= block.timestamp) {
+        delete approvalExpiries[_approvedList[_i]];
+        _approvedActionsBuildersAndHubs.remove(_approvedList[_i]);
       }
     }
   }
