@@ -46,7 +46,7 @@ jobs:
         run: yarn build
 
       - name: Export Solidity - Export Type ${{ matrix.export_type }}
-        uses: defi-wonderland/solidity-exporter-action@v2.1.0
+        uses: defi-wonderland/solidity-exporter-action@v2.2.0
         with:
           package_name: ${{ env.NPM_PACKAGE_NAME }}
           out: "out"
