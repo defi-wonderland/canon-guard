@@ -4,8 +4,7 @@
   "description": "Canon Guard",
   "homepage": "https://github.com/defi-wonderland/canon-guard#readme",
   "repository": {
-    "type": "git",
-    "url": "git+https://github.com/defi-wonderland/canon-guard.git"
+    "url": "https://github.com/defi-wonderland/canon-guard"
   },
   "license": "MIT",
   "author": "Wonderland",
