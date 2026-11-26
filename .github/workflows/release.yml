@@ -11,6 +11,9 @@ jobs:
     # 1) Remove the following line if you wish to export your Solidity contracts and interfaces and publish them to NPM
     if: false
     runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
     strategy:
       matrix:
         export_type: ['interfaces', 'all']
@@ -54,5 +57,3 @@ jobs:
 
       - name: Publish to NPM - Export Type ${{ matrix.export_type }}
         run: cd export/${{ env.NPM_PACKAGE_NAME }}${{ env.EXPORT_NAME }} && npm publish --access public --tag latest
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
