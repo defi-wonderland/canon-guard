@@ -9,6 +9,7 @@ jobs:
     # 1) Remove the following line if you wish to export your Solidity contracts and interfaces and publish them to NPM
     if: false
     runs-on: ubuntu-latest
+    environment: Development
     permissions:
       id-token: write
       contents: read
