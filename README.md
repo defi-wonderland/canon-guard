@@ -109,7 +109,12 @@ See the [Foundry Book for available options](https://book.getfoundry.sh/referenc
 
 Export TypeScript interfaces from Solidity contracts and interfaces providing compatibility with TypeChain. Publish the exported packages to NPM.
 
-To enable this feature, make sure you've set the `NPM_TOKEN` on your org's secrets. Then set the job's conditional to `true`:
+The workflows publish with [npm trusted publishing](https://docs.npmjs.com/trusted-publishers). They do not use a stored npm token. To enable this feature:
+
+1. Publish each package to npm once by hand. A package must exist on npm before it can have a trusted publisher.
+2. In the settings of each package on npm, add this repository and the workflow file that publishes it (`release.yml` or `canary.yml`) as its trusted publisher. npm accepts one trusted publisher per package, so to publish the same package from both workflows, move the two publish jobs into one workflow file.
+
+Then set the job's conditional to `true`:
 
 ```yaml
 jobs:
